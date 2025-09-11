@@ -1,0 +1,199 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="container-fluid">
+    <!-- Encabezado -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h2 class="mb-1">Dashboard de SkyNet</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-primary" asp-controller="Visitas" asp-action="Create">
+                <i class="bi bi-plus-circle me-1"></i> Nueva visita
+            </a>
+            <a class="btn btn-outline-secondary" asp-controller="Clientes" asp-action="Create">
+                <i class="bi bi-person-plus me-1"></i> Nuevo cliente
+            </a>
+        </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="row g-3">
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar bg-primary text-white me-3"><i class="bi bi-people"></i></div>
+                        <div>
+                            <div class="text-muted small">Clientes</div>
+                            <div class="fs-4 fw-semibold">120</div>
+                        </div>
+                    </div>
+                    <div class="progress progress-thin mt-3">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: 72%"></div>
+                    </div>
+                    <div class="text-muted small mt-1">+12 este mes</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar bg-success text-white me-3"><i class="bi bi-calendar-check"></i></div>
+                        <div>
+                            <div class="text-muted small">Visitas hoy</div>
+                            <div class="fs-4 fw-semibold">35</div>
+                        </div>
+                    </div>
+                    <div class="progress progress-thin mt-3">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: 60%"></div>
+                    </div>
+                    <div class="text-muted small mt-1">70% completadas</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar bg-warning text-white me-3"><i class="bi bi-hourglass-split"></i></div>
+                        <div>
+                            <div class="text-muted small">Pendientes</div>
+                            <div class="fs-4 fw-semibold">14</div>
+                        </div>
+                    </div>
+                    <div class="progress progress-thin mt-3">
+                        <div class="progress-bar bg-warning" role="progressbar" style="width: 40%"></div>
+                    </div>
+                    <div class="text-muted small mt-1">SLA 2h promedio</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar bg-danger text-white me-3"><i class="bi bi-geo-alt"></i></div>
+                        <div>
+                            <div class="text-muted small">Fuera de rango</div>
+                            <div class="fs-4 fw-semibold">2</div>
+                        </div>
+                    </div>
+                    <div class="progress progress-thin mt-3">
+                        <div class="progress-bar bg-danger" role="progressbar" style="width: 15%"></div>
+                    </div>
+                    <div class="text-muted small mt-1">Revisar ubicaciones</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfica + tabla -->
+    <div class="row g-3 mt-1">
+        <div class="col-12 col-xl-7">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header d-flex align-items-center justify-content-between bg-white">
+                    <span class="fw-semibold">Visitas por día (últimos 7)</span>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button class="btn btn-outline-secondary active">Semana</button>
+                        <button class="btn btn-outline-secondary">Mes</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <canvas id="chartVisitas" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-5">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <span class="fw-semibold">Visitas de hoy</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Técnico</th>
+                                    <th>Cliente</th>
+                                    <th>Hora</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>JFlores</td>
+                                    <td>Comercial XYZ</td>
+                                    <td>09:30</td>
+                                    <td><span class="badge bg-success">Finalizada</span></td>
+                                </tr>
+                                <tr>
+                                    <td>MLuna</td>
+                                    <td>Hotel Central</td>
+                                    <td>10:15</td>
+                                    <td><span class="badge bg-info text-dark">En curso</span></td>
+                                </tr>
+                                <tr>
+                                    <td>ARamírez</td>
+                                    <td>Farmacia Los Olivos</td>
+                                    <td>11:00</td>
+                                    <td><span class="badge bg-warning text-dark">Pendiente</span></td>
+                                </tr>
+                                <tr>
+                                    <td>RCano</td>
+                                    <td>Rest. El Mirador</td>
+                                    <td>11:30</td>
+                                    <td><span class="badge bg-danger">Reprogramar</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="p-3 text-end">
+                        <a asp-controller="Visitas" asp-action="Index" class="btn btn-sm btn-outline-primary">
+                            Ver todas
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Chart.js (CDN) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        // Demo simple: visitas últimos 7 días
+        const ctx = document.getElementById('chartVisitas');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'],
+                datasets: [{
+                    label: 'Visitas',
+                    data: [12, 18, 14, 22, 19, 25, 20],
+                    tension: 0.35,
+                    fill: true
+                }]
+            },
+            options: {
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 5 } }
+                }
+            }
+        });
+    </script>
+}

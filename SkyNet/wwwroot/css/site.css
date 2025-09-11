@@ -1,0 +1,37 @@
+/* ===== Sidebar look & feel ===== */
+.sidebar .nav-link {
+    font-size: 1.15rem; /* ?? tamaño más grande */
+    font-weight: 600; /* ?? un poco más grueso */
+    padding: .9rem 1.2rem; /* más espacio alrededor */
+    border-radius: .6rem;
+    margin: .2rem .6rem;
+    display: flex;
+    align-items: center;
+}
+
+    .sidebar .nav-link i {
+        font-size: 1.3rem; /* íconos también más grandes */
+        margin-right: .6rem;
+        opacity: .9;
+    }
+
+    .sidebar .nav-link:hover {
+        background: rgba(255, 255, 255, .08);
+    }
+
+    .sidebar .nav-link.active {
+        background: linear-gradient(90deg, rgba(74,108,247,.25), rgba(74,108,247,.12));
+        color: #fff;
+        font-weight: 700; /* más destacado */
+        border: 1px solid rgba(74,108,247,.35);
+    }
+
+.sidebar .nav-title {
+    font-size: .95rem; /* títulos de sección también más legibles */
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05rem;
+    opacity: .75;
+    padding: .85rem 1.2rem .3rem;
+    margin-top: .5rem;
+}

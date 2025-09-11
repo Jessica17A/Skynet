@@ -1,0 +1,9 @@
+@model SkyNet.Models.DTOs.ClienteDTO
+@{
+    ViewData["Title"] = "Detalle cliente";
+}
+<h2>Detalle</h2>
+<p><b>Id:</b> @Model.Id</p>
+<p><b>Nombre:</b> @Model.Nombre</p>
+<p><b>Email:</b> @Model.Email</p>
+<a asp-action="Index">Volver</a>

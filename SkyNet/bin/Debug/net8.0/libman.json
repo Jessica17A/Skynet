@@ -1,0 +1,52 @@
+{
+  "version": "3.0",
+  "defaultProvider": "jsdelivr",
+  "libraries": [
+    {
+      "library": "@coreui/coreui@5.3.0",
+      "destination": "wwwroot/lib/coreui/",
+      "files": [
+        "dist/css/themes/bootstrap/bootstrap.css",
+        "dist/css/themes/bootstrap/bootstrap.css.map",
+        "dist/css/themes/bootstrap/bootstrap.min.css",
+        "dist/css/themes/bootstrap/bootstrap.min.css.map",
+        "dist/css/themes/bootstrap/bootstrap.rtl.css",
+        "dist/css/themes/bootstrap/bootstrap.rtl.css.map",
+        "dist/css/themes/bootstrap/bootstrap.rtl.min.css",
+        "dist/css/themes/bootstrap/bootstrap.rtl.min.css.map",
+        "dist/css/coreui-grid.css",
+        "dist/css/coreui-grid.css.map",
+        "dist/css/coreui-grid.min.css",
+        "dist/css/coreui-grid.min.css.map",
+        "dist/css/coreui-grid.rtl.css",
+        "dist/css/coreui-grid.rtl.css.map",
+        "dist/css/coreui-grid.rtl.min.css",
+        "dist/css/coreui-grid.rtl.min.css.map",
+        "dist/css/coreui-reboot.css",
+        "dist/css/coreui-reboot.css.map",
+        "dist/css/coreui-reboot.min.css",
+        "dist/css/coreui-reboot.min.css.map",
+        "dist/css/coreui-reboot.rtl.css",
+        "dist/css/coreui-reboot.rtl.css.map",
+        "dist/css/coreui-reboot.rtl.min.css",
+        "dist/css/coreui-reboot.rtl.min.css.map",
+        "dist/css/coreui-utilities.css",
+        "dist/css/coreui-utilities.css.map",
+        "dist/css/coreui-utilities.min.css",
+        "dist/css/coreui-utilities.min.css.map",
+        "dist/css/coreui-utilities.rtl.css",
+        "dist/css/coreui-utilities.rtl.css.map",
+        "dist/css/coreui-utilities.rtl.min.css",
+        "dist/css/coreui-utilities.rtl.min.css.map",
+        "dist/css/coreui.css",
+        "dist/css/coreui.css.map",
+        "dist/css/coreui.min.css",
+        "dist/css/coreui.min.css.map",
+        "dist/css/coreui.rtl.css",
+        "dist/css/coreui.rtl.css.map",
+        "dist/css/coreui.rtl.min.css",
+        "dist/css/coreui.rtl.min.css.map"
+      ]
+    }
+  ]
+}

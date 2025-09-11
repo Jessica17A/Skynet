@@ -1,0 +1,17 @@
+﻿@{
+    if (User?.Identity != null && User.Identity.IsAuthenticated)
+    {
+        if (User.IsInRole("Admin"))
+        {
+            Layout = "/Views/Shared/_Plantilla.cshtml"; // Layout para el rol Admin
+        }
+        else
+        {
+            Layout = "/Views/Shared/_Vendedor.cshtml"; // Layout para otros roles autenticados
+        }
+    }
+    else
+    {
+        Layout = "/Views/Shared/_Layout.cshtml"; // Layout para usuarios no autenticados
+    }
+}

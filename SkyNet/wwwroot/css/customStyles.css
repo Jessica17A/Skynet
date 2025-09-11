@@ -1,0 +1,51 @@
+﻿/* Estilos personalizados para la barra lateral */
+.sidebar .sidebar-nav .nav-item .nav-link {
+    font-size: 1.15rem; /* Texto más grande */
+    font-weight: 600; /* Negrita ligera */
+    padding: 0.9rem 1.2rem; /* Más espacio */
+    border-radius: 0.6rem;
+    margin: 0.2rem 0.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.sidebar .nav-link i {
+    font-size: 1.3rem;
+    margin-right: .6rem;
+    opacity: 0.9;
+}
+
+.sidebar .nav-link:hover {
+    background: rgba(0, 123, 255, 0.1); /* Azul clarito al pasar */
+    color: #0d6efd !important;
+}
+
+.sidebar .nav-link.active {
+    background: #0d6efd;
+    color: #fff !important;
+}
+
+/* Aumentar tamaño de letras e íconos en navbar */
+.navbar .nav-link {
+    font-size: 1.35rem; /* letras más grandes */
+    font-weight: 600; /* semi-negrita */
+    padding: 0.7rem 1rem; /* más espacio para que se vean amplios */
+}
+
+    .navbar .nav-link i {
+        font-size: 1.6rem; /* íconos más grandes */
+        margin-right: 8px; /* separación entre ícono y texto */
+    }
+
+
+/* Logo en el Home */
+.home-logo {
+    max-width: 220px; /* puedes subirlo a 250px si quieres más grande */
+    margin-bottom: 25px;
+}
+
+.home-welcome-title {
+    font-family: 'Sugar Bread', cursive;
+    font-size: 3rem;
+    color: #1c31a5;
+}
