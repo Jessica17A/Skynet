@@ -8,5 +8,14 @@ namespace SkyNet.Controllers
         {
             return View();
         }
+        public IActionResult Nosotros()
+        {
+            return View();
+        }
+
+        public IActionResult FormularioClientes()
+        {
+            return View();
+        }
     }
 }

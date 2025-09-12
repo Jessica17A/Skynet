@@ -1,0 +1,170 @@
+﻿@{
+    ViewData["Title"] = "Nueva Solicitud";
+    Layout = "~/Views/Shared/_Layout.cshtml"; // opcional, puedes quitar si no usas layout
+}
+
+<style>
+    .solicitud-wrap {
+        max-width: 900px;
+        margin: 90px auto 40px; /* deja espacio por navbar fixed-top */
+    }
+
+    .card-modern {
+        border: 1px solid rgba(255,255,255,.15);
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(0,0,0,.08);
+    }
+
+    .form-label {
+        font-weight: 600;
+    }
+
+    .form-control, .form-select {
+        border-radius: 12px;
+    }
+
+    .input-group-text {
+        border-radius: 12px 0 0 12px;
+    }
+
+    .hint {
+        font-size: .85rem;
+        color: #65768a;
+    }
+
+    .char-counter {
+        font-size: .8rem;
+        color: #6c757d;
+        text-align: right;
+    }
+</style>
+
+<div class="solicitud-wrap">
+    <div class="card card-modern">
+        <div class="card-body p-4 p-md-5">
+
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <i class="bi bi-file-earmark-text fs-3"></i>
+                <h1 class="h4 m-0">Crear Solicitud</h1>
+            </div>
+            <p class="text-muted mb-4">
+                Cuéntanos qué necesitas. Te asignaremos un número de ticket para que puedas darle seguimiento.
+            </p>
+
+            <form method="post" enctype="multipart/form-data" novalidate>
+                <div class="row g-3">
+                    <!-- Nombre -->
+                    <div class="col-md-6">
+                        <label class="form-label">Nombre</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-person"></i></span>
+                            <input type="text" name="Nombre" class="form-control" placeholder="Tu nombre completo" required>
+                        </div>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="col-md-6">
+                        <label class="form-label">Email</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                            <input type="email" name="Email" class="form-control" placeholder="tucorreo@ejemplo.com" required>
+                        </div>
+                    </div>
+
+                    <!-- Teléfono -->
+                    <div class="col-md-6">
+                        <label class="form-label">Teléfono</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                            <input type="tel" name="Telefono" class="form-control" placeholder="+502 5X0X-XXXX">
+                        </div>
+                        <div class="hint mt-1">Opcional, pero ayuda si necesitamos contactarte rápido.</div>
+                    </div>
+
+                    <!-- Tipo de solicitud -->
+                    <div class="col-md-6">
+                        <label class="form-label">Tipo de Solicitud</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-ui-checks-grid"></i></span>
+                            <select name="Tipo" class="form-select" required>
+                                <option value="">Selecciona una opción...</option>
+                                <option>Soporte Técnico</option>
+                                <option>Consulta</option>
+                                <option>Reclamo</option>
+                                <option>Servicio/Instalación</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Prioridad -->
+                    <div class="col-md-6">
+                        <label class="form-label">Prioridad</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-flag"></i></span>
+                            <select name="Prioridad" class="form-select">
+                                <option value="Normal">Normal</option>
+                                <option value="Baja">Baja</option>
+                                <option value="Alta">Alta</option>
+                                <option value="Crítica">Crítica</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Descripción -->
+                    <div class="col-12">
+                        <label class="form-label">Descripción</label>
+                        <textarea name="Descripcion" class="form-control" rows="5"
+                                  placeholder="Describe tu solicitud con detalle..."
+                                  maxlength="1500" oninput="updateCounter(this)" required></textarea>
+                        <div class="char-counter"><span id="desc-count">0</span>/1500</div>
+                    </div>
+
+                    <!-- Adjuntos -->
+                    <div class="col-12">
+                        <label class="form-label">Adjunto</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-paperclip"></i></span>
+                            <input type="file" name="Adjunto" class="form-control" accept=".png,.jpg,.jpeg,.pdf">
+                        </div>
+                        <div class="hint mt-1">Opcional: captura de pantalla, PDF, etc. (máx. 5 MB)</div>
+                    </div>
+
+                    <!-- Términos -->
+                    <div class="col-12">
+                        <div class="form-check">
+                            <input type="checkbox" name="AceptaTerminos" class="form-check-input" required>
+                            <label class="form-check-label">
+                                Acepto el tratamiento de mis datos para gestionar esta solicitud.
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center justify-content-between mt-4">
+                    <button type="reset" class="btn btn-light btn-sm">
+                        <i class="bi bi-eraser"></i> Limpiar
+                    </button>
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="bi bi-send"></i> Enviar solicitud
+                    </button>
+                </div>
+            </form>
+
+            <hr class="my-4">
+
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <span class="text-muted">¿Ya tienes un ticket?</span>
+                <a href="/Solicitudes/Tracking" class="link-light text-decoration-none">
+                    <i class="bi bi-search"></i> Consultar estado
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateCounter(el) {
+        const max = el.getAttribute('maxlength') || 1500;
+        document.getElementById('desc-count').textContent = el.value.length;
+    }
+</script>

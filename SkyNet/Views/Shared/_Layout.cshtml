@@ -37,6 +37,16 @@
                         onclick="coreui.Sidebar.getInstance(document.querySelector('#sidebar')).toggle()">
                     <i class="bi bi-list"></i>
                 </button>
+                <div class="d-flex align-items-center gap-3">
+                    <a class="nav-link fs-4 fw-bold text-white @(IsActive("Nosotros") ? "active" : "")"
+                       asp-area="" asp-controller="LayoutPrincipal" asp-action="Nosotros">
+                        <i class="bi bi-people-fill me-2 fs-3"></i> Nosotros
+                    </a>
+                    <a class="nav-link fs-4 fw-bold text-white @(IsActive("Solicitudes") ? "active" : "")"
+                       asp-area="" asp-controller="LayoutPrincipal" asp-action="FormularioClientes">
+                        <i class="bi bi-file-earmark-text me-2 fs-3"></i> Solicitudes
+                    </a>
+                </div>
 
                 <!-- LOGO CENTRADO -->
                 <a class="navbar-brand mx-auto d-flex align-items-center text-white" asp-area="" asp-controller="Home" asp-action="Index">
