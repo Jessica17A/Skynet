@@ -28,49 +28,45 @@
 <body>
     <!-- NAVBAR -->
     <header>
-        <nav class="navbar navbar-expand-lg shadow-sm fixed-top" style="background-color:#1c31a5;">
+        <nav class="navbar navbar-expand-lg navbar-dark fixed-top" style="background-color:#1c31a5;">
             <div class="container-fluid">
-
-                <!-- Botón menú (colapsar sidebar) -->
-                <button class="btn btn-outline-light me-3 d-lg-none"
-                        type="button"
-                        onclick="coreui.Sidebar.getInstance(document.querySelector('#sidebar')).toggle()">
-                    <i class="bi bi-list"></i>
+               
+                <!-- Botón colapsable -->
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain"
+                        aria-controls="navMain" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="d-flex align-items-center gap-3">
-                    <a class="nav-link fs-4 fw-bold text-white @(IsActive("Nosotros") ? "active" : "")"
-                       asp-area="" asp-controller="LayoutPrincipal" asp-action="Nosotros">
-                        <i class="bi bi-people-fill me-2 fs-3"></i> Nosotros
-                    </a>
-                    <a class="nav-link fs-4 fw-bold text-white @(IsActive("Solicitudes") ? "active" : "")"
-                       asp-area="" asp-controller="LayoutPrincipal" asp-action="FormularioClientes">
-                        <i class="bi bi-file-earmark-text me-2 fs-3"></i> Solicitudes
-                    </a>
+
+                <!-- Links -->
+                <div class="collapse navbar-collapse" id="navMain">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link text-white @(IsActive("LayoutPrincipal") ? "active" : "")"
+                               asp-controller="LayoutPrincipal" asp-action="Nosotros">Nosotros</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white @(IsActive("LayoutPrincipal") ? "active" : "")"
+                               asp-controller="LayoutPrincipal" asp-action="FormularioClientes">Solicitudes</a>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link text-white @(IsActive("Home") ? "active" : "")"
+                               asp-controller="LayoutPrincipal" asp-action="Index">Inicio</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" asp-area="Identity" asp-page="/Account/Register">Registro</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" asp-area="Identity" asp-page="/Account/Login">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <partial name="_LoginPartial" />
+                        </li>
+                    </ul>
                 </div>
-
-                <!-- LOGO CENTRADO -->
-                <a class="navbar-brand mx-auto d-flex align-items-center text-white" asp-area="" asp-controller="Home" asp-action="Index">
-                    @* <img src="~/img/logo.png" alt="Yeishop Logo" style="height:40px; margin-right:8px;" />
-            <span class="fw-bold fs-4" style="font-family: 'Sugar Bread', cursive;">Yeishop</span> *@
-                </a>
-
-                <!-- Menú derecho -->
-                <div class="d-flex align-items-center gap-3">
-                    <a class="nav-link fs-4 fw-bold text-white @(IsActive("Home") ? "active" : "")" asp-area="" asp-controller="LayoutPrincipal" asp-action="Index">
-                        <i class="bi bi-house me-2 fs-3"></i> Inicio
-                    </a>
-                    <a class="nav-link fs-4 fw-bold text-white @(IsActive("ClientesUi") ? "active" : "")" asp-area="Identity" asp-page="/Account/Register">
-                        <i class="bi bi-person-plus me-2 fs-3"></i> Registro
-                    </a>
-                    <a class="nav-link fs-4 fw-bold text-white" asp-area="Identity" asp-page="/Account/Login">
-                        <i class="bi bi-box-arrow-in-right me-2 fs-3"></i> Login
-                    </a>
-                    <partial name="_LoginPartial" />
-                </div>
-
             </div>
         </nav>
-
     </header>
 
     <!-- CONTENIDO -->

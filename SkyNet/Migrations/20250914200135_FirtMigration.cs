@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SkyNet.Migrations
 {
     /// <inheritdoc />
-    public partial class Inicial : Migration
+    public partial class FirtMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -62,6 +62,28 @@ namespace SkyNet.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Clientes", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Solicitudes",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Nombre = table.Column<string>(type: "nvarchar(120)", maxLength: 120, nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(160)", maxLength: 160, nullable: false),
+                    Telefono = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: true),
+                    Tipo = table.Column<string>(type: "nvarchar(60)", maxLength: 60, nullable: false),
+                    Prioridad = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    Descripcion = table.Column<string>(type: "nvarchar(1500)", maxLength: 1500, nullable: false),
+                    Ticket = table.Column<string>(type: "nvarchar(40)", maxLength: 40, nullable: false),
+                    CreatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Estado = table.Column<int>(type: "int", nullable: false),
+                    AdjuntoPublicId = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Solicitudes", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -230,6 +252,9 @@ namespace SkyNet.Migrations
 
             migrationBuilder.DropTable(
                 name: "Clientes");
+
+            migrationBuilder.DropTable(
+                name: "Solicitudes");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");

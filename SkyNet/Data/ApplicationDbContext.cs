@@ -12,5 +12,6 @@ namespace SkyNet.Data
         }
 
         public DbSet<Cliente> Clientes => Set<Cliente>();
+        public DbSet<Solicitud> Solicitudes => Set<Solicitud>();
     }
 }

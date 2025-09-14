@@ -1,18 +1,18 @@
 ﻿@{
     ViewData["Title"] = "Nueva Solicitud";
-    Layout = "~/Views/Shared/_Layout.cshtml"; // opcional, puedes quitar si no usas layout
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <style>
     .solicitud-wrap {
         max-width: 900px;
-        margin: 90px auto 40px; /* deja espacio por navbar fixed-top */
+        margin: 90px auto 40px;
     }
 
     .card-modern {
-        border: 2px solid #0d6efd; /* azul Bootstrap */
+        border: 2px solid #0d6efd;
         border-radius: 18px;
-        box-shadow: 0 10px 30px rgba(13,110,253,.15); /* sombra azul suave */
+        box-shadow: 0 10px 30px rgba(13,110,253,.15);
     }
 
     .form-label {
@@ -39,7 +39,6 @@
     }
 </style>
 
-
 <div class="solicitud-wrap">
     <div class="card card-modern">
         <div class="card-body p-4 p-md-5">
@@ -53,23 +52,16 @@
 
             <hr class="my-4">
 
-            <div class="d-flex align-items-center gap-2 mb-5">
+            <div class="d-flex align-items-center gap-2 mb-3">
                 <i class="bi bi-file-earmark-text fs-3"></i>
                 <h1 class="h4 m-0">Crear Solicitud</h1>
             </div>
+            <p class="text-muted mb-4">Cuéntanos qué necesitas. Te asignaremos un número de ticket.</p>
 
+            <form method="post" enctype="multipart/form-data" asp-controller="Solicitudes" asp-action="Create" novalidate>
+                @Html.AntiForgeryToken()
 
-
-
-
-           
-            <p class="text-muted mb-4">
-                Cuéntanos qué necesitas. Te asignaremos un número de ticket para que puedas darle seguimiento.
-            </p>
-
-            <form method="post" enctype="multipart/form-data" novalidate>
                 <div class="row g-3">
-                    <!-- Nombre -->
                     <div class="col-md-6">
                         <label class="form-label">Nombre</label>
                         <div class="input-group">
@@ -78,7 +70,6 @@
                         </div>
                     </div>
 
-                    <!-- Email -->
                     <div class="col-md-6">
                         <label class="form-label">Email</label>
                         <div class="input-group">
@@ -87,17 +78,15 @@
                         </div>
                     </div>
 
-                    <!-- Teléfono -->
                     <div class="col-md-6">
                         <label class="form-label">Teléfono</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-telephone"></i></span>
                             <input type="tel" name="Telefono" class="form-control" placeholder="+502 5X0X-XXXX">
                         </div>
-                        <div class="hint mt-1">Opcional, pero ayuda si necesitamos contactarte rápido.</div>
+                        <div class="hint mt-1">Opcional para contactarte rápido.</div>
                     </div>
 
-                    <!-- Tipo de solicitud -->
                     <div class="col-md-6">
                         <label class="form-label">Tipo de Solicitud</label>
                         <div class="input-group">
@@ -112,7 +101,6 @@
                         </div>
                     </div>
 
-                    <!-- Prioridad -->
                     <div class="col-md-6">
                         <label class="form-label">Prioridad</label>
                         <div class="input-group">
@@ -126,27 +114,22 @@
                         </div>
                     </div>
 
-                    <!-- Descripción -->
                     <div class="col-12">
                         <label class="form-label">Descripción</label>
-                        <textarea name="Descripcion" class="form-control" rows="5"
-                                  placeholder="Describe tu solicitud con detalle..."
-                                  maxlength="1500" oninput="updateCounter(this)" required></textarea>
+                        <textarea name="Descripcion" class="form-control" rows="5" maxlength="1500"
+                                  placeholder="Describe tu solicitud con detalle..." oninput="updateCounter(this)" required></textarea>
                         <div class="char-counter"><span id="desc-count">0</span>/1500</div>
                     </div>
 
-                    <!-- Adjuntos -->
                     <div class="col-12">
-                        <label class="form-label">Adjunto</label>
+                        <label class="form-label">Adjunto (solo imagen)</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-paperclip"></i></span>
-                            <input type="file" name="Adjunto" class="form-control" accept=".png,.jpg,.jpeg,.pdf">
+                            <input type="file" name="Adjunto" id="Adjunto" class="form-control" accept="image/*">
                         </div>
-                        <div class="hint mt-1">Opcional: captura de pantalla, PDF, etc. (máx. 5 MB)</div>
+                        <div class="hint mt-1">Opcional: JPG/PNG, máx. 5 MB.</div>
                     </div>
 
-                    <!-- Términos -->
-                    <!-- Términos -->
                     <div class="col-12">
                         <div class="form-check">
                             <input type="checkbox" id="aceptaTerminos" name="AceptaTerminos" class="form-check-input" required>
@@ -156,7 +139,6 @@
                         </div>
                     </div>
 
-                    <!-- Botones -->
                     <div class="d-flex align-items-center justify-content-between mt-4">
                         <button type="reset" class="btn btn-light btn-sm">
                             <i class="bi bi-eraser"></i> Limpiar
@@ -165,22 +147,86 @@
                             <i class="bi bi-send"></i> Enviar solicitud
                         </button>
                     </div>
-
+                </div>
             </form>
 
-            <hr class="my-4">
+            <hr class="my-4" />
 
+            @* Bloque para SweetAlert y comprobante *@
+            <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+            @if (TempData["Success"] is bool ok && ok && TempData["Ticket"] is string tk)
+            {
+                <script>
+                    document.addEventListener('DOMContentLoaded', () => {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Solicitud enviada!',
+                            text: 'Tu ticket es @tk',
+                            confirmButtonText: 'Entendido'
+                        });
+                    });
+                </script>
+
+                <div class="mt-4">
+                    <div class="card border-success">
+                        <div class="card-body">
+                            <h5 class="card-title">Comprobante de solicitud</h5>
+                            <p class="mb-1">Número de ticket:</p>
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <code class="px-2 py-1 bg-light rounded">@tk</code>
+                                <button class="btn btn-sm btn-outline-secondary" type="button"
+                                        onclick="navigator.clipboard.writeText('@tk')">
+                                    Copiar
+                                </button>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a class="btn btn-primary btn-sm" href="/Solicitudes/Tracking?ticket=@tk">
+                                    Ver estado en Tracking
+                                </a>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="window.print()">Imprimir</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            @if (TempData["Error"] is string err)
+            {
+                <script>
+                    document.addEventListener('DOMContentLoaded', () => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'No se pudo enviar',
+                            text: '@err',
+                            confirmButtonText: 'OK'
+                        });
+                    });
+                </script>
+            }
         </div>
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    $(function () {
-      $("#aceptaTerminos").on("change", function () {
-        $("#btnEnviar").prop("disabled", !this.checked);
-      });
+    function updateCounter(el) {
+        document.getElementById('desc-count').textContent = el.value.length;
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+        const chk = document.getElementById('aceptaTerminos');
+        const btn = document.getElementById('btnEnviar');
+        const inp = document.getElementById('Adjunto');
+        chk.addEventListener('change', () => btn.disabled = !chk.checked);
+
+        if (inp) {
+            inp.addEventListener('change', function () {
+                const f = this.files?.[0];
+                if (!f) return;
+                const okType = f.type?.startsWith("image/");
+                const max = 5 * 1024 * 1024;
+                if (!okType) { alert("Solo se permiten imágenes (JPG/PNG)."); this.value = ""; return; }
+                if (f.size > max) { alert("La imagen supera 5 MB."); this.value = ""; }
+            });
+        }
     });
 </script>
-

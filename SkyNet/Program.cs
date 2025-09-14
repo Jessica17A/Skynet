@@ -1,10 +1,11 @@
-using Microsoft.AspNetCore.Identity;
+Ôªøusing Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using CloudinaryDotNet;
 using SkyNet.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ------------------ Services (ANTES de Build) ------------------
+// --- Services ---
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
@@ -13,24 +14,26 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-// Identity (NO se quita)
+// Identity
 builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 {
-    options.SignIn.RequireConfirmedAccount = true;
+    options.SignIn.RequireConfirmedAccount = true;   // en dev puedes poner false si te estorba
 })
 .AddEntityFrameworkStores<ApplicationDbContext>();
 
-// MVC (vistas) + API + HttpClient
-builder.Services.AddControllersWithViews();  // Vistas
-builder.Services.AddControllers();           // API (attribute routing)
+// MVC + HttpClient
+builder.Services.AddControllersWithViews();   // basta para MVC + API con attribute routing
 builder.Services.AddHttpClient();
+
+// Cloudinary
+var csec = builder.Configuration.GetSection("Cloudinary");
+var cloud = new Cloudinary(new Account(csec["CloudName"], csec["ApiKey"], csec["ApiSecret"]));
+cloud.Api.Secure = true; // URLs https
+builder.Services.AddSingleton(cloud);
 
 var app = builder.Build();
 
-// ------------------ Pipeline ------------------
-// Si te da guerra el certificado en dev, deja comentado HTTPS:
-// app.UseHttpsRedirection();
-
+// --- Pipeline ---
 if (app.Environment.IsDevelopment())
 {
     app.UseMigrationsEndPoint();
@@ -38,29 +41,26 @@ if (app.Environment.IsDevelopment())
 else
 {
     app.UseExceptionHandler("/Home/Error");
-    app.UseHsts(); // opcional si usas HTTPS
+    app.UseHsts();
 }
 
+app.UseHttpsRedirection();   // ‚¨ÖÔ∏è faltaba
 app.UseStaticFiles();
 
 app.UseRouting();
 
-// Identity: °autenticaciÛn ANTES de autorizaciÛn!
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Rutas MVC convencionales
+// API (attribute routed controllers: /api/...)
+app.MapControllers();
+
+// MVC convencional
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=LayoutPrincipal}/{action=Index}/{id?}");
 
-// P·ginas de Identity (si las usas)
+// Razor Pages (Identity UI)
 app.MapRazorPages();
-
-// Rutas de API por atributo (Controllers en /Api)
-app.MapControllers();
-
-app.UseStaticFiles();
-
 
 app.Run();

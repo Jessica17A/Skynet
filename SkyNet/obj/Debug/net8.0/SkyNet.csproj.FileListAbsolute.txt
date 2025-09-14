@@ -311,3 +311,5 @@ C:\Users\JESSICA GONZALEZ\Desktop\Skynet\SkyNet\obj\Debug\net8.0\refint\SkyNet.d
 C:\Users\JESSICA GONZALEZ\Desktop\Skynet\SkyNet\obj\Debug\net8.0\SkyNet.pdb
 C:\Users\JESSICA GONZALEZ\Desktop\Skynet\SkyNet\obj\Debug\net8.0\SkyNet.genruntimeconfig.cache
 C:\Users\JESSICA GONZALEZ\Desktop\Skynet\SkyNet\obj\Debug\net8.0\ref\SkyNet.dll
+C:\Users\JESSICA GONZALEZ\Desktop\Skynet\SkyNet\bin\Debug\net8.0\CloudinaryDotNet.dll
+C:\Users\JESSICA GONZALEZ\Desktop\Skynet\SkyNet\bin\Debug\net8.0\Newtonsoft.Json.dll
