@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using SkyNet.Models;
 
 namespace SkyNet.Models.DTOs
 {
@@ -23,7 +22,13 @@ namespace SkyNet.Models.DTOs
         [Required, StringLength(1500)]
         public string Descripcion { get; set; } = "";
 
+        // archivo
         public IFormFile? Adjunto { get; set; }
+
+        // geo
+        public string? Direccion { get; set; }
+        public double? Latitud { get; set; }
+        public double? Longitud { get; set; }
     }
 
     public class SolicitudDto
@@ -37,8 +42,10 @@ namespace SkyNet.Models.DTOs
         public string Descripcion { get; set; } = "";
         public string Ticket { get; set; } = "";
         public DateTime CreatedAtUtc { get; set; }
-        public SolicitudEstado Estado { get; set; }
-        public string? AdjuntoPath { get; set; }
-        public string? AdjuntoPublicId { get; internal set; }
+        public SkyNet.Models.SolicitudEstado Estado { get; set; }
+        public string? AdjuntoPublicId { get; set; }
+        public string? Direccion { get; set; }
+        public double? Latitud { get; set; }
+        public double? Longitud { get; set; }
     }
 }

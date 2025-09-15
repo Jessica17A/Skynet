@@ -12,8 +12,8 @@ using SkyNet.Data;
 namespace SkyNet.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250914200135_FirtMigration")]
-    partial class FirtMigration
+    [Migration("20250915004100_Inicial")]
+    partial class Inicial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -265,6 +265,10 @@ namespace SkyNet.Migrations
                         .HasMaxLength(1500)
                         .HasColumnType("nvarchar(1500)");
 
+                    b.Property<string>("Direccion")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(160)
@@ -272,6 +276,12 @@ namespace SkyNet.Migrations
 
                     b.Property<int>("Estado")
                         .HasColumnType("int");
+
+                    b.Property<double?>("Latitud")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("Longitud")
+                        .HasColumnType("float");
 
                     b.Property<string>("Nombre")
                         .IsRequired()

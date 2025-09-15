@@ -1,11 +1,11 @@
-﻿using CloudinaryDotNet;
+﻿using System.Net;
+using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SkyNet.Data;
 using SkyNet.Models;
 using SkyNet.Models.DTOs;
-
 
 namespace SkyNet.Controllers.Api
 {
@@ -16,14 +16,15 @@ namespace SkyNet.Controllers.Api
     {
         private readonly ApplicationDbContext _db;
         private readonly Cloudinary _cloud;
+        private readonly ILogger<SolicitudesApiController> _logger;
 
-        public SolicitudesApiController(ApplicationDbContext db, Cloudinary cloud)
+        public SolicitudesApiController(ApplicationDbContext db, Cloudinary cloud, ILogger<SolicitudesApiController> logger)
         {
             _db = db;
             _cloud = cloud;
+            _logger = logger;
         }
 
-        // GET: api/solicitudes
         [HttpGet]
         public async Task<ActionResult<IEnumerable<SolicitudDto>>> GetAll(CancellationToken ct)
         {
@@ -41,14 +42,16 @@ namespace SkyNet.Controllers.Api
                     Ticket = s.Ticket,
                     CreatedAtUtc = s.CreatedAtUtc,
                     Estado = s.Estado,
-                    AdjuntoPublicId = s.AdjuntoPublicId
+                    AdjuntoPublicId = s.AdjuntoPublicId,
+                    Direccion = s.Direccion,
+                    Latitud = s.Latitud,
+                    Longitud = s.Longitud
                 })
                 .ToListAsync(ct);
 
             return Ok(list);
         }
 
-        // GET: api/solicitudes/{id}
         [HttpGet("{id:long}")]
         public async Task<ActionResult<SolicitudDto>> GetById(long id, CancellationToken ct)
         {
@@ -56,7 +59,6 @@ namespace SkyNet.Controllers.Api
             return s is null ? NotFound() : Map(s);
         }
 
-        // GET: api/solicitudes/by-ticket/{ticket}
         [HttpGet("by-ticket/{ticket}")]
         public async Task<ActionResult<SolicitudDto>> GetByTicket(string ticket, CancellationToken ct)
         {
@@ -64,20 +66,33 @@ namespace SkyNet.Controllers.Api
             return s is null ? NotFound() : Map(s);
         }
 
-        // POST: api/solicitudes  (multipart/form-data)
+        // POST: multipart/form-data
         [HttpPost]
         [RequestSizeLimit(10_000_000)]
         public async Task<ActionResult<SolicitudDto>> Create([FromForm] SolicitudCreateDto dto, CancellationToken ct)
         {
-            if (!ModelState.IsValid) return ValidationProblem(ModelState);
+            if (!ModelState.IsValid)
+            {
+                // devuelve 400 con los errores (para que el Web Controller lo muestre)
+                return ValidationProblem(ModelState);
+            }
+
+            // validar coordenadas si envían sólo una
+            if (dto.Latitud.HasValue ^ dto.Longitud.HasValue)
+                return BadRequest(new { error = "Debe proporcionar latitud y longitud juntas." });
+
+            if (dto.Latitud is < -90 or > 90 || dto.Longitud is < -180 or > 180)
+                return BadRequest(new { error = "Coordenadas fuera de rango." });
 
             var ticket = GenerateTicket();
             string? publicId = null;
 
+            // Imagen (opcional)
             if (dto.Adjunto is not null && dto.Adjunto.Length > 0)
             {
                 if (!dto.Adjunto.ContentType?.StartsWith("image/") ?? true)
                     return BadRequest(new { error = "Solo se permiten imágenes." });
+
                 if (dto.Adjunto.Length > 5_000_000)
                     return BadRequest(new { error = "La imagen supera 5 MB." });
 
@@ -97,14 +112,10 @@ namespace SkyNet.Controllers.Api
                 };
                 var result = await _cloud.UploadAsync(uploadParams, ct);
 
-                if (result.StatusCode != System.Net.HttpStatusCode.OK &&
-                    result.StatusCode != System.Net.HttpStatusCode.Created)
-                {
+                if (result.StatusCode != HttpStatusCode.OK && result.StatusCode != HttpStatusCode.Created)
                     return StatusCode((int)result.StatusCode, new { error = "Error subiendo la imagen a Cloudinary." });
-                }
 
-               
-                publicId = result.PublicId;  // Ejemplo: "solicitudes/SKY-20250914-ABC123/archivo_xyz"
+                publicId = result.PublicId; // guardamos sólo el public_id
             }
 
             var entidad = new Solicitud
@@ -118,13 +129,17 @@ namespace SkyNet.Controllers.Api
                 Ticket = ticket,
                 CreatedAtUtc = DateTime.UtcNow,
                 Estado = SolicitudEstado.Pendiente,
-                AdjuntoPublicId = publicId   // 👈 aquí guardas el identificador
+                AdjuntoPublicId = publicId,
+                Direccion = string.IsNullOrWhiteSpace(dto.Direccion) ? null : dto.Direccion.Trim(),
+                Latitud = dto.Latitud,
+                Longitud = dto.Longitud
             };
 
             _db.Solicitudes.Add(entidad);
             await _db.SaveChangesAsync(ct);
 
             var outDto = Map(entidad);
+            // Created => JSON queda camelCase por defecto
             return CreatedAtAction(nameof(GetById), new { id = entidad.Id }, outDto);
         }
 
@@ -149,7 +164,10 @@ namespace SkyNet.Controllers.Api
             Ticket = s.Ticket,
             CreatedAtUtc = s.CreatedAtUtc,
             Estado = s.Estado,
-            AdjuntoPublicId = s.AdjuntoPublicId
+            AdjuntoPublicId = s.AdjuntoPublicId,
+            Direccion = s.Direccion,
+            Latitud = s.Latitud,
+            Longitud = s.Longitud
         };
     }
 }

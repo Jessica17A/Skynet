@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SkyNet.Migrations
 {
     /// <inheritdoc />
-    public partial class FirtMigration : Migration
+    public partial class Inicial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -79,7 +79,10 @@ namespace SkyNet.Migrations
                     Ticket = table.Column<string>(type: "nvarchar(40)", maxLength: 40, nullable: false),
                     CreatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Estado = table.Column<int>(type: "int", nullable: false),
-                    AdjuntoPublicId = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    AdjuntoPublicId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Direccion = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: true),
+                    Latitud = table.Column<double>(type: "float", nullable: true),
+                    Longitud = table.Column<double>(type: "float", nullable: true)
                 },
                 constraints: table =>
                 {

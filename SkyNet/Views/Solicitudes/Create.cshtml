@@ -1,4 +1,5 @@
-﻿@{
+﻿@inject Microsoft.Extensions.Configuration.IConfiguration Config
+@{
     ViewData["Title"] = "Nueva Solicitud";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
@@ -37,12 +38,49 @@
         color: #6c757d;
         text-align: right;
     }
+
+    .map-wrap {
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    #map {
+        width: 100%;
+        height: 380px;
+    }
+    /* Autocomplete list */
+    .ac-wrap {
+        position: relative;
+    }
+
+    .ac-list {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        z-index: 1050;
+        max-height: 260px;
+        overflow: auto;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        background: #fff;
+        box-shadow: 0 8px 20px rgba(0,0,0,.08);
+    }
+
+    .ac-item {
+        padding: 10px 12px;
+        cursor: pointer
+    }
+
+        .ac-item:hover {
+            background: #f6f7fb
+        }
 </style>
 
 <div class="solicitud-wrap">
     <div class="card card-modern">
         <div class="card-body p-4 p-md-5">
-
             <div class="text-center mb-4">
                 <span class="text-muted d-block mb-2">¿Ya tienes un ticket?</span>
                 <a href="/Solicitudes/Tracking" class="btn btn-outline-primary fw-bold">
@@ -62,6 +100,7 @@
                 @Html.AntiForgeryToken()
 
                 <div class="row g-3">
+                    <!-- Datos -->
                     <div class="col-md-6">
                         <label class="form-label">Nombre</label>
                         <div class="input-group">
@@ -121,6 +160,36 @@
                         <div class="char-counter"><span id="desc-count">0</span>/1500</div>
                     </div>
 
+                    <!-- Autocomplete + Mapa -->
+                    <div class="col-md-12">
+                        <label class="form-label">Buscar dirección</label>
+                        <div class="ac-wrap">
+                            <input id="ac-input" type="text" class="form-control" placeholder="Ingresa una dirección o lugar..." autocomplete="off" />
+                            <div id="ac-list" class="ac-list d-none"></div>
+                        </div>
+                        <div class="form-text">Selecciona una sugerencia para fijar la ubicación.</div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="map-wrap"><div id="map"></div></div>
+                        <div class="form-text">También puedes hacer clic en el mapa o arrastrar el marcador.</div>
+                    </div>
+
+                    <!-- Campos enviados -->
+                    <div class="col-md-12">
+                        <label class="form-label">Dirección</label>
+                        <input type="text" name="Direccion" id="direccion" class="form-control" placeholder="Calle, zona, ciudad" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Latitud</label>
+                        <input type="text" name="Latitud" id="lat" class="form-control" placeholder="14.634915" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Longitud</label>
+                        <input type="text" name="Longitud" id="lng" class="form-control" placeholder="-90.506882" />
+                    </div>
+
+                    <!-- Archivo -->
                     <div class="col-12">
                         <label class="form-label">Adjunto (solo imagen)</label>
                         <div class="input-group">
@@ -130,15 +199,18 @@
                         <div class="hint mt-1">Opcional: JPG/PNG, máx. 5 MB.</div>
                     </div>
 
+                    <!-- Términos -->
                     <div class="col-12">
+                        <input type="hidden" name="AceptaTerminos" value="false" />
                         <div class="form-check">
-                            <input type="checkbox" id="aceptaTerminos" name="AceptaTerminos" class="form-check-input" required>
+                            <input type="checkbox" id="aceptaTerminos" name="AceptaTerminos" class="form-check-input" value="true" required>
                             <label class="form-check-label" for="aceptaTerminos">
                                 Acepto el tratamiento de mis datos para gestionar esta solicitud.
                             </label>
                         </div>
                     </div>
 
+                    <!-- Botones -->
                     <div class="d-flex align-items-center justify-content-between mt-4">
                         <button type="reset" class="btn btn-light btn-sm">
                             <i class="bi bi-eraser"></i> Limpiar
@@ -152,56 +224,23 @@
 
             <hr class="my-4" />
 
-            @* Bloque para SweetAlert y comprobante *@
             <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
             @if (TempData["Success"] is bool ok && ok && TempData["Ticket"] is string tk)
             {
                 <script>
-                    document.addEventListener('DOMContentLoaded', () => {
+                    document.addEventListener('DOMContentLoaded', () =>
                         Swal.fire({
                             icon: 'success',
                             title: '¡Solicitud enviada!',
-                            text: 'Tu ticket es @tk',
-                            confirmButtonText: 'Entendido'
-                        });
-                    });
+                            text: 'Tu ticket es @tk'
+                        }).then(() => generatePdf('@tk'))
+                    );
                 </script>
-
-                <div class="mt-4">
-                    <div class="card border-success">
-                        <div class="card-body">
-                            <h5 class="card-title">Comprobante de solicitud</h5>
-                            <p class="mb-1">Número de ticket:</p>
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <code class="px-2 py-1 bg-light rounded">@tk</code>
-                                <button class="btn btn-sm btn-outline-secondary" type="button"
-                                        onclick="navigator.clipboard.writeText('@tk')">
-                                    Copiar
-                                </button>
-                            </div>
-                            <div class="d-flex gap-2">
-                                <a class="btn btn-primary btn-sm" href="/Solicitudes/Tracking?ticket=@tk">
-                                    Ver estado en Tracking
-                                </a>
-                                <button class="btn btn-outline-secondary btn-sm" onclick="window.print()">Imprimir</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             }
-
             @if (TempData["Error"] is string err)
             {
                 <script>
-                    document.addEventListener('DOMContentLoaded', () => {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'No se pudo enviar',
-                            text: '@err',
-                            confirmButtonText: 'OK'
-                        });
-                    });
+                    document.addEventListener('DOMContentLoaded',()=>Swal.fire({icon:'error',title:'No se pudo enviar',text:'@err'}));
                 </script>
             }
         </div>
@@ -209,24 +248,134 @@
 </div>
 
 <script>
-    function updateCounter(el) {
-        document.getElementById('desc-count').textContent = el.value.length;
-    }
-    document.addEventListener('DOMContentLoaded', () => {
-        const chk = document.getElementById('aceptaTerminos');
-        const btn = document.getElementById('btnEnviar');
-        const inp = document.getElementById('Adjunto');
-        chk.addEventListener('change', () => btn.disabled = !chk.checked);
-
-        if (inp) {
-            inp.addEventListener('change', function () {
-                const f = this.files?.[0];
-                if (!f) return;
-                const okType = f.type?.startsWith("image/");
-                const max = 5 * 1024 * 1024;
-                if (!okType) { alert("Solo se permiten imágenes (JPG/PNG)."); this.value = ""; return; }
-                if (f.size > max) { alert("La imagen supera 5 MB."); this.value = ""; }
-            });
-        }
+    function updateCounter(el){document.getElementById('desc-count').textContent=el.value.length;}
+    document.addEventListener('DOMContentLoaded',()=>{
+      const chk=document.getElementById('aceptaTerminos');
+      const btn=document.getElementById('btnEnviar');
+      const inp=document.getElementById('Adjunto');
+      chk.addEventListener('change',()=>btn.disabled=!chk.checked);
+      if(inp){
+        inp.addEventListener('change',function(){
+          const f=this.files?.[0]; if(!f) return;
+          const okType=f.type?.startsWith('image/'); const max=5*1024*1024;
+          if(!okType){alert('Solo imágenes (JPG/PNG).'); this.value=''; return;}
+          if(f.size>max){alert('Máx. 5 MB.'); this.value='';}
+        });
+      }
     });
 </script>
+
+@section Scripts {
+    <!-- Carga Google Maps + Places -->
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=@(Config["GoogleMaps:ApiKey"])&libraries=places&callback=initMap"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="~/js/ticket-pdf.js"></script>
+
+
+
+    <script>
+        let map, marker, geocoder, acSvc;
+        const GT_CENTER={lat:14.634915,lng:-90.506882};
+
+        function updateInputs(pos){
+          document.getElementById('lat').value=pos.lat.toFixed(6);
+          document.getElementById('lng').value=pos.lng.toFixed(6);
+        }
+        function setMarker(pos, pan=true, syncInputs=true){
+          if(!marker){
+            marker=new google.maps.Marker({position:pos,map,draggable:true});
+            marker.addListener('dragend',(e)=>{
+              const p={lat:e.latLng.lat(),lng:e.latLng.lng()};
+              updateInputs(p); reverseGeocode(p);
+            });
+          }else{ marker.setPosition(pos); }
+          if(pan) map.panTo(pos);
+          if(syncInputs) updateInputs(pos);
+        }
+        function reverseGeocode(pos){
+          geocoder.geocode({location:pos}).then(({results})=>{
+            if(results && results[0]) document.getElementById('direccion').value=results[0].formatted_address;
+          }).catch(()=>{});
+        }
+
+        // --- Autocomplete propio con AutocompleteService ---
+        function setupAutocomplete(){
+          const input=document.getElementById('ac-input');
+          const list =document.getElementById('ac-list');
+
+          let timer=null, lastTerm="";
+          input.addEventListener('input',()=>{
+            const term=input.value.trim();
+            if(term===lastTerm){return;}
+            lastTerm=term;
+            clearTimeout(timer);
+            if(term.length<3){ list.classList.add('d-none'); list.innerHTML=''; return; }
+            timer=setTimeout(()=>queryPredictions(term), 220);
+          });
+
+          function queryPredictions(term){
+            acSvc.getPlacePredictions(
+              { input: term, componentRestrictions: { country: ['gt','mx','us'] } },
+              (preds, status)=>{
+                if(status!==google.maps.places.PlacesServiceStatus.OK || !preds?.length){
+                  list.classList.add('d-none'); list.innerHTML=''; return;
+                }
+                list.innerHTML = preds.map(p=>(
+                  `<div class="ac-item" data-pid="${p.place_id}">${p.description.replace(/</g,'&lt;')}</div>`
+                )).join('');
+                list.classList.remove('d-none');
+              }
+            );
+          }
+
+          list.addEventListener('click',(e)=>{
+            const item = e.target.closest('.ac-item'); if(!item) return;
+            const placeId = item.getAttribute('data-pid');
+            list.classList.add('d-none'); list.innerHTML='';
+            input.value = item.textContent;
+
+            // Obtener geometry por placeId
+            geocoder.geocode({ placeId }).then(({results})=>{
+              if(results && results[0]){
+                const loc=results[0].geometry.location;
+                const pos={lat:loc.lat(),lng:loc.lng()};
+                setMarker(pos,true,true);
+                document.getElementById('direccion').value=results[0].formatted_address;
+              }
+            });
+          });
+
+          // cerrar lista si clic fuera
+          document.addEventListener('click',(e)=>{
+            if(!e.target.closest('.ac-wrap')){ list.classList.add('d-none'); }
+          });
+        }
+
+        // callback global
+        window.initMap=function(){
+          geocoder=new google.maps.Geocoder();
+          acSvc   =new google.maps.places.AutocompleteService();
+
+          map=new google.maps.Map(document.getElementById('map'),{
+            center:GT_CENTER, zoom:14, mapTypeControl:false, streetViewControl:false
+          });
+          setMarker(GT_CENTER,false,true);
+
+          map.addListener('click',(e)=>{
+            const p={lat:e.latLng.lat(),lng:e.latLng.lng()};
+            setMarker(p,true,true); reverseGeocode(p);
+          });
+
+          setupAutocomplete();
+
+          // sincroniza si editan lat/lng manualmente
+          const latIn=document.getElementById('lat');
+          const lngIn=document.getElementById('lng');
+          function sync(){ const la=parseFloat(latIn.value), lo=parseFloat(lngIn.value);
+            if(!isNaN(la)&&!isNaN(lo)) setMarker({lat:la,lng:lo},true,false);
+          }
+          latIn.addEventListener('change',sync);
+          lngIn.addEventListener('change',sync);
+        }
+    </script>
+}

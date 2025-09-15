@@ -2,7 +2,8 @@
 
 namespace SkyNet.Models
 {
-    public enum SolicitudEstado { Pendiente = 0, EnRevision = 1, Resuelto = 2, Cancelado = 3 }
+    public enum SolicitudEstado { Pendiente = 0, EnProceso = 1, Cerrada = 2 }
+
     public class Solicitud
     {
         public long Id { get; set; }
@@ -25,6 +26,7 @@ namespace SkyNet.Models
         [Required, StringLength(1500)]
         public string Descripcion { get; set; } = "";
 
+        // Ticket & estado
         [Required, StringLength(40)]
         public string Ticket { get; set; } = "";
 
@@ -32,7 +34,13 @@ namespace SkyNet.Models
 
         public SolicitudEstado Estado { get; set; } = SolicitudEstado.Pendiente;
 
-      
-        public string? AdjuntoPublicId { get; internal set; }
+        // Cloudinary (opcional)
+        public string? AdjuntoPublicId { get; set; }
+
+        // Dirección / Geo
+        [StringLength(300)]
+        public string? Direccion { get; set; }
+        public double? Latitud { get; set; }
+        public double? Longitud { get; set; }
     }
 }
