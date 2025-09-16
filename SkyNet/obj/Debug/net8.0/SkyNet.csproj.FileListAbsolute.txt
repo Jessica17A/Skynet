@@ -313,3 +313,6 @@ C:\Users\JESSICA GONZALEZ\Desktop\Skynet\SkyNet\obj\Debug\net8.0\SkyNet.genrunti
 C:\Users\JESSICA GONZALEZ\Desktop\Skynet\SkyNet\obj\Debug\net8.0\ref\SkyNet.dll
 C:\Users\JESSICA GONZALEZ\Desktop\Skynet\SkyNet\bin\Debug\net8.0\CloudinaryDotNet.dll
 C:\Users\JESSICA GONZALEZ\Desktop\Skynet\SkyNet\bin\Debug\net8.0\Newtonsoft.Json.dll
+C:\Users\jgonzalez\source\repos\SkyNet\SkyNet\bin\Debug\net8.0\CloudinaryDotNet.dll
+C:\Users\jgonzalez\source\repos\SkyNet\SkyNet\bin\Debug\net8.0\Newtonsoft.Json.dll
+C:\Users\jgonzalez\source\repos\SkyNet\SkyNet\obj\Debug\net8.0\SkyNet.sourcelink.json

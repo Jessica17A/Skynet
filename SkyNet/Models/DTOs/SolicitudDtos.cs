@@ -16,8 +16,9 @@ namespace SkyNet.Models.DTOs
         [Required, StringLength(60)]
         public string Tipo { get; set; } = "";
 
-        [StringLength(20)]
-        public string Prioridad { get; set; } = "Normal";
+        [Required, StringLength(30)]
+        public string Prioridad { get; set; } = "";
+
 
         [Required, StringLength(1500)]
         public string Descripcion { get; set; } = "";
@@ -38,7 +39,7 @@ namespace SkyNet.Models.DTOs
         public string Email { get; set; } = "";
         public string? Telefono { get; set; }
         public string Tipo { get; set; } = "";
-        public string Prioridad { get; set; } = "Normal";
+        public string Prioridad { get; set; } = "";
         public string Descripcion { get; set; } = "";
         public string Ticket { get; set; } = "";
         public DateTime CreatedAtUtc { get; set; }

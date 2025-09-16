@@ -32,6 +32,7 @@ namespace SkyNet.Controllers.Web
                 string.IsNullOrWhiteSpace(form.Email) ||
                 string.IsNullOrWhiteSpace(form.Tipo) ||
                 string.IsNullOrWhiteSpace(form.Descripcion))
+               
             {
                 TempData["Error"] = "Completa Nombre, Email, Tipo y Descripción.";
                 return View();
@@ -48,7 +49,7 @@ namespace SkyNet.Controllers.Web
             mp.Add(new StringContent(form.Email), "Email");
             mp.Add(new StringContent(form.Telefono ?? ""), "Telefono");
             mp.Add(new StringContent(form.Tipo), "Tipo");
-            mp.Add(new StringContent(string.IsNullOrWhiteSpace(form.Prioridad) ? "Normal" : form.Prioridad), "Prioridad");
+            mp.Add(new StringContent(form.Prioridad), "Prioridad");
             mp.Add(new StringContent(form.Descripcion), "Descripcion");
 
             mp.Add(new StringContent(form.Direccion ?? ""), "Direccion");

@@ -124,7 +124,7 @@ namespace SkyNet.Controllers.Api
                 Email = dto.Email.Trim(),
                 Telefono = string.IsNullOrWhiteSpace(dto.Telefono) ? null : dto.Telefono.Trim(),
                 Tipo = dto.Tipo.Trim(),
-                Prioridad = string.IsNullOrWhiteSpace(dto.Prioridad) ? "Normal" : dto.Prioridad.Trim(),
+                Prioridad = dto.Prioridad?.Trim() ?? "",
                 Descripcion = dto.Descripcion.Trim(),
                 Ticket = ticket,
                 CreatedAtUtc = DateTime.UtcNow,

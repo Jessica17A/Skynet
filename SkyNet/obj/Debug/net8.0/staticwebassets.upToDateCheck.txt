@@ -4,6 +4,7 @@ wwwroot\favicon.ico
 wwwroot\img\logo.png
 wwwroot\img\logo1.png
 wwwroot\js\site.js
+wwwroot\js\ticket-pdf.js
 wwwroot\lib\bootstrap\dist\css\bootstrap-grid.css
 wwwroot\lib\bootstrap\dist\css\bootstrap-grid.css.map
 wwwroot\lib\bootstrap\dist\css\bootstrap-grid.min.css
@@ -101,4 +102,3 @@ wwwroot\lib\jquery\dist\jquery.js
 wwwroot\lib\jquery\dist\jquery.min.js
 wwwroot\lib\jquery\dist\jquery.min.map
 wwwroot\lib\jquery\LICENSE.txt
-wwwroot\js\ticket-pdf.js

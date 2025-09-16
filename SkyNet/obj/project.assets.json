@@ -7165,23 +7165,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\JESSICA GONZALEZ\\.nuget\\packages\\": {},
+    "C:\\Users\\jgonzalez\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\SkyNet.csproj",
+      "projectUniqueName": "C:\\Users\\jgonzalez\\source\\repos\\SkyNet\\SkyNet\\SkyNet.csproj",
       "projectName": "SkyNet",
-      "projectPath": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\SkyNet.csproj",
-      "packagesPath": "C:\\Users\\JESSICA GONZALEZ\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\obj\\",
+      "projectPath": "C:\\Users\\jgonzalez\\source\\repos\\SkyNet\\SkyNet\\SkyNet.csproj",
+      "packagesPath": "C:\\Users\\jgonzalez\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\jgonzalez\\source\\repos\\SkyNet\\SkyNet\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\JESSICA GONZALEZ\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\jgonzalez\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],

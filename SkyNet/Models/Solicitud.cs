@@ -21,7 +21,7 @@ namespace SkyNet.Models
         public string Tipo { get; set; } = "";
 
         [StringLength(20)]
-        public string Prioridad { get; set; } = "Normal";
+        public string Prioridad { get; set; } = "";
 
         [Required, StringLength(1500)]
         public string Descripcion { get; set; } = "";
