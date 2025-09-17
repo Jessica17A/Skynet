@@ -1,0 +1,43 @@
+﻿@model SkyNet.Models.DTOs.EmpleadoDTO
+@{
+    ViewData["Title"] = "Detalle de empleado";
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Empleado #@Model.Id</h2>
+        <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">Nombre</dt>
+                <dd class="col-sm-9">@Model.Nombre</dd>
+
+                <dt class="col-sm-3">DPI</dt>
+                <dd class="col-sm-9">@Model.DPI</dd>
+
+                <dt class="col-sm-3">Dirección</dt>
+                <dd class="col-sm-9">@Model.Direccion</dd>
+
+                <dt class="col-sm-3">Teléfono</dt>
+                <dd class="col-sm-9">@Model.Telefono</dd>
+
+                <dt class="col-sm-3">Email</dt>
+                <dd class="col-sm-9">@Model.Email</dd>
+
+                <dt class="col-sm-3">Cargo</dt>
+                <dd class="col-sm-9">@Model.Cargo</dd>
+
+                <dt class="col-sm-3">Estado</dt>
+                <dd class="col-sm-9">
+                    @(Model.Estado == 1 ? "Activo" : "Inactivo")
+                </dd>
+
+                <dt class="col-sm-3">Creado (UTC)</dt>
+                <dd class="col-sm-9">@Model.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm")</dd>
+            </dl>
+        </div>
+    </div>
+</div>

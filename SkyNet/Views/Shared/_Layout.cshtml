@@ -41,6 +41,10 @@
                 <div class="collapse navbar-collapse" id="navMain">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                         <li class="nav-item">
+                            <a class="nav-link text-white @(IsActive("Home") ? "active" : "")"
+                               asp-controller="LayoutPrincipal" asp-action="Index">Inicio</a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link text-white @(IsActive("LayoutPrincipal") ? "active" : "")"
                                asp-controller="LayoutPrincipal" asp-action="Nosotros">Nosotros</a>
                         </li>
@@ -50,16 +54,13 @@
                         </li>
                     </ul>
                     <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                        <li class="nav-item">
-                            <a class="nav-link text-white @(IsActive("Home") ? "active" : "")"
-                               asp-controller="LayoutPrincipal" asp-action="Index">Inicio</a>
-                        </li>
+                       
                         <li class="nav-item">
                             <a class="nav-link text-white" asp-area="Identity" asp-page="/Account/Register">Registro</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-white" asp-area="Identity" asp-page="/Account/Login">Login</a>
-                        </li>
+                        
                         <li class="nav-item">
                             <partial name="_LoginPartial" />
                         </li>

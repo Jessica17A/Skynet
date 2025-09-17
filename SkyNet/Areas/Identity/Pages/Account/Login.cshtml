@@ -1,0 +1,112 @@
+﻿@page
+@model LoginModel
+
+@{
+    ViewData["Title"] = "Log in";
+}
+
+<style>
+    :root {
+        --azul: #1f4ae0;
+        --borde: #e9ecef;
+    }
+
+    .auth-shell {
+        min-height: 100vh;
+        display: flex;
+        align-items: flex-start; /* en lugar de center */
+        justify-content: center;
+        padding: 210px 100px 130px; /* arriba más grande para empujar hacia arriba */
+        background: #fff;
+    }
+
+
+    .login-card {
+        width: 100%;
+        max-width: 900px;
+        border: 1px solid var(--borde);
+        border-radius: 16px;
+        overflow: hidden;
+        background: #fff;
+        box-shadow: 0 10px 35px rgba(0,0,0,.1);
+    }
+
+    .login-left {
+        padding: 40px 32px;
+    }
+
+    .login-right {
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+        .login-right img {
+            width: 100%;
+            max-width: 300px;
+            height: auto;
+        }
+
+    .title {
+        color: var(--azul);
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .form-floating > .form-control {
+        border-radius: 10px;
+        height: 3rem;
+    }
+
+    .btn-login {
+        background: var(--azul);
+        border-color: var(--azul);
+        color: #fff;
+        width: 100%;
+        padding: 12px;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+
+        .btn-login:hover {
+            filter: brightness(.95);
+        }
+</style>
+
+<div class="auth-shell">
+    <div class="login-card row g-0">
+        <!-- Columna izquierda (formulario) -->
+        <div class="col-lg-6 login-left">
+            <h3 class="title">Acceso a Cuentas</h3>
+            <form id="account" method="post" novalidate>
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+
+                <div class="form-floating mb-3">
+                    <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="Correo electrónico" />
+                    <label asp-for="Input.Email">Correo Electrónico</label>
+                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+                </div>
+
+                <div class="form-floating mb-4">
+                    <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Contraseña" />
+                    <label asp-for="Input.Password">Contraseña</label>
+                    <span asp-validation-for="Input.Password" class="text-danger"></span>
+                </div>
+
+                <button id="login-submit" type="submit" class="btn btn-login">Acceder</button>
+            </form>
+        </div>
+
+        <!-- Columna derecha (logo/imagen) -->
+        <div class="col-lg-6 login-right">
+            <img src="~/img/logo1.png" alt="Logo" />
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

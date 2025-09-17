@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using CloudinaryDotNet;
 using SkyNet.Data;
@@ -17,7 +17,7 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 // Identity
 builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 {
-    options.SignIn.RequireConfirmedAccount = true;   // en dev puedes poner false si te estorba
+    options.SignIn.RequireConfirmedAccount = false;   // en dev puedes poner false si te estorba
 })
 .AddEntityFrameworkStores<ApplicationDbContext>();
 

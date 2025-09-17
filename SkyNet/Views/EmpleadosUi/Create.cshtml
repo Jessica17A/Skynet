@@ -1,0 +1,91 @@
+﻿@model SkyNet.Models.DTOs.EmpleadoCrearDTO
+@{
+    ViewData["Title"] = "Nuevo empleado";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-8">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="mb-3">Nuevo empleado</h2>
+
+                    <form asp-action="Create" method="post">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="Nombre" class="form-label">Nombre</label>
+                                <input asp-for="Nombre" class="form-control" placeholder="Nombre completo" />
+                                <span asp-validation-for="Nombre" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="DPI" class="form-label">DPI</label>
+                                <input asp-for="DPI" class="form-control" placeholder="Documento de identificación" />
+                                <span asp-validation-for="DPI" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="Direccion" class="form-label">Dirección</label>
+                                <input asp-for="Direccion" class="form-control" placeholder="Dirección" />
+                                <span asp-validation-for="Direccion" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="Telefono" class="form-label">Teléfono</label>
+                                <input asp-for="Telefono" class="form-control" placeholder="Teléfono" />
+                                <span asp-validation-for="Telefono" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="Email" class="form-label">Email</label>
+                                <input asp-for="Email" class="form-control" placeholder="correo@dominio.com" />
+                                <span asp-validation-for="Email" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="Cargo" class="form-label">Cargo</label>
+                                <input asp-for="Cargo" class="form-control" placeholder="Cargo/puesto" />
+                                <span asp-validation-for="Cargo" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                            <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    @* Muestra errores del servidor (ModelState) como SweetAlert *@
+    @{
+        var allErrors = ViewData.ModelState.Values
+            .SelectMany(v => v.Errors)
+            .Select(e => e.ErrorMessage)
+            .Where(m => !string.IsNullOrWhiteSpace(m))
+            .ToList();
+        var hasErrors = allErrors.Any();
+        var errorsJson = System.Text.Json.JsonSerializer.Serialize(allErrors);
+    }
+    @if (hasErrors)
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+              const errs = @Html.Raw(errorsJson);
+              const html = errs.length ? errs.map(e => `• ${e}`).join('<br>') : 'Revisa el formulario.';
+              Swal.fire({ icon:'error', title:'Ups…', html });
+            });
+        </script>
+    }
+}

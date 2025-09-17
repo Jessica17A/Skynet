@@ -1,0 +1,80 @@
+﻿@model IEnumerable<SkyNet.Models.DTOs.EmpleadoDTO>
+@{
+    ViewData["Title"] = "Empleados";
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Empleados</h2>
+        <a asp-action="Create" class="btn btn-primary">Nuevo empleado</a>
+    </div>
+
+    @if (Model is null || !Model.Any())
+    {
+        <div class="alert alert-light border">No hay empleados registrados.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Nombre</th>
+                        <th>Email</th>
+                        <th>Teléfono</th>
+                        <th>Cargo</th>
+                        <th>Estado</th>
+                        <th>Creado (UTC)</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var e in Model)
+                    {
+                        <tr>
+                            <td>@e.Id</td>
+                            <td>@(string.IsNullOrWhiteSpace(e.Nombre) ? "—" : e.Nombre)</td>
+                            <td>@(string.IsNullOrWhiteSpace(e.Email) ? "—" : e.Email)</td>
+                            <td>@(string.IsNullOrWhiteSpace(e.Telefono) ? "—" : e.Telefono)</td>
+                            <td>@(string.IsNullOrWhiteSpace(e.Cargo) ? "—" : e.Cargo)</td>
+                            <td>
+                                @if (e.Estado == 1)
+                                {
+                                    <span class="badge bg-success">Activo</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Inactivo</span>
+                                }
+                            </td>
+                            <td>@e.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-primary" asp-action="Detalle" asp-route-id="@e.Id">Ver</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    @* Toast de éxito tras crear (TempData["Ok"] viene del Redirect) *@
+    @if (TempData["Ok"] is string ok && !string.IsNullOrWhiteSpace(ok))
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+              Swal.fire({
+                icon:'success',
+                title:'¡Listo!',
+                text:@Html.Raw(System.Text.Json.JsonSerializer.Serialize(ok)),
+                toast:true, position:'top-end', timer:5000, showConfirmButton:false
+              });
+            });
+        </script>
+    }
+}
