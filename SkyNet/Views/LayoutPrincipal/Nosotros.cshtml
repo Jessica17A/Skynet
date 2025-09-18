@@ -1,5 +1,287 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
+﻿@{
+    ViewData["Title"] = "Misión y Visión | SkyNet S.A.";
+    Layout = "~/Views/Shared/_Layout.cshtml"; // Quita o cambia si no usas layout
 }
+
+<!-- (Opcional) Cargar Bootstrap/FA si tu _Layout no los incluye -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+<style>
+    :root {
+        --brand: #0d6efd;
+        --brand-2: #33bde4;
+        --soft: #eef5ff;
+        --ink: #0f172a;
+    }
+
+    .hero {
+        position: relative;
+        overflow: hidden;
+        border-radius: 22px;
+        padding: clamp(28px, 5vw, 60px);
+        background: radial-gradient(80% 120% at 15% 0%, #e8f2ff 0%, #f6fbff 45%, #ffffff 100%);
+        box-shadow: 0 20px 45px rgba(13,110,253,.12);
+        border: 1px solid rgba(13,110,253,.12);
+    }
+
+        .hero:before, .hero:after {
+            content: "";
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(50px);
+            opacity: .35;
+        }
+
+        .hero:before {
+            width: 280px;
+            height: 280px;
+            background: #cfe6ff;
+            top: -80px;
+            right: -60px;
+        }
+
+        .hero:after {
+            width: 220px;
+            height: 220px;
+            background: #d2f6ff;
+            bottom: -60px;
+            left: -40px;
+        }
+
+    .badge-soft {
+        background: linear-gradient(90deg, var(--brand), var(--brand-2));
+        color: #fff;
+        border-radius: 20px;
+        padding: 8px 14px;
+        font-weight: 600;
+        letter-spacing: .2px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 6px 18px rgba(51,189,228,.35);
+    }
+
+    .card-soft {
+        border: 1px solid rgba(13,110,253,.12);
+        border-radius: 18px;
+        background: #fff;
+        box-shadow: 0 12px 28px rgba(15,23,42,.06);
+    }
+
+        .card-soft .card-header {
+            background: linear-gradient(90deg,#f4f9ff,#ffffff);
+            border-bottom: 1px solid rgba(13,110,253,.08);
+            border-radius: 18px 18px 0 0;
+            padding: 18px 22px;
+        }
+
+    .icon-wrap {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #e6f0ff, #f1fbff);
+        border: 1px solid rgba(13,110,253,.15);
+        box-shadow: inset 0 0 0 6px #fff;
+    }
+
+        .icon-wrap i {
+            font-size: 22px;
+            color: var(--brand);
+        }
+
+    .lead-hero {
+        color: #334155;
+    }
+
+    .tick i {
+        color: var(--brand);
+    }
+
+    .grid-mini .mini {
+        border: 1px dashed rgba(13,110,253,.25);
+        border-radius: 14px;
+        padding: 14px 16px;
+        background: #fff;
+    }
+
+    .watermark {
+        position: absolute;
+        inset: auto -10px 10px auto;
+        opacity: .08;
+        font-size: 90px;
+        font-weight: 900;
+        color: #0d6efd;
+        pointer-events: none;
+    }
+</style>
+
+<div class="container py-5">
+    <!-- HERO -->
+    <section class="hero mb-5">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-7">
+                <span class="badge-soft mb-3">
+                    <i class="fa-solid fa-chart-line"></i> SkyNet S. A. · Gestión de Visitas en Tiempo Real
+                </span>
+                <h1 class="display-6 fw-bold mb-3" style="color:#0b2447;">
+                    Misión & Visión del Proyecto
+                </h1>
+                <p class="lead lead-hero mb-4">
+                    Plataforma moderna basada en <strong>microservicios</strong> para optimizar la <strong>gestión de clientes</strong>,
+                    el registro de <strong>oportunidades</strong> y el <strong>agendamiento de visitas</strong> con métricas en tiempo real.
+                </p>
+                <div class="d-flex gap-3 flex-wrap">
+                    <div class="grid-mini d-flex gap-3">
+                        <div class="mini"><i class="fa-solid fa-cubes me-2"></i>Microservicios</div>
+                        <div class="mini"><i class="fa-regular fa-clock me-2"></i>Tiempo real</div>
+                        <div class="mini"><i class="fa-solid fa-shield-halved me-2"></i>Seguridad</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5 text-center">
+                <!-- Ilustración (puedes cambiar por tu imagen en /img/visitas.svg) -->
+                <img src="https://images.unsplash.com/photo-1556157382-97eda2d62296?q=80&w=1200&auto=format&fit=crop"
+                     class="img-fluid rounded-4 border" alt="Dashboard de visitas y métricas">
+            </div>
+        </div>
+        <div class="watermark d-none d-md-block">SkyNet</div>
+    </section>
+
+    <!-- CARDS: VISIÓN / MISIÓN -->
+    <section class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card card-soft h-100">
+                <div class="card-header d-flex align-items-center gap-3">
+                    <div class="icon-wrap"><i class="fa-solid fa-eye"></i></div>
+                    <div>
+                        <h5 class="mb-0 fw-semibold">Visión</h5>
+                        <small class="text-muted">Hacia dónde vamos</small>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="fs-5 mb-3">
+                        Convertirse en la empresa líder en consultoría y soluciones tecnológicas en Guatemala,
+                        ofreciendo herramientas innovadoras basadas en arquitecturas modernas que optimicen la gestión
+                        de clientes y visitas en tiempo real, garantizando <strong>eficiencia</strong>, <strong>seguridad</strong> y
+                        <strong>satisfacción</strong> en cada servicio brindado.
+                    </p>
+                    <ul class="list-unstyled d-grid gap-2">
+                        <li class="tick"><i class="fa-solid fa-check me-2"></i> Innovación continua y escalabilidad</li>
+                        <li class="tick"><i class="fa-solid fa-check me-2"></i> Decisiones basadas en datos en tiempo real</li>
+                        <li class="tick"><i class="fa-solid fa-check me-2"></i> Experiencia del cliente sobresaliente</li>
+                    </ul>
+                </div>
+                <div class="card-footer bg-white d-flex justify-content-between">
+                    <small class="text-muted"><i class="fa-regular fa-compass me-1"></i> Horizonte estratégico</small>
+                    <span class="badge text-bg-light">Liderazgo</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card card-soft h-100">
+                <div class="card-header d-flex align-items-center gap-3">
+                    <div class="icon-wrap"><i class="fa-solid fa-bullseye"></i></div>
+                    <div>
+                        <h5 class="mb-0 fw-semibold">Misión</h5>
+                        <small class="text-muted">Qué hacemos y cómo</small>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="fs-5 mb-3">
+                        Desarrollar e implementar soluciones informáticas modernas, basadas en <strong>microservicios</strong>,
+                        que permitan a supervisores y administradores gestionar de forma <strong>ágil</strong> y <strong>segura</strong> las
+                        visitas y oportunidades de negocio. Transformamos procesos manuales en flujos digitales eficientes,
+                        asegurando <strong>información confiable</strong>, <strong>decisiones oportunas</strong> y un servicio de excelencia
+                        en todo el país.
+                    </p>
+                    <div class="row g-3">
+                        <div class="col-12 d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-diagram-project"></i>
+                            <small>Arquitectura desacoplada y mantenible</small>
+                        </div>
+                        <div class="col-12 d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-lock"></i>
+                            <small>Seguridad y trazabilidad de punta a punta</small>
+                        </div>
+                        <div class="col-12 d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-chart-pie"></i>
+                            <small>Analítica y KPIs accionables</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-white d-flex justify-content-between">
+                    <small class="text-muted"><i class="fa-regular fa-circle-check me-1"></i> Enfoque operativo</small>
+                    <span class="badge text-bg-light">Excelencia</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- POR QUÉ IMPORTA -->
+    <section class="card card-soft">
+        <div class="card-body p-4 p-md-5">
+            <div class="row g-4 align-items-center">
+                <div class="col-lg-7">
+                    <h4 class="fw-semibold mb-3">
+                        ¿Por qué es clave para SkyNet?
+                    </h4>
+                    <p class="mb-3">
+                        El crecimiento acelerado exige dejar atrás el papel y las hojas de cálculo. Con esta plataforma,
+                        reducimos cuellos de botella, evitamos pérdidas de información y garantizamos visitas a tiempo.
+                    </p>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start gap-3">
+                                <i class="fa-solid fa-bolt fa-lg mt-1"></i>
+                                <div>
+                                    <div class="fw-semibold">Agilidad</div>
+                                    <small>Registro y programación de visitas sin fricciones.</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start gap-3">
+                                <i class="fa-solid fa-database fa-lg mt-1"></i>
+                                <div>
+                                    <div class="fw-semibold">Datos confiables</div>
+                                    <small>Historial centralizado y métricas consistentes.</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start gap-3">
+                                <i class="fa-solid fa-user-shield fa-lg mt-1"></i>
+                                <div>
+                                    <div class="fw-semibold">Seguridad</div>
+                                    <small>Trazabilidad y control de accesos por rol.</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start gap-3">
+                                <i class="fa-solid fa-face-smile-beam fa-lg mt-1"></i>
+                                <div>
+                                    <div class="fw-semibold">Satisfacción del cliente</div>
+                                    <small>Menos retrasos, más cumplimiento y transparencia.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-5 text-center">
+                    <!-- Imagen de apoyo (cámbiala por un asset propio si prefieres) -->
+                    <img src="https://images.unsplash.com/photo-1553877522-43269d4ea984?q=80&w=1200&auto=format&fit=crop"
+                         class="img-fluid rounded-4 border" alt="Equipo planificando visitas">
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- (Opcional) Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

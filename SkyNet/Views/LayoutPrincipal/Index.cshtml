@@ -3,16 +3,285 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="d-flex flex-column justify-content-center align-items-center text-center" style="min-height:75vh;">
-    <!-- Logo centrado más grande -->
-    <img src="~/img/logo1.png" alt="Logo Yeishop" style="max-width:600px; margin-bottom:35px;" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
 
-    <!-- Texto de bienvenida -->
-    <h1 class="fw-bold" style="font-family: 'Sugar Bread', cursive; font-size:3rem; color:#1c31a5;">
-        ¡Bienvenido a SkyNet!
-    </h1>
+<style>
+    :root {
+        --brand: #0d6efd;
+        --brand-2: #33bde4;
+        --ink: #0f172a;
+    }
 
-    <p class="text-muted mt-3 fs-5">
-        Gestiona tus solicitudes aqui!! 🚀
-    </p>
+    /* Contenedor del carrusel a pantalla casi completa */
+    .services-carousel {
+        position: relative;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 18px 48px rgba(15,23,42,.18);
+        border: 1px solid rgba(13,110,253,.12);
+    }
+    /* NO tocamos .carousel-item (Bootstrap lo necesita) */
+    .carousel-h {
+        height: calc(100vh - 140px); /* ajusta si tu navbar es fija/alta */
+        min-height: 520px;
+    }
+    /* Distribución interna del slide */
+    .slide-row {
+        height: 100%;
+        display: flex; /* usamos flex en este contenedor, NO en .carousel-item */
+        align-items: stretch;
+    }
+
+    /* Columna de imagen */
+    .slide-image {
+        flex: 1 1 60%;
+        background-position: center;
+        background-size: cover;
+        background-repeat: no-repeat;
+        min-height: 40vh;
+    }
+
+    /* Columna de contenido */
+    .slide-content {
+        flex: 1 1 40%;
+        background: radial-gradient(90% 120% at 10% 0%, #e8f2ff 0%, #f6fbff 50%, #ffffff 100%);
+        padding: clamp(28px, 4.5vw, 56px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    .slide-inner {
+        max-width: 620px;
+    }
+
+    .badge-soft {
+        background: linear-gradient(90deg, var(--brand), var(--brand-2));
+        color: #fff;
+        border-radius: 20px;
+        padding: 8px 14px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 6px 18px rgba(51,189,228,.35);
+    }
+
+    .slide-title {
+        color: #0b2447;
+        font-weight: 800;
+        margin: 16px 0 10px;
+    }
+
+    .slide-text {
+        color: #334155;
+        font-size: 1.03rem;
+    }
+
+    .mini-tag {
+        border: 1px dashed rgba(13,110,253,.25);
+        border-radius: 12px;
+        padding: 6px 10px;
+        background: #fff;
+        font-size: .85rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-right: 6px;
+        margin-top: 10px;
+    }
+
+    /* Controles/indicadores */
+    .carousel-control-prev, .carousel-control-next {
+        filter: drop-shadow(0 4px 14px rgba(0,0,0,.25));
+        width: 8%;
+    }
+
+    .carousel-indicators [data-bs-target] {
+        background-color: var(--brand);
+    }
+
+    /* Marca de agua */
+    .watermark {
+        position: absolute;
+        right: -8px;
+        bottom: 12px;
+        opacity: .08;
+        font-size: 80px;
+        font-weight: 900;
+        color: #0d6efd;
+        pointer-events: none;
+        line-height: 1;
+    }
+</style>
+
+<div class="container py-4">
+    <section id="servicesCarousel" class="carousel slide services-carousel" aria-label="Presentación de servicios SkyNet">
+        <!-- Indicadores -->
+        <div class="carousel-indicators">
+            <button type="button" data-bs-target="#servicesCarousel" data-bs-slide-to="0" class="active" aria-current="true"></button>
+            <button type="button" data-bs-target="#servicesCarousel" data-bs-slide-to="1"></button>
+            <button type="button" data-bs-target="#servicesCarousel" data-bs-slide-to="2"></button>
+            <button type="button" data-bs-target="#servicesCarousel" data-bs-slide-to="3"></button>
+            <button type="button" data-bs-target="#servicesCarousel" data-bs-slide-to="4"></button>
+        </div>
+
+        <div class="carousel-inner carousel-h">
+            <!-- Slide 1 -->
+            <div class="carousel-item active">
+                <div class="slide-row">
+                    <div class="slide-image" style="background-image:url('https://images.unsplash.com/photo-1553877522-43269d4ea984?q=80&w=1600&auto=format&fit=crop');"></div>
+                    <div class="slide-content">
+                        <div class="slide-inner">
+                            <span class="badge-soft"><i class="fa-solid fa-city"></i> Antecedentes</span>
+                            <h2 class="slide-title">SkyNet S.A. · Guatemala (desde 2017)</h2>
+                            <p class="slide-text">
+                                Servicios Técnicos y Profesionales en Consultorías de Informática:
+                                <strong>Infraestructura</strong>, <strong>Soporte</strong> y <strong>Mantenimiento de Equipos</strong>.
+                                La plataforma soluciona gestión de clientes, registro de oportunidades y visitas (antes en papel/Excel).
+                            </p>
+                            <div class="d-flex flex-wrap">
+                                <span class="mini-tag"><i class="fa-solid fa-clipboard-check"></i> Seguimiento</span>
+                                <span class="mini-tag"><i class="fa-regular fa-clock"></i> Visitas a tiempo</span>
+                                <span class="mini-tag"><i class="fa-solid fa-shield-halved"></i> Seguridad</span>
+                            </div>
+                            <div class="watermark d-none d-md-block">SkyNet</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 2 -->
+           @*  <div class="carousel-item">
+                <div class="slide-row">
+                    <div class="slide-image" style="background-image:url('https://images.unsplash.com/photo-1518779578993-ec3579fee39f?q=80&w=1600&auto=format&fit=crop');"></div>
+                    <div class="slide-content">
+                        <div class="slide-inner">
+                            <span class="badge-soft"><i class="fa-solid fa-server"></i> Infraestructura de TI</span>
+                            <h2 class="slide-title">Diseño, implementación y puesta en marcha</h2>
+                            <p class="slide-text">
+                                Servidores, almacenamiento y redes para continuidad operativa.
+                                Segmentación, backups y alta disponibilidad según cada cliente.
+                            </p>
+                            <div class="d-flex flex-wrap">
+                                <span class="mini-tag"><i class="fa-solid fa-network-wired"></i> Redes</span>
+                                <span class="mini-tag"><i class="fa-solid fa-database"></i> Almacenamiento</span>
+                                <span class="mini-tag"><i class="fa-solid fa-diagram-project"></i> Alta disponibilidad</span>
+                            </div>
+                            <div class="watermark d-none d-md-block">Infraestructura</div>
+                        </div>
+                    </div>
+                </div>
+            </div> *@
+
+            <!-- Slide 3 -->
+            <div class="carousel-item">
+                <div class="slide-row">
+                    <div class="slide-image" style="background-image:url('https://images.unsplash.com/photo-1551836022-4c4c79ecde51?q=80&w=1600&auto=format&fit=crop');"></div>
+                    <div class="slide-content">
+                        <div class="slide-inner">
+                            <span class="badge-soft"><i class="fa-solid fa-headset"></i> Soporte Técnico</span>
+                            <h2 class="slide-title">Atención, diagnóstico y solución</h2>
+                            <p class="slide-text">
+                                Mesa de ayuda, resolución de incidencias y asesoría remota/presencial con trazabilidad.
+                            </p>
+                            <div class="d-flex flex-wrap">
+                                <span class="mini-tag"><i class="fa-solid fa-gauge"></i> SLAs</span>
+                                <span class="mini-tag"><i class="fa-regular fa-bell"></i> Notificaciones</span>
+                                <span class="mini-tag"><i class="fa-solid fa-file-lines"></i> Historial</span>
+                            </div>
+                            <div class="watermark d-none d-md-block">Soporte</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 4 -->
+            <div class="carousel-item">
+                <div class="slide-row">
+                    <div class="slide-image" style="background-image:url('https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=1600&auto=format&fit=crop');"></div>
+                    <div class="slide-content">
+                        <div class="slide-inner">
+                            <span class="badge-soft"><i class="fa-solid fa-screwdriver-wrench"></i> Mantenimiento</span>
+                            <h2 class="slide-title">Preventivo y correctivo</h2>
+                            <p class="slide-text">
+                                Planes para PCs, impresoras y periféricos: revisiones, limpieza y reemplazo de piezas.
+                            </p>
+                            <div class="d-flex flex-wrap">
+                                <span class="mini-tag"><i class="fa-solid fa-laptop"></i> PCs</span>
+                                <span class="mini-tag"><i class="fa-solid fa-print"></i> Impresoras</span>
+                                <span class="mini-tag"><i class="fa-solid fa-plug"></i> Periféricos</span>
+                            </div>
+                            <div class="watermark d-none d-md-block">Mantenimiento</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 5 -->
+            <div class="carousel-item">
+                <div class="slide-row">
+                    <div class="slide-image" style="background-image:url('https://images.unsplash.com/photo-1532614338840-ab30cf10ed36?q=80&w=1600&auto=format&fit=crop');"></div>
+                    <div class="slide-content">
+                        <div class="slide-inner">
+                            <span class="badge-soft"><i class="fa-solid fa-user-tie"></i> Consultoría</span>
+                            <h2 class="slide-title">Análisis y acompañamiento</h2>
+                            <p class="slide-text">
+                                Levantamiento de procesos, evaluación de riesgos y recomendaciones para alinear tecnología con negocio.
+                            </p>
+                            <div class="d-flex flex-wrap">
+                                <span class="mini-tag"><i class="fa-solid fa-clipboard-check"></i> Procesos</span>
+                                <span class="mini-tag"><i class="fa-solid fa-shield-halved"></i> Buenas prácticas</span>
+                                <span class="mini-tag"><i class="fa-solid fa-road"></i> Roadmap</span>
+                            </div>
+                            <div class="watermark d-none d-md-block">Consultoría</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controles -->
+        <button class="carousel-control-prev" type="button" data-bs-target="#servicesCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon"></span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#servicesCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon"></span>
+        </button>
+    </section>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    /* Forzar autoplay con setInterval y no tocar data-* */
+    document.addEventListener('DOMContentLoaded', function () {
+      var el = document.getElementById('servicesCarousel');
+      if (!el) return;
+
+      // 1) Instancia sin autoplay interno
+      var carousel = bootstrap.Carousel.getOrCreateInstance(el, {
+        interval: false, pause: false, wrap: true, touch: true, keyboard: false
+      });
+
+      // 2) Asegurar slide activo
+      if (!el.querySelector('.carousel-item.active')) {
+        var first = el.querySelector('.carousel-item');
+        if (first) first.classList.add('active');
+      }
+
+      // 3) Autoplay forzado
+      var FORCE_MS = 5000;
+      var tick = function(){ try{ carousel.next(); }catch(e){} };
+      var timer = setInterval(tick, FORCE_MS);
+
+      // 4) Reiniciar al interactuar (botones/gestos)
+      ['click','touchstart','mouseenter'].forEach(function(evt){
+        el.addEventListener(evt, function(){
+          clearInterval(timer);
+          timer = setInterval(tick, FORCE_MS);
+        }, {passive:true});
+      });
+    });
+</script>
