@@ -1,0 +1,19 @@
+use SkyNet;
+
+INSERT INTO AspNetRoles (Id, [Name], [NormalizedName], [ConcurrencyStamp])
+VALUES (NEWID(), 'Administrador', 'ADMINISTRADOR', NEWID());
+
+INSERT INTO AspNetRoles (Id, [Name], [NormalizedName], [ConcurrencyStamp])
+VALUES (NEWID(), 'Usuario', 'USUARIO', NEWID());
+
+INSERT INTO AspNetRoles (Id, [Name], [NormalizedName], [ConcurrencyStamp])
+VALUES (NEWID(), 'Supervisor', 'SUPERVISOR', NEWID());
+
+INSERT INTO AspNetRoles (Id, [Name], [NormalizedName], [ConcurrencyStamp])
+VALUES (NEWID(), 'Tecnico', 'TECNICO', NEWID());
+
+
+
+--DELETE FROM AspNetRoles;
+
+--DBCC CHECKIDENT ('AspNetRoles', RESEED, 0);

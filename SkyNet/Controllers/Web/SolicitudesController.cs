@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using SkyNet.Models.DTOs;
 using System.Globalization;
+using System.Net.Http.Json; // 👈 NECESARIO para ReadFromJsonAsync
 
 namespace SkyNet.Controllers.Web
 {
@@ -32,7 +33,6 @@ namespace SkyNet.Controllers.Web
                 string.IsNullOrWhiteSpace(form.Email) ||
                 string.IsNullOrWhiteSpace(form.Tipo) ||
                 string.IsNullOrWhiteSpace(form.Descripcion))
-               
             {
                 TempData["Error"] = "Completa Nombre, Email, Tipo y Descripción.";
                 return View();
@@ -102,5 +102,32 @@ namespace SkyNet.Controllers.Web
             TempData["Ticket"] = ticket;
             return RedirectToAction(nameof(Create));
         }
+
+        // ============================
+        // Tracking por TICKET (GET)
+        // ============================
+        [HttpGet] // /Solicitudes/Tracking?ticket=...
+        public async Task<IActionResult> Tracking(string? ticket, CancellationToken ct)
+        {
+            ViewBag.QueryTried = !string.IsNullOrWhiteSpace(ticket);
+
+            if (string.IsNullOrWhiteSpace(ticket))
+                return View(model: null); // solo muestra el buscador
+
+            var cli = _factory.CreateClient();
+            cli.BaseAddress = new Uri($"{Request.Scheme}://{Request.Host}/");
+
+            // Tu API expone: GET /api/solicitudes/by-ticket/{ticket}
+            var resp = await cli.GetAsync($"api/solicitudes/by-ticket/{Uri.EscapeDataString(ticket)}", ct);
+            if (!resp.IsSuccessStatusCode)
+            {
+                _logger.LogInformation("Tracking ticket {Ticket} API status: {StatusCode}", ticket, resp.StatusCode);
+                return View(model: null); // Ticket no encontrado
+            }
+
+            var model = await resp.Content.ReadFromJsonAsync<SolicitudDto>(cancellationToken: ct);
+            return View(model); // View = Views/Solicitudes/Tracking.cshtml
+        }
+
     }
 }

@@ -6,7 +6,8 @@ namespace SkyNet.Models.DTOs
     public class EmpleadoDTO
     {
         public long Id { get; set; }
-        public string? Nombre { get; set; }
+        public string? Nombres { get; set; }
+        public string? Apellidos { get; set; }
         public string? DPI { get; set; }
 
         public string Direccion { get; set; } = default!;
@@ -21,7 +22,8 @@ namespace SkyNet.Models.DTOs
     // Crear (todo opcional)
     public class EmpleadoCrearDTO
     {
-        public string? Nombre { get; set; }
+        public string? Nombres { get; set; }
+        public string? Apellidos { get; set; }
         public string? DPI { get; set; }
         public string? Direccion { get; set; }
         public string? Telefono { get; set; }
@@ -33,7 +35,8 @@ namespace SkyNet.Models.DTOs
     // Editar (patch/put parcial, todo opcional)
     public class EmpleadoEditarDTO
     {
-        public string? Nombre { get; set; }
+        public string? Nombres { get; set; }
+        public string? Apellidos { get; set; }
         public string? DPI { get; set; }
         public string? Direccion { get; set; }
         public string? Telefono { get; set; }

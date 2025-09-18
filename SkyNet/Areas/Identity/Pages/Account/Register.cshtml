@@ -1,75 +1,177 @@
 ﻿@page
-@model RegisterModel
+@model SkyNet.Areas.Identity.Pages.Account.RegisterModel
 @{
-    ViewData["Title"] = "Register";
+    ViewData["Title"] = "Registrar usuario de empleado";
 }
 
-@if (TempData["RegisterMsg"] != null)
-{
-    <div class="alert alert-success">
-        @TempData["RegisterMsg"]
-    </div>
-}
+<style>
+    /* Header morado con esquinas redondeadas y texto centrado */
+    .card-header.header-purple {
+        background: #635bff;
+        color: #fff;
+        border-top-left-radius: 1rem !important;
+        border-top-right-radius: 1rem !important;
+        text-align: center;
+    }
+    .card.rounded-4 { border-radius: 1rem; }
+</style>
 
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-7 col-md-9">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header header-purple">
+                    <h5 class="mb-0">
+                        <i class="bi bi-person-plus"></i>
+                        @ViewData["Title"]
+                    </h5>
+                </div>
 
-<h1>@ViewData["Title"]</h1>
+                <div class="card-body p-4">
+                    <p class="text-muted mb-4 text-center">
+                        Crea un usuario de acceso seleccionando un empleado y asignando un rol.
+                        La contraseña debe cumplir con las políticas definidas por el sistema.
+                    </p>
+                    <hr class="my-4" />
 
-<div class="row">
-    <div class="col-md-4">
-        <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
-            <h2>Create a new account.</h2>
-            <hr />
-            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
-            <div class="form-floating mb-3">
-                <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                <label asp-for="Input.Email">Email</label>
-                <span asp-validation-for="Input.Email" class="text-danger"></span>
-            </div>
-            <div class="form-floating mb-3">
-                <input asp-for="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
-                <label asp-for="Input.Password">Password</label>
-                <span asp-validation-for="Input.Password" class="text-danger"></span>
-            </div>
-            <div class="form-floating mb-3">
-                <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
-                <label asp-for="Input.ConfirmPassword">Confirm Password</label>
-                <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
-            </div>
-            <button id="registerSubmit" type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
-        </form>
-    </div>
-    <div class="col-md-6 col-md-offset-2">
-        <section>
-            <h3>Use another service to register.</h3>
-            <hr />
-            @{
-                if ((Model.ExternalLogins?.Count ?? 0) == 0)
-                {
-                    <div>
-                        <p>
-                            There are no external authentication services configured. See this <a href="https://go.microsoft.com/fwlink/?LinkID=532715">article
-                            about setting up this ASP.NET application to support logging in via external services</a>.
-                        </p>
-                    </div>
-                }
-                else
-                {
-                    <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="form-horizontal">
-                        <div>
-                            <p>
-                                @foreach (var provider in Model.ExternalLogins!)
-                                {
-                                    <button type="submit" class="btn btn-primary" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">@provider.DisplayName</button>
-                                }
-                            </p>
+                    <form method="post" id="registerForm">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 d-none" id="valSummary"></div>
+
+                        <!-- Empleado -->
+                        <div class="mb-3">
+                            <label asp-for="Input.EmpleadoId" class="form-label fw-semibold"></label>
+                            <select asp-for="Input.EmpleadoId" class="form-select" asp-items="Model.EmpleadosOptions">
+                                <option value="">Selecciona un empleado...</option>
+                            </select>
+                            <span asp-validation-for="Input.EmpleadoId" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Rol -->
+                        <div class="mb-3">
+                            <label asp-for="Input.RoleName" class="form-label fw-semibold"></label>
+                            <select asp-for="Input.RoleName" class="form-select" asp-items="Model.RolesOptions">
+                                <option value="">Selecciona un rol...</option>
+                            </select>
+                            <span asp-validation-for="Input.RoleName" class="text-danger small"></span>
+                        </div>
+
+                        <div class="row g-3">
+                            <!-- Contraseña -->
+                            <div class="col-md-6">
+                                <label asp-for="Input.Password" class="form-label fw-semibold"></label>
+                                <div class="input-group">
+                                    <input asp-for="Input.Password" class="form-control" id="pwdInput" type="password" />
+                                    <button class="btn btn-outline-secondary" type="button" id="togglePwd" aria-label="Mostrar/Ocultar contraseña">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                                <span asp-validation-for="Input.Password" class="text-danger small"></span>
+                                <div class="form-text">
+                                    Usa una combinación de mayúsculas, minúsculas, números y símbolos.
+                                </div>
+                            </div>
+
+                            <!-- Confirmación -->
+                            <div class="col-md-6">
+                                <label asp-for="Input.ConfirmPassword" class="form-label fw-semibold"></label>
+                                <div class="input-group">
+                                    <input asp-for="Input.ConfirmPassword" class="form-control" id="pwd2Input" type="password" />
+                                    <button class="btn btn-outline-secondary" type="button" id="togglePwd2" aria-label="Mostrar/Ocultar confirmación">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                                <span asp-validation-for="Input.ConfirmPassword" class="text-danger small"></span>
+                                <div class="form-text">
+                                    Debe coincidir con la contraseña.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary px-4" id="btnSubmit">
+                                <span class="spinner-border spinner-border-sm me-2 d-none" id="btnSpinner" role="status" aria-hidden="true"></span>
+                                Crear usuario
+                            </button>
+                            <a asp-page="/Account/Register" class="btn btn-outline-secondary">Limpiar</a>
                         </div>
                     </form>
-                }
-            }
-        </section>
+                </div>
+
+                <div class="card-footer bg-light rounded-bottom-4">
+                    <small class="text-muted">
+                        Si no ves el empleado o el rol, verifica que existan en el sistema y estén activos.
+                    </small>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Bootstrap Icons (para el ojito) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+
+    @{
+        var okMsg = TempData["RegisterMsg"] as string;
+        var okJson = System.Text.Json.JsonSerializer.Serialize(okMsg ?? "");
+    }
+    @if (!string.IsNullOrWhiteSpace(okMsg))
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Usuario creado!',
+                    text: @Html.Raw(okJson),
+                    confirmButtonText: 'Aceptar',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                });
+            });
+        </script>
+    }
+
+    <script>
+        // Toggle mostrar/ocultar contraseña con icono
+        function wireToggle(inputId, btnId) {
+            const input = document.getElementById(inputId);
+            const btn = document.getElementById(btnId);
+            if (!input || !btn) return;
+
+            const icon = btn.querySelector("i");
+            btn.addEventListener("click", () => {
+                const isPwd = input.type === "password";
+                input.type = isPwd ? "text" : "password";
+                icon.classList.toggle("bi-eye", !isPwd);
+                icon.classList.toggle("bi-eye-slash", isPwd);
+            });
+        }
+        wireToggle("pwdInput", "togglePwd");
+        wireToggle("pwd2Input", "togglePwd2");
+
+        // Spinner y bloqueo para evitar doble submit
+        (function () {
+            const form = document.getElementById('registerForm');
+            const btn = document.getElementById('btnSubmit');
+            const spn = document.getElementById('btnSpinner');
+            if (!form || !btn || !spn) return;
+            form.addEventListener('submit', function () {
+                btn.setAttribute('disabled', 'disabled');
+                spn.classList.remove('d-none');
+            });
+        })();
+
+        // Mostrar resumen de validación solo si hay errores
+        (function () {
+            const valSummary = document.getElementById('valSummary');
+            if (!valSummary) return;
+            const obs = new MutationObserver(() => {
+                const hasItems = valSummary.querySelector('ul li');
+                valSummary.classList.toggle('d-none', !hasItems);
+            });
+            obs.observe(valSummary, { childList: true, subtree: true });
+        })();
+    </script>
 }

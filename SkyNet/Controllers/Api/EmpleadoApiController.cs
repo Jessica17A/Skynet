@@ -21,11 +21,14 @@ namespace SkyNet.Controllers.Api
         [HttpGet]
         public async Task<ActionResult<IEnumerable<EmpleadoDTO>>> GetAll(CancellationToken ct)
         {
-            var data = await _db.Empleados.AsNoTracking()
+            var data = await _db.Empleados
+                .AsNoTracking()
+                .Where(e => e.Estado != 0) 
                 .Select(e => new EmpleadoDTO
                 {
                     Id = e.Id,
-                    Nombre = e.Nombre,
+                    Nombres = e.Nombres,
+                    Apellidos = e.Apellidos,
                     DPI = e.DPI,
                     Direccion = e.Direccion,
                     Telefono = e.Telefono,
@@ -35,6 +38,7 @@ namespace SkyNet.Controllers.Api
                     Estado = e.Estado
                 })
                 .ToListAsync(ct);
+
 
             return Ok(data);
         }
@@ -48,7 +52,7 @@ namespace SkyNet.Controllers.Api
                 .Select(e => new EmpleadoDTO
                 {
                     Id = e.Id,
-                    Nombre = e.Nombre,
+                    Nombres = e.Nombres,
                     DPI = e.DPI,
                     Direccion = e.Direccion,
                     Telefono = e.Telefono,
@@ -70,7 +74,8 @@ namespace SkyNet.Controllers.Api
 
             var entidad = new Empleado
             {
-                Nombre = dto.Nombre?.Trim(),
+                Nombres = dto.Nombres?.Trim(),
+                Apellidos = dto.Apellidos?.Trim(),
                 DPI = dto.DPI?.Trim(),
                 Direccion = F(dto.Direccion),
                 Telefono = F(dto.Telefono),
@@ -86,7 +91,8 @@ namespace SkyNet.Controllers.Api
             var outDto = new EmpleadoDTO
             {
                 Id = entidad.Id,
-                Nombre = entidad.Nombre,
+                Nombres = entidad.Nombres,
+                Apellidos = entidad.Apellidos,
                 DPI = entidad.DPI,
                 Direccion = entidad.Direccion,
                 Telefono = entidad.Telefono,
@@ -109,7 +115,8 @@ namespace SkyNet.Controllers.Api
             if (e is null) return NotFound();
 
             // Actualiza solo lo enviado; normaliza NOT NULL a "N/I" si viene vacío
-            if (dto.Nombre != null) e.Nombre = dto.Nombre.Trim();
+            if (dto.Nombres != null) e.Nombres = dto.Nombres.Trim();
+            if (dto.Apellidos != null) e.Apellidos = dto.Apellidos.Trim();
             if (dto.DPI != null) e.DPI = dto.DPI.Trim();
             if (dto.Direccion != null) e.Direccion = F(dto.Direccion);
             if (dto.Telefono != null) e.Telefono = F(dto.Telefono);

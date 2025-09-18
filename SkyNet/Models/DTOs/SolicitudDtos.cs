@@ -49,4 +49,8 @@ namespace SkyNet.Models.DTOs
         public double? Latitud { get; set; }
         public double? Longitud { get; set; }
     }
+
+
+
+
 }

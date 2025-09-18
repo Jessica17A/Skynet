@@ -1,7 +1,7 @@
 ﻿@{
     if (User?.Identity != null && User.Identity.IsAuthenticated)
     {
-        if (User.IsInRole("Admin"))
+        if (User.IsInRole("Administrador"))
         {
             Layout = "/Views/Shared/_Plantilla.cshtml"; // Layout para el rol Admin
         }

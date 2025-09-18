@@ -2,7 +2,7 @@
 
 namespace SkyNet.Models
 {
-    public enum SolicitudEstado { Pendiente = 0, EnProceso = 1, Cerrada = 2 }
+    public enum SolicitudEstado { Pendiente = 1, EnProceso = 4, Cerrada = 5 }
 
     public class Solicitud
     {

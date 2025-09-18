@@ -1,9 +1,13 @@
+using Microsoft.AspNetCore.Identity;
+
 namespace SkyNet.Models;
 
 public class Empleado
 {
     public long Id { get; set; }         // PK
-    public string? Nombre { get; set; }
+    public string? Nombres { get; set; }
+
+    public string? Apellidos { get; set; }
    public string? DPI { get; set; }
 
     public string Direccion { get; set; } = null!;
@@ -12,4 +16,8 @@ public class Empleado
     public string? Cargo { get; set; } 
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
     public int Estado { get; set; } // 1 activo, 0 inactivo
+
+
+    public string? UserId { get; set; }
+    public IdentityUser? User { get; set; }
 }

@@ -17,8 +17,10 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 // Identity
 builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 {
+    
     options.SignIn.RequireConfirmedAccount = false;   // en dev puedes poner false si te estorba
 })
+.AddRoles<IdentityRole>()
 .AddEntityFrameworkStores<ApplicationDbContext>();
 
 // MVC + HttpClient

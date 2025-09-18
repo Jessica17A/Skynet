@@ -15,17 +15,18 @@
     }
     else
     {
+
+        var i = 1;
         <div class="table-responsive">
             <table class="table table-hover align-middle">
                 <thead class="table-light">
                     <tr>
-                        <th>#</th>
-                        <th>Nombre</th>
+                        <th>NO</th>
+                        <th>Nombres</th>
+                        <th>Apellidos</th>
                         <th>Email</th>
                         <th>Teléfono</th>
                         <th>Cargo</th>
-                        <th>Estado</th>
-                        <th>Creado (UTC)</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -33,26 +34,17 @@
                     @foreach (var e in Model)
                     {
                         <tr>
-                            <td>@e.Id</td>
-                            <td>@(string.IsNullOrWhiteSpace(e.Nombre) ? "—" : e.Nombre)</td>
+                            <td>@i</td>
+                            <td>@(string.IsNullOrWhiteSpace(e.Nombres) ? "—" : e.Nombres)</td>
+                            <td>@(string.IsNullOrWhiteSpace(e.Apellidos) ? "—" : e.Apellidos)</td>
                             <td>@(string.IsNullOrWhiteSpace(e.Email) ? "—" : e.Email)</td>
                             <td>@(string.IsNullOrWhiteSpace(e.Telefono) ? "—" : e.Telefono)</td>
                             <td>@(string.IsNullOrWhiteSpace(e.Cargo) ? "—" : e.Cargo)</td>
-                            <td>
-                                @if (e.Estado == 1)
-                                {
-                                    <span class="badge bg-success">Activo</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-secondary">Inactivo</span>
-                                }
-                            </td>
-                            <td>@e.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm")</td>
                             <td class="text-end">
                                 <a class="btn btn-sm btn-outline-primary" asp-action="Detalle" asp-route-id="@e.Id">Ver</a>
                             </td>
                         </tr>
+                        i++;
                     }
                 </tbody>
             </table>
