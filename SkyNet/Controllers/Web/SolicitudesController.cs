@@ -28,13 +28,13 @@ namespace SkyNet.Controllers.Web
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([FromForm] SolicitudCreateDto form)
         {
-            // Validación mínima del lado cliente-servidor
+            // Validación mínima
             if (string.IsNullOrWhiteSpace(form.Nombre) ||
                 string.IsNullOrWhiteSpace(form.Email) ||
                 string.IsNullOrWhiteSpace(form.Tipo) ||
                 string.IsNullOrWhiteSpace(form.Descripcion))
             {
-                TempData["Error"] = "Completa Nombre, Email, Tipo y Descripción.";
+                TempData["Error"] = "Completa los campos Nombre, Email, Tipo y Descripcion.";
                 return View();
             }
 
@@ -45,22 +45,27 @@ namespace SkyNet.Controllers.Web
             using var mp = new MultipartFormDataContent();
             var inv = CultureInfo.InvariantCulture;
 
+            // Campos simples (los nombres deben coincidir con el DTO del API)
             mp.Add(new StringContent(form.Nombre), "Nombre");
             mp.Add(new StringContent(form.Email), "Email");
             mp.Add(new StringContent(form.Telefono ?? ""), "Telefono");
             mp.Add(new StringContent(form.Tipo), "Tipo");
-            mp.Add(new StringContent(form.Prioridad), "Prioridad");
+            mp.Add(new StringContent(form.Prioridad ?? ""), "Prioridad");
             mp.Add(new StringContent(form.Descripcion), "Descripcion");
-
             mp.Add(new StringContent(form.Direccion ?? ""), "Direccion");
             mp.Add(new StringContent(form.Latitud?.ToString(inv) ?? ""), "Latitud");
             mp.Add(new StringContent(form.Longitud?.ToString(inv) ?? ""), "Longitud");
 
-            if (form.Adjunto is not null && form.Adjunto.Length > 0)
+            // Archivos múltiples: usa el mismo nombre "Archivos" en cada Add
+            if (form.Archivos is not null)
             {
-                var content = new StreamContent(form.Adjunto.OpenReadStream());
-                content.Headers.ContentType = new MediaTypeHeaderValue(form.Adjunto.ContentType ?? "application/octet-stream");
-                mp.Add(content, "Adjunto", form.Adjunto.FileName);
+                foreach (var file in form.Archivos.Where(f => f is not null && f.Length > 0))
+                {
+                    var streamContent = new StreamContent(file.OpenReadStream());
+                    streamContent.Headers.ContentType =
+                        new MediaTypeHeaderValue(string.IsNullOrWhiteSpace(file.ContentType) ? "application/octet-stream" : file.ContentType);
+                    mp.Add(streamContent, "Archivos", file.FileName);
+                }
             }
 
             var resp = await cli.PostAsync("api/solicitudes", mp);
@@ -82,6 +87,7 @@ namespace SkyNet.Controllers.Web
                 return View();
             }
 
+            // Extraer ticket del JSON (case-insensitive)
             string? ticket = null;
             try
             {
@@ -102,6 +108,7 @@ namespace SkyNet.Controllers.Web
             TempData["Ticket"] = ticket;
             return RedirectToAction(nameof(Create));
         }
+
 
         // ============================
         // Tracking por TICKET (GET)

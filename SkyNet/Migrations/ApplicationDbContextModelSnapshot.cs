@@ -224,6 +224,39 @@ namespace SkyNet.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("SkyNet.Models.ArchivoSolicitud", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<int>("Estado")
+                        .HasColumnType("int")
+                        .HasColumnName("estado");
+
+                    b.Property<long>("Fk_Solicitud")
+                        .HasColumnType("bigint")
+                        .HasColumnName("fk_solicitud");
+
+                    b.Property<string>("PublicId")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)")
+                        .HasColumnName("public_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Fk_Solicitud");
+
+                    b.ToTable("Archivos_solicitudes", (string)null);
+                });
+
             modelBuilder.Entity("SkyNet.Models.Cliente", b =>
                 {
                     b.Property<long>("Id")
@@ -302,9 +335,6 @@ namespace SkyNet.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
-                    b.Property<string>("AdjuntoPublicId")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("datetime2");
 
@@ -338,8 +368,8 @@ namespace SkyNet.Migrations
 
                     b.Property<string>("Prioridad")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<string>("Telefono")
                         .HasMaxLength(30)
@@ -357,7 +387,7 @@ namespace SkyNet.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Solicitudes");
+                    b.ToTable("Solicitudes", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -411,6 +441,17 @@ namespace SkyNet.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("SkyNet.Models.ArchivoSolicitud", b =>
+                {
+                    b.HasOne("SkyNet.Models.Solicitud", "Solicitud")
+                        .WithMany("Archivos")
+                        .HasForeignKey("Fk_Solicitud")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Solicitud");
+                });
+
             modelBuilder.Entity("SkyNet.Models.Empleado", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
@@ -419,6 +460,11 @@ namespace SkyNet.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("SkyNet.Models.Solicitud", b =>
+                {
+                    b.Navigation("Archivos");
                 });
 #pragma warning restore 612, 618
         }

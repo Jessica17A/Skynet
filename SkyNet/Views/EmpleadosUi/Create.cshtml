@@ -17,18 +17,18 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label asp-for="Nombres" class="form-label">Nombre</label>
-                                <input asp-for="Nombres" class="form-control" placeholder="Nombres" />
+                                <input asp-for="Nombres" class="form-control" placeholder="Nombres" required />
                                 <span asp-validation-for="Nombres" class="text-danger"></span>
                             </div>
                             <div class="col-md-6">
                                 <label asp-for="Apellidos" class="form-label">Apellidos</label>
-                                <input asp-for="Apellidos" class="form-control" placeholder="Apellidos" />
+                                <input asp-for="Apellidos" class="form-control" placeholder="Apellidos" required />
                                 <span asp-validation-for="Apellidos" class="text-danger"></span>
                             </div>
 
                             <div class="col-md-6">
                                 <label asp-for="DPI" class="form-label">DPI</label>
-                                <input asp-for="DPI" class="form-control" placeholder="Documento de identificación" />
+                                <input asp-for="DPI" class="form-control" placeholder="Documento de identificación" required />
                                 <span asp-validation-for="DPI" class="text-danger"></span>
                             </div>
 
@@ -46,13 +46,13 @@
 
                             <div class="col-md-6">
                                 <label asp-for="Email" class="form-label">Email</label>
-                                <input asp-for="Email" class="form-control" placeholder="correo@dominio.com" />
+                                <input asp-for="Email" class="form-control" placeholder="correo@dominio.com" required />
                                 <span asp-validation-for="Email" class="text-danger"></span>
                             </div>
 
                             <div class="col-md-6">
                                 <label asp-for="Cargo" class="form-label">Cargo</label>
-                                <input asp-for="Cargo" class="form-control" placeholder="Cargo/puesto" />
+                                <input asp-for="Cargo" class="form-control" placeholder="Cargo/puesto" required />
                                 <span asp-validation-for="Cargo" class="text-danger"></span>
                             </div>
                         </div>

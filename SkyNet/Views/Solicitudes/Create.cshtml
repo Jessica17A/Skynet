@@ -189,15 +189,22 @@
                         <input type="text" name="Longitud" id="lng" class="form-control" placeholder="-90.506882" />
                     </div>
 
-                    <!-- Archivo -->
+                    <!-- Archivos -->
                     <div class="col-12">
-                        <label class="form-label">Adjunto (solo imagen)</label>
+                        <label class="form-label">Adjuntos (imágenes / pdf / word / excel)</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-paperclip"></i></span>
-                            <input type="file" name="Adjunto" id="Adjunto" class="form-control" accept="image/*">
+                            <input type="file"
+                                   name="Archivos"
+                                   id="Archivos"
+                                   class="form-control"
+                                   multiple
+                                   accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,image/*">
                         </div>
-                        <div class="hint mt-1">Opcional: JPG/PNG, máx. 5 MB.</div>
+                        <div class="hint mt-1">Opcional. Máx. 10 MB por archivo.</div>
                     </div>
+
+
 
                     <!-- Términos -->
                     <div class="col-12">

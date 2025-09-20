@@ -14,7 +14,7 @@ namespace SkyNet.Controllers.Api
         private readonly ApplicationDbContext _db;
         public EmpleadosApiController(ApplicationDbContext db) => _db = db;
 
-        // helper para normalizar strings (null/empty -> "N/I")
+ 
         private static string F(string? s) => string.IsNullOrWhiteSpace(s) ? "N/I" : s.Trim();
 
         // GET: /api/empleados

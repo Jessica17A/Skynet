@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SkyNet.Migrations
 {
     /// <inheritdoc />
-    public partial class Inicial : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -74,12 +74,11 @@ namespace SkyNet.Migrations
                     Email = table.Column<string>(type: "nvarchar(160)", maxLength: 160, nullable: false),
                     Telefono = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: true),
                     Tipo = table.Column<string>(type: "nvarchar(60)", maxLength: 60, nullable: false),
-                    Prioridad = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    Prioridad = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
                     Descripcion = table.Column<string>(type: "nvarchar(1500)", maxLength: 1500, nullable: false),
                     Ticket = table.Column<string>(type: "nvarchar(40)", maxLength: 40, nullable: false),
                     CreatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Estado = table.Column<int>(type: "int", nullable: false),
-                    AdjuntoPublicId = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Direccion = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: true),
                     Latitud = table.Column<double>(type: "float", nullable: true),
                     Longitud = table.Column<double>(type: "float", nullable: true)
@@ -223,6 +222,33 @@ namespace SkyNet.Migrations
                         onDelete: ReferentialAction.SetNull);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "Archivos_solicitudes",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    fk_solicitud = table.Column<long>(type: "bigint", nullable: false),
+                    public_id = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: false),
+                    created_at_utc = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    estado = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Archivos_solicitudes", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Archivos_solicitudes_Solicitudes_fk_solicitud",
+                        column: x => x.fk_solicitud,
+                        principalTable: "Solicitudes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Archivos_solicitudes_fk_solicitud",
+                table: "Archivos_solicitudes",
+                column: "fk_solicitud");
+
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
@@ -273,6 +299,9 @@ namespace SkyNet.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "Archivos_solicitudes");
+
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
 

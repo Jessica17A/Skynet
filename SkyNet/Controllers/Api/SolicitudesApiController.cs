@@ -42,7 +42,7 @@ namespace SkyNet.Controllers.Api
                     Ticket = s.Ticket,
                     CreatedAtUtc = s.CreatedAtUtc,
                     Estado = s.Estado,
-                    AdjuntoPublicId = s.AdjuntoPublicId,
+                   
                     Direccion = s.Direccion,
                     Latitud = s.Latitud,
                     Longitud = s.Longitud
@@ -66,57 +66,20 @@ namespace SkyNet.Controllers.Api
             return s is null ? NotFound() : Map(s);
         }
 
-        // POST: multipart/form-data
         [HttpPost]
-        [RequestSizeLimit(10_000_000)]
+        [RequestSizeLimit(25_000_000)] 
         public async Task<ActionResult<SolicitudDto>> Create([FromForm] SolicitudCreateDto dto, CancellationToken ct)
         {
             if (!ModelState.IsValid)
-            {
-                // devuelve 400 con los errores (para que el Web Controller lo muestre)
                 return ValidationProblem(ModelState);
-            }
 
-            // validar coordenadas si envían sólo una
+            // Coordenadas: ambas o ninguna, y dentro de rango
             if (dto.Latitud.HasValue ^ dto.Longitud.HasValue)
                 return BadRequest(new { error = "Debe proporcionar latitud y longitud juntas." });
-
-            if (dto.Latitud is < -90 or > 90 || dto.Longitud is < -180 or > 180)
+            if ((dto.Latitud is < -90 or > 90) || (dto.Longitud is < -180 or > 180))
                 return BadRequest(new { error = "Coordenadas fuera de rango." });
 
             var ticket = GenerateTicket();
-            string? publicId = null;
-
-            // Imagen (opcional)
-            if (dto.Adjunto is not null && dto.Adjunto.Length > 0)
-            {
-                if (!dto.Adjunto.ContentType?.StartsWith("image/") ?? true)
-                    return BadRequest(new { error = "Solo se permiten imágenes." });
-
-                if (dto.Adjunto.Length > 5_000_000)
-                    return BadRequest(new { error = "La imagen supera 5 MB." });
-
-                var ext = Path.GetExtension(dto.Adjunto.FileName).ToLowerInvariant();
-                var allowed = new[] { ".jpg", ".jpeg", ".png" };
-                if (!allowed.Contains(ext))
-                    return BadRequest(new { error = "Extensión no permitida. Usa JPG o PNG." });
-
-                await using var stream = dto.Adjunto.OpenReadStream();
-                var uploadParams = new ImageUploadParams
-                {
-                    File = new FileDescription(dto.Adjunto.FileName, stream),
-                    Folder = $"solicitudes/{ticket}",
-                    UseFilename = true,
-                    UniqueFilename = true,
-                    Overwrite = false
-                };
-                var result = await _cloud.UploadAsync(uploadParams, ct);
-
-                if (result.StatusCode != HttpStatusCode.OK && result.StatusCode != HttpStatusCode.Created)
-                    return StatusCode((int)result.StatusCode, new { error = "Error subiendo la imagen a Cloudinary." });
-
-                publicId = result.PublicId; // guardamos sólo el public_id
-            }
 
             var entidad = new Solicitud
             {
@@ -129,19 +92,95 @@ namespace SkyNet.Controllers.Api
                 Ticket = ticket,
                 CreatedAtUtc = DateTime.UtcNow,
                 Estado = SolicitudEstado.Pendiente,
-                AdjuntoPublicId = publicId,
                 Direccion = string.IsNullOrWhiteSpace(dto.Direccion) ? null : dto.Direccion.Trim(),
                 Latitud = dto.Latitud,
                 Longitud = dto.Longitud
             };
 
             _db.Solicitudes.Add(entidad);
-            await _db.SaveChangesAsync(ct);
+            await _db.SaveChangesAsync(ct); // genera entidad.Id
+
+            // Si hay archivos, valida y sube (Cloudinary: imágenes -> ImageUploadParams; otros -> RawUploadParams)
+            var archivos = dto.Archivos?.Where(f => f is not null && f.Length > 0).ToList() ?? new();
+            if (archivos.Count > 0)
+            {
+                var imgExt = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+                var pdfExt = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".pdf" };
+                var wordExt = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".doc", ".docx" };
+                var xlsExt = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".xls", ".xlsx" };
+                const long MAX_FILE_BYTES = 10_000_000; // 10 MB por archivo
+
+                foreach (var file in archivos)
+                {
+                    if (file.Length > MAX_FILE_BYTES)
+                        return BadRequest(new { error = $"El archivo {file.FileName} supera 10 MB." });
+
+                    var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+                    bool esImagen = imgExt.Contains(ext);
+                    bool esPdf = pdfExt.Contains(ext);
+                    bool esWord = wordExt.Contains(ext);
+                    bool esExcel = xlsExt.Contains(ext);
+
+                    if (!(esImagen || esPdf || esWord || esExcel))
+                        return BadRequest(new { error = $"Tipo de archivo no permitido: {file.FileName}" });
+
+                    string publicId;
+
+                    await using (var stream = file.OpenReadStream())
+                    {
+                        if (esImagen)
+                        {
+                            var up = new ImageUploadParams
+                            {
+                                File = new FileDescription(file.FileName, stream),
+                                Folder = $"solicitudes/{ticket}",
+                                UseFilename = true,
+                                UniqueFilename = true,
+                                Overwrite = false
+                            };
+
+                            var res = await _cloud.UploadAsync(up); // sin CancellationToken
+                            if (res.StatusCode != HttpStatusCode.OK && res.StatusCode != HttpStatusCode.Created)
+                                return StatusCode((int)res.StatusCode, new { error = $"Error subiendo imagen {file.FileName}." });
+
+                            publicId = res.PublicId!;
+                        }
+                        else
+                        {
+                            var up = new RawUploadParams
+                            {
+                                File = new FileDescription(file.FileName, stream),
+                                Folder = $"solicitudes/{ticket}",
+                                UseFilename = true,
+                                UniqueFilename = true,
+                                Overwrite = false
+                                // NO asignes ResourceType: RawUploadParams ya lo fija a raw
+                            };
+
+                            var res = await _cloud.UploadAsync(up);
+                            if (res.StatusCode != HttpStatusCode.OK && res.StatusCode != HttpStatusCode.Created)
+                                return StatusCode((int)res.StatusCode, new { error = $"Error subiendo archivo {file.FileName}." });
+
+                            publicId = res.PublicId!;
+                        }
+                    }
+
+                    _db.ArchivosSolicitudes.Add(new ArchivoSolicitud
+                    {
+                        Fk_Solicitud = entidad.Id,   // FK
+                        PublicId = publicId,
+                        CreatedAtUtc = DateTime.UtcNow
+                    });
+                }
+
+                await _db.SaveChangesAsync(ct);
+            }
 
             var outDto = Map(entidad);
-            // Created => JSON queda camelCase por defecto
             return CreatedAtAction(nameof(GetById), new { id = entidad.Id }, outDto);
         }
+
+
 
         private static string GenerateTicket()
         {
@@ -164,7 +203,7 @@ namespace SkyNet.Controllers.Api
             Ticket = s.Ticket,
             CreatedAtUtc = s.CreatedAtUtc,
             Estado = s.Estado,
-            AdjuntoPublicId = s.AdjuntoPublicId,
+           
             Direccion = s.Direccion,
             Latitud = s.Latitud,
             Longitud = s.Longitud

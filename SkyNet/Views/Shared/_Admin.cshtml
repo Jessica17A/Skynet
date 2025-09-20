@@ -5,6 +5,11 @@
         return string.Equals(rc, controller, StringComparison.OrdinalIgnoreCase);
     }
 }
+
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -34,7 +39,6 @@
                     <span class="badge bg-info ms-auto">NEW</span>
                 </a>
             </li>
-
 
             <li class="nav-title">Operación</li>
             <li class="nav-item">
@@ -79,28 +83,72 @@
                     </nav>
                 </div>
 
-
-
-                <!-- Icons -->
+                <!-- Icons + User -->
                 <div class="d-flex align-items-center gap-2">
                     <button class="btn btn-link text-body" title="Notificaciones"><i class="bi bi-bell fs-5"></i></button>
                     <button class="btn btn-link text-body" title="Mensajes"><i class="bi bi-envelope fs-5"></i></button>
 
+                    @if (SignInManager.IsSignedIn(User))
+                    {
+                        <!-- Form oculto para Logout (POST) -->
+                        <form id="logoutForm"
+                              method="post"
+                              asp-area="Identity"
+                              asp-page="/Account/Logout"
+                              asp-route-returnUrl="@Url.Action("Index", "LayoutPrincipal", new { area = "" })"
+                              class="m-0 p-0">
+                        </form>
 
+                        <!-- Botón icono SIEMPRE visible para cerrar sesión -->
+                        <button type="submit"
+                                form="logoutForm"
+                                class="btn btn-link text-body"
+                                title="Cerrar sesión"
+                                aria-label="Cerrar sesión">
+                            <i class="bi bi-box-arrow-right fs-5"></i>
+                        </button>
 
-                    <!-- User dropdown -->
-                    <div class="dropdown">
-                        <a class="d-inline-flex align-items-center text-decoration-none" href="#" data-coreui-toggle="dropdown">
-                            <img src="https://i.pravatar.cc/40" class="rounded-circle" width="36" height="36" alt="user" />
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li class="dropdown-item-text"><strong>@User.Identity?.Name</strong></li>
-                            <li><hr class="dropdown-divider" /></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i> Perfil</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i> Ajustes</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-box-arrow-right me-2"></i> Cerrar sesión</a></li>
-                        </ul>
-                    </div>
+                        <!-- Avatar con dropdown (opcional) -->
+                        <div class="dropdown">
+                            <a class="d-inline-flex align-items-center text-decoration-none" href="#" data-coreui-toggle="dropdown">
+                                <img src="https://i.pravatar.cc/40" class="rounded-circle" width="36" height="36" alt="user" />
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li class="dropdown-item-text"><strong>@User.Identity?.Name</strong></li>
+                                <li><hr class="dropdown-divider" /></li>
+                                <li>
+                                    <a class="dropdown-item" asp-controller="Profile" asp-action="Index">
+                                        <i class="bi bi-person me-2"></i> Perfil
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-controller="Settings" asp-action="Index">
+                                        <i class="bi bi-gear me-2"></i> Ajustes
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider" /></li>
+                                <li class="px-2">
+                                    <form method="post"
+                                          asp-area="Identity"
+                                          asp-page="/Account/Logout"
+                                          asp-route-returnUrl="@Url.Action("Index", "LayoutPrincipal", new { area = "" })">
+                                        <button type="submit" class="dropdown-item w-100 text-start">
+                                            <i class="bi bi-box-arrow-right me-2"></i> Cerrar sesión
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="d-flex align-items-center gap-2">
+                            <a class="btn btn-outline-primary btn-sm"
+                               asp-area="Identity" asp-page="/Account/Register">Registrarse</a>
+                            <a class="btn btn-primary btn-sm"
+                               asp-area="Identity" asp-page="/Account/Login">Iniciar sesión</a>
+                        </div>
+                    }
                 </div>
             </div>
 
@@ -130,7 +178,6 @@
         // Toggle tema claro/oscuro (demo simple)
         document.getElementById('themeToggle')?.addEventListener('click', () => {
           document.documentElement.toggleAttribute('data-coreui-theme');
-          // alterna entre claro/oscuro
           const cur = document.documentElement.getAttribute('data-coreui-theme');
           document.documentElement.setAttribute('data-coreui-theme', cur === 'dark' ? 'light' : 'dark');
         });

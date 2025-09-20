@@ -89,18 +89,16 @@
 
                         <div class="d-flex align-items-center gap-2 mt-4">
                             <button type="submit" class="btn btn-primary px-4" id="btnSubmit">
-                                <span class="spinner-border spinner-border-sm me-2 d-none" id="btnSpinner" role="status" aria-hidden="true"></span>
                                 Crear usuario
                             </button>
+
                             <a asp-page="/Account/Register" class="btn btn-outline-secondary">Limpiar</a>
                         </div>
                     </form>
                 </div>
 
                 <div class="card-footer bg-light rounded-bottom-4">
-                    <small class="text-muted">
-                        Si no ves el empleado o el rol, verifica que existan en el sistema y estén activos.
-                    </small>
+                   
                 </div>
             </div>
         </div>
@@ -151,16 +149,43 @@
         wireToggle("pwdInput", "togglePwd");
         wireToggle("pwd2Input", "togglePwd2");
 
-        // Spinner y bloqueo para evitar doble submit
+        // Spinner y bloqueo SOLO si el formulario es válido
         (function () {
             const form = document.getElementById('registerForm');
-            const btn = document.getElementById('btnSubmit');
-            const spn = document.getElementById('btnSpinner');
+            const btn  = document.getElementById('btnSubmit');
+            const spn  = document.getElementById('btnSpinner');
             if (!form || !btn || !spn) return;
-            form.addEventListener('submit', function () {
-                btn.setAttribute('disabled', 'disabled');
+
+            form.addEventListener('submit', function (e) {
+                // 1) Si está jQuery Validate (de _ValidationScriptsPartial), úsalo
+                if (window.jQuery && typeof jQuery.fn.valid === 'function') {
+                    if (!jQuery(form).valid()) {
+                        e.preventDefault();
+                        spn.classList.add('d-none');
+                        btn.disabled = false;
+                        return;
+                    }
+                }
+
+                // 2) Validación nativa HTML5
+                if (!form.checkValidity()) {
+                    e.preventDefault();
+                    form.reportValidity();   // muestra los “globitos” nativos
+                    spn.classList.add('d-none');
+                    btn.disabled = false;
+                    return;
+                }
+
+                // ✅ Válido → activar loading
+                btn.disabled = true;
                 spn.classList.remove('d-none');
             });
+
+            // Defensa extra: si algún control lanza "invalid", re-habilita
+            form.addEventListener('invalid', function () {
+                spn.classList.add('d-none');
+                btn.disabled = false;
+            }, true);
         })();
 
         // Mostrar resumen de validación solo si hay errores
@@ -174,4 +199,6 @@
             obs.observe(valSummary, { childList: true, subtree: true });
         })();
     </script>
+}
+
 }
