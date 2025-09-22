@@ -18,7 +18,29 @@
     <title>@ViewData["Title"] - SkyNet</title>
 
     <link rel="stylesheet" href="~/lib/coreui/dist/css/coreui.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/coreui/coreui@5.1.0/dist/css/coreui.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+    <style>
+        /* Mantener sangría, pero hacer que el rectángulo activo se expanda */
+        .sidebar .nav-group-items .nav-link {
+            border-radius: .5rem;
+            margin-left: -0.5rem;
+            margin-right: -0.5rem;
+        }
+
+        .sidebar .nav-link.active {
+            background-color: var(--cui-sidebar-nav-link-active-bg, rgba(255,255,255,.06));
+            color: var(--cui-sidebar-nav-link-active-color, #fff);
+        }
+
+        .sidebar .nav-link:focus,
+        .sidebar .nav-link:focus-visible {
+            outline: 0;
+            box-shadow: none;
+        }
+    </style>
+
+
     <link rel="stylesheet" href="~/css/site.css" />
 </head>
 <body>
@@ -26,7 +48,6 @@
     <div class="sidebar sidebar-dark sidebar-fixed" id="sidebar">
         <div class="sidebar-brand d-none d-md-flex">
             <div class="brand-wrap">
-                <img src="~/img/logo-skynet.png" alt="SkyNet" />
                 <span class="brand-text">SkyNet</span>
             </div>
         </div>
@@ -52,6 +73,29 @@
                 </a>
             </li>
 
+            <li class="nav-title">Administración</li>
+
+            <!-- Menú desplegable (NAV-GROUP) -->
+            <li class="nav-item nav-group">
+                <a class="nav-link nav-group-toggle" href="#" role="button">
+                    <i class="bi bi-menu-button"></i> Gestión de usuarios
+                </a>
+                <ul class="nav-group-items">
+                    <li class="nav-item">
+                        <a class="nav-link" asp-area="Identity" asp-page="/Account/Register">
+                            <i class="bi bi-person-plus-fill me-2"></i> Registrar usuarios
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(IsActive("Usuarios") ? "active" : "")"
+                           asp-controller="Usuarios" asp-action="Index">
+                            <i class="bi bi-people-fill me-2"></i> Listar usuarios
+                        </a>
+
+                    </li>
+                </ul>
+            </li>
+
             <li class="nav-title">Extras</li>
             <li class="nav-item">
                 <a class="nav-link" href="#"><i class="bi bi-file-earmark-text me-2"></i> Pages</a>
@@ -64,7 +108,6 @@
 
     <!-- WRAPPER -->
     <div class="wrapper d-flex flex-column min-vh-100 bg-light">
-
         <!-- HEADER -->
         <header class="header header-sticky mb-4">
             <div class="container-fluid d-flex align-items-center justify-content-between gap-3">
@@ -73,7 +116,6 @@
                     <i class="bi bi-list fs-4"></i>
                 </button>
 
-                <!-- Breadcrumbs + título -->
                 <div class="d-none d-md-block">
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb mb-0">
@@ -85,42 +127,26 @@
 
                 <!-- Icons + User -->
                 <div class="d-flex align-items-center gap-2">
-                    <button class="btn btn-link text-body" title="Notificaciones"><i class="bi bi-bell fs-5"></i></button>
-                    <button class="btn btn-link text-body" title="Mensajes"><i class="bi bi-envelope fs-5"></i></button>
+                    <button class="btn btn-link text-body" title="Notificaciones">
+                        <i class="bi bi-bell fs-4"></i>
+                    </button>
 
                     @if (SignInManager.IsSignedIn(User))
                     {
-                        <!-- Form oculto para Logout (POST) -->
-                        <form id="logoutForm"
-                              method="post"
-                              asp-area="Identity"
-                              asp-page="/Account/Logout"
-                              asp-route-returnUrl="@Url.Action("Index", "LayoutPrincipal", new { area = "" })"
-                              class="m-0 p-0">
-                        </form>
-
-                        <!-- Botón icono SIEMPRE visible para cerrar sesión -->
-                        <button type="submit"
-                                form="logoutForm"
-                                class="btn btn-link text-body"
-                                title="Cerrar sesión"
-                                aria-label="Cerrar sesión">
-                            <i class="bi bi-box-arrow-right fs-5"></i>
-                        </button>
-
-                        <!-- Avatar con dropdown (opcional) -->
+                        <!-- Botón/Avatar que ABRE el dropdown -->
                         <div class="dropdown">
-                            <a class="d-inline-flex align-items-center text-decoration-none" href="#" data-coreui-toggle="dropdown">
-                                <img src="https://i.pravatar.cc/40" class="rounded-circle" width="36" height="36" alt="user" />
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
+                            <button class="btn btn-link text-body d-flex align-items-center gap-2"
+                                    type="button"
+                                    id="userMenuBtn"
+                                    data-coreui-toggle="dropdown"
+                                    aria-expanded="false">
+                                <i class="bi bi-person-circle fs-4"></i>
+                                <span class="d-none d-sm-inline">@User.Identity?.Name</span>
+                            </button>
+
+                            <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userMenuBtn">
                                 <li class="dropdown-item-text"><strong>@User.Identity?.Name</strong></li>
                                 <li><hr class="dropdown-divider" /></li>
-                                <li>
-                                    <a class="dropdown-item" asp-controller="Profile" asp-action="Index">
-                                        <i class="bi bi-person me-2"></i> Perfil
-                                    </a>
-                                </li>
                                 <li>
                                     <a class="dropdown-item" asp-controller="Settings" asp-action="Index">
                                         <i class="bi bi-gear me-2"></i> Ajustes
@@ -151,12 +177,6 @@
                     }
                 </div>
             </div>
-
-            <!-- Subheader opcional -->
-            <div class="header-divider"></div>
-            <div class="container-fluid">
-                <small class="text-muted">Panel de control</small>
-            </div>
         </header>
 
         <!-- BODY -->
@@ -169,19 +189,50 @@
         <!-- FOOTER -->
         <footer class="footer">
             <div><strong>SkyNet</strong> © 2025</div>
-            <div class="ms-auto">Hecho con <span class="text-danger">♥</span> y CoreUI</div>
+           
         </footer>
     </div>
 
-    <script src="~/lib/coreui/dist/js/coreui.bundle.min.js"></script>
-    <script>
-        // Toggle tema claro/oscuro (demo simple)
-        document.getElementById('themeToggle')?.addEventListener('click', () => {
-          document.documentElement.toggleAttribute('data-coreui-theme');
-          const cur = document.documentElement.getAttribute('data-coreui-theme');
-          document.documentElement.setAttribute('data-coreui-theme', cur === 'dark' ? 'light' : 'dark');
+    <!-- JS CoreUI (local con respaldo CDN) -->
+    <script src="https://cdn.jsdelivr.net/npm/coreui/coreui@5.1.0/dist/js/coreui.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js" crossorigin="anonymous"></script>
+
+
+
+
+    <script src="~/lib/coreui/dist/js/coreui.bundle.min.js"
+            onerror="(function(){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@@coreui/coreui@5.1.0/dist/js/coreui.bundle.min.js';document.body.appendChild(s);}())"></script>
+
+       <script>
+            document.addEventListener('DOMContentLoaded', () => {
+            // Asegura Sidebar
+            const sidebarEl = document.getElementById('sidebar');
+            if (sidebarEl && window.coreui?.Sidebar) {
+                new coreui.Sidebar(sidebarEl);
+            }
+
+            // Asegura Navigation (submenús)
+            const navEl = document.querySelector('.sidebar-nav');
+            if (navEl && window.coreui?.Navigation) {
+                new coreui.Navigation(navEl);
+            }
+
+            // Fallback ultra simple si el plugin Navigation no existe
+            if (navEl && !window.coreui?.Navigation) {
+                navEl.querySelectorAll('.nav-group-toggle').forEach(t => {
+                    t.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const group = t.closest('.nav-group');
+                        const list = t.nextElementSibling;
+                        if (group && list && list.classList.contains('nav-group-items')) {
+                            list.classList.toggle('show');
+                        }
+                    });
+                });
+            }
         });
     </script>
+
     @RenderSection("Scripts", required: false)
 </body>
 </html>
