@@ -12,7 +12,7 @@ namespace SkyNet.Models.DTOs
         public string? Nombres { get; set; }
         public string? Apellidos { get; set; }
         public string? Cargo { get; set; }
-        public int? Estado { get; set; }              // 1 activo / 0 inactivo
+        public int? Estado { get; set; }             
         public string NombreCompleto => $"{Nombres} {Apellidos}".Trim();
     }
 

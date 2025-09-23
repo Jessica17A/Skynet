@@ -1,5 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
+﻿
 #nullable disable
 
 using System;
@@ -81,7 +80,7 @@ namespace SkyNet.Areas.Identity.Pages.Account
 
             returnUrl ??= Url.Content("~/");
 
-            // Limpiar cookie externa para un login fresco
+           
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
 
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
@@ -98,7 +97,7 @@ namespace SkyNet.Areas.Identity.Pages.Account
                 return Page();
             }
 
-            // Login por UserName (no por email)
+          
             var result = await _signInManager.PasswordSignInAsync(
                 Input.UserName,
                 Input.Password,
@@ -124,7 +123,7 @@ namespace SkyNet.Areas.Identity.Pages.Account
 
             if (result.IsNotAllowed)
             {
-                // Suele indicar correo no confirmado u otra restricción de la app
+                
                 ModelState.AddModelError(string.Empty, "Inicio de sesión no permitido. Verifica que tu cuenta cumpla los requisitos.");
                 return Page();
             }

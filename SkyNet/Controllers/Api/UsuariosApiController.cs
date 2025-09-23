@@ -9,7 +9,7 @@ namespace SkyNet.Controllers.Api
 {
     [ApiController]
     [Route("api/usuarios")]
-    [Authorize] // opcional
+    [Authorize]
     public class UsuariosApiController : ControllerBase
     {
         private readonly ApplicationDbContext _db;
@@ -19,7 +19,7 @@ namespace SkyNet.Controllers.Api
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UsuarioDto>>> GetAll(CancellationToken ct)
         {
-            // Users + (LEFT JOIN) Empleados
+          
             var baseQuery =
                 from u in _db.Users.AsNoTracking()
                 join e in _db.Empleados.AsNoTracking() on u.Id equals e.UserId into ue
@@ -29,7 +29,7 @@ namespace SkyNet.Controllers.Api
             var baseList = await baseQuery.ToListAsync(ct);
             var userIds = baseList.Select(x => x.u.Id).ToList();
 
-            // Roles → a memoria y agrupar
+         
             var rolesRaw = await (
                 from ur in _db.UserRoles.AsNoTracking()
                 join r in _db.Roles.AsNoTracking() on ur.RoleId equals r.Id

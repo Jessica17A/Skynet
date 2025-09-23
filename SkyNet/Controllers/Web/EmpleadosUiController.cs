@@ -52,10 +52,9 @@ namespace SkyNet.Controllers.Web
                 return RedirectToAction(nameof(Index));
             }
 
-            // Mostrar error que devuelve el API (si viene)
             try
             {
-                // mismo patrón que en clientes
+                
                 var apiErr = await resp.Content.ReadFromJsonAsync<Dictionary<string, string>>();
                 if (apiErr is not null && apiErr.TryGetValue("error", out var msg))
                     ModelState.AddModelError(string.Empty, msg);

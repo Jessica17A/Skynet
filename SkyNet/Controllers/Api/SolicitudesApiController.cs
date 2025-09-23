@@ -98,9 +98,9 @@ namespace SkyNet.Controllers.Api
             };
 
             _db.Solicitudes.Add(entidad);
-            await _db.SaveChangesAsync(ct); // genera entidad.Id
+            await _db.SaveChangesAsync(ct); 
 
-            // Si hay archivos, valida y sube (Cloudinary: imágenes -> ImageUploadParams; otros -> RawUploadParams)
+           
             var archivos = dto.Archivos?.Where(f => f is not null && f.Length > 0).ToList() ?? new();
             if (archivos.Count > 0)
             {
@@ -108,7 +108,7 @@ namespace SkyNet.Controllers.Api
                 var pdfExt = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".pdf" };
                 var wordExt = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".doc", ".docx" };
                 var xlsExt = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".xls", ".xlsx" };
-                const long MAX_FILE_BYTES = 10_000_000; // 10 MB por archivo
+                const long MAX_FILE_BYTES = 10_000_000; 
 
                 foreach (var file in archivos)
                 {
@@ -154,7 +154,7 @@ namespace SkyNet.Controllers.Api
                                 UseFilename = true,
                                 UniqueFilename = true,
                                 Overwrite = false
-                                // NO asignes ResourceType: RawUploadParams ya lo fija a raw
+                               
                             };
 
                             var res = await _cloud.UploadAsync(up);
@@ -167,7 +167,7 @@ namespace SkyNet.Controllers.Api
 
                     _db.ArchivosSolicitudes.Add(new ArchivoSolicitud
                     {
-                        Fk_Solicitud = entidad.Id,   // FK
+                        Fk_Solicitud = entidad.Id,  
                         PublicId = publicId,
                         CreatedAtUtc = DateTime.UtcNow
                     });

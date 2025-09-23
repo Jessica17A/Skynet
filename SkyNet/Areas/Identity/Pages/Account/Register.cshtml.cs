@@ -103,7 +103,7 @@ namespace SkyNet.Areas.Identity.Pages.Account
                 return Page();
             }
 
-            // 1) Traer empleado (con tracking, porque lo vamos a actualizar)
+        
             var emp = await _db.Empleados.FirstOrDefaultAsync(e => e.Id == Input.EmpleadoId, ct);
             if (emp is null)
             {
@@ -134,11 +134,11 @@ namespace SkyNet.Areas.Identity.Pages.Account
                 return Page();
             }
 
-            // 3) Generar username: primera letra del primer nombre + primer apellido (sin acentos), en minúsculas
+            // 3) Generar username: primera letra del primer nombre + primer apellido 
             var baseUserName = BuildBaseUserName(emp.Nombres, emp.Apellidos);
             var uniqueUserName = await EnsureUniqueUserNameAsync(baseUserName);
 
-            // 4) Validar que no exista ya un usuario con ese email (opcional pero recomendado)
+            // 4) Validar que no exista ya un usuario con ese email 
             var existing = await _userManager.FindByEmailAsync(emp.Email);
             if (existing is not null)
             {
@@ -158,7 +158,7 @@ namespace SkyNet.Areas.Identity.Pages.Account
             {
                 _logger.LogInformation("Usuario {UserName} creado para empleado {EmpleadoId}.", uniqueUserName, emp.Id);
 
-                // 5.1) Asignar rol
+             
                 var roleRes = await _userManager.AddToRoleAsync(user, Input.RoleName);
                 if (!roleRes.Succeeded)
                 {
@@ -171,15 +171,15 @@ namespace SkyNet.Areas.Identity.Pages.Account
                     return Page();
                 }
 
-                // 5.2) Claim con EmpleadoId (útil si no navegas por FK desde Identity)
+              
                 await _userManager.AddClaimAsync(user, new Claim("EmpleadoId", emp.Id.ToString()));
 
-                // 5.3) Vincular Empleado.UserId <- AspNetUsers.Id
+              
                 emp.UserId = user.Id;
                 emp.Estado = 2;
                 await _db.SaveChangesAsync(ct);
 
-                // 5.4) Email de confirmación
+           
                 var userId = await _userManager.GetUserIdAsync(user);
                 var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                 code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
@@ -192,7 +192,7 @@ namespace SkyNet.Areas.Identity.Pages.Account
                 await _emailSender.SendEmailAsync(emp.Email, "Confirma tu email",
                     $"Confirma tu cuenta haciendo clic <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>aquí</a>.");
 
-                // 6) No iniciar sesión; mostrar OK y resetear form
+            
                 ModelState.Clear();
                 TempData["RegisterMsg"] = $"Usuario '{uniqueUserName}' creado para {emp.Nombres}  y asignado al rol '{Input.RoleName}'.";
                 await CargarListasAsync(ct);
@@ -208,7 +208,7 @@ namespace SkyNet.Areas.Identity.Pages.Account
 
         private async Task CargarListasAsync(CancellationToken ct)
         {
-            // Solo empleados activos, con email y sin usuario vinculado
+         
             var emps = await _db.Empleados.AsNoTracking()
                 .Where(e => e.Estado == 1 && !string.IsNullOrEmpty(e.Email) && e.UserId == null)
                 .OrderBy(e => e.Nombres)
@@ -237,7 +237,7 @@ namespace SkyNet.Areas.Identity.Pages.Account
             var firstName = (nombres ?? "").Trim();
             var firstLetter = firstName.Length > 0 ? firstName.Split(' ', StringSplitOptions.RemoveEmptyEntries)[0][0].ToString() : "x";
 
-            // primer apellido (palabra completa)
+            // primer apellido 
             var lastName1 = "x";
             var ap = (apellidos ?? "").Trim();
             if (!string.IsNullOrEmpty(ap))
@@ -246,7 +246,7 @@ namespace SkyNet.Areas.Identity.Pages.Account
             }
             else
             {
-                // fallback: toma última palabra de nombres como apellido si no hay Apellidos
+            
                 var parts = firstName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
                 if (parts.Length > 1) lastName1 = parts.Last();
             }
@@ -258,7 +258,7 @@ namespace SkyNet.Areas.Identity.Pages.Account
         private static string SlugifyLettersAndDigits(string input)
         {
             if (string.IsNullOrWhiteSpace(input)) return "user";
-            // quita acentos
+           
             var norm = input.Normalize(NormalizationForm.FormD);
             var sb = new StringBuilder(capacity: norm.Length);
             foreach (var ch in norm)
@@ -266,7 +266,7 @@ namespace SkyNet.Areas.Identity.Pages.Account
                 var uc = CharUnicodeInfo.GetUnicodeCategory(ch);
                 if (uc != UnicodeCategory.NonSpacingMark)
                 {
-                    // deja solo letras y números
+                
                     if (char.IsLetterOrDigit(ch)) sb.Append(char.ToLowerInvariant(ch));
                 }
             }
@@ -278,7 +278,7 @@ namespace SkyNet.Areas.Identity.Pages.Account
         {
             var candidate = baseUserName;
             var i = 0;
-            // intenta base, luego base1, base2, ...
+        
             while (true)
             {
                 var existing = await _userManager.FindByNameAsync(candidate);

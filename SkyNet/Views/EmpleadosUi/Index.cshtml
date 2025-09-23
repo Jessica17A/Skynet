@@ -3,48 +3,176 @@
     ViewData["Title"] = "Empleados";
 }
 
+<style>
+    /* Numeración automática */
+    .table-counter {
+        counter-reset: rownum;
+    }
+
+        .table-counter tbody tr {
+            counter-increment: rownum;
+        }
+
+        .table-counter td.col-num::before {
+            content: counter(rownum);
+        }
+
+    /* Encabezado fijo */
+    .table-sticky thead th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background: var(--bs-light);
+    }
+
+    /* Celda con texto largo */
+    .td-ellipsis {
+        max-width: 280px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Buscador pill (mismo alto que btn-sm) */
+    .search-pill {
+        display: flex;
+        align-items: center;
+        gap: .35rem;
+        height: 31px; /* = alto visual de .btn-sm */
+        padding: 0 .5rem; /* sin crecer en alto */
+        border: 1px solid var(--bs-border-color);
+        border-radius: 999px;
+        background: var(--bs-body-bg);
+        width: 240px; /* asegúrate que se vea el input */
+        transition: box-shadow .2s ease, border-color .2s ease, background .2s ease;
+    }
+
+        .search-pill:focus-within {
+            border-color: var(--bs-primary);
+            box-shadow: 0 0 0 .2rem rgba(var(--bs-primary-rgb), .15);
+            background: var(--bs-light);
+        }
+
+        .search-pill i.bi-search {
+            font-size: .9rem;
+            opacity: .7;
+        }
+
+        .search-pill .form-control {
+            border: 0;
+            outline: 0;
+            box-shadow: none !important;
+            background: transparent;
+            height: 100%; /* iguala al contenedor */
+            padding: 0; /* evita crecer en alto */
+            font-size: .875rem; /* ~btn-sm */
+            line-height: 1.5;
+            flex: 1; /* ocupa el espacio disponible */
+        }
+
+        .search-pill .btn-clear {
+            border: 0;
+            background: transparent;
+            padding: 0;
+            width: 22px;
+            height: 22px;
+            display: none;
+            border-radius: 50%;
+            line-height: 1;
+            opacity: .6;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .search-pill .btn-clear:hover {
+                opacity: 1;
+            }
+
+    /* Ajuste visual del botón Nuevo para alineación vertical perfecta */
+    .btn-sm.align-fix {
+        line-height: 1.2; /* opcional: compensa fuentes distintas */
+    }
+</style>
+
 <div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <h2 class="mb-0">Empleados</h2>
-        <a asp-action="Create" class="btn btn-primary">Nuevo empleado</a>
+
+        <div class="d-flex gap-2 align-items-center">
+            <!-- Buscador simple agregado -->
+            <input id="buscar" type="search" class="form-control form-control-sm" placeholder="Buscar..." />
+
+            <a asp-action="Create" class="btn btn-primary btn-sm align-fix">
+                <i class="bi bi-person-plus me-1"></i> Nuevo
+            </a>
+        </div>
     </div>
 
     @if (Model is null || !Model.Any())
     {
-        <div class="alert alert-light border">No hay empleados registrados.</div>
+        <div class="alert alert-light border d-flex align-items-center" role="alert">
+            <i class="bi bi-people me-2"></i>
+            <div>No hay empleados registrados.</div>
+        </div>
     }
     else
     {
-
-        var i = 1;
         <div class="table-responsive">
-            <table class="table table-hover align-middle">
+            <table class="table table-hover align-middle table-counter table-sticky" id="tabla">
                 <thead class="table-light">
                     <tr>
-                        <th>NO</th>
+                        <th style="width:60px">#</th>
                         <th>Nombres</th>
                         <th>Apellidos</th>
-                        <th>Email</th>
-                        <th>Teléfono</th>
-                        <th>Cargo</th>
-                        <th></th>
+                        <th class="d-none d-md-table-cell">Email</th>
+                        <th class="d-none d-lg-table-cell">Teléfono</th>
+                        <th class="d-none d-sm-table-cell">Cargo</th>
+                        <th class="text-end" style="width:120px;">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var e in Model)
                     {
+                        var nombres = string.IsNullOrWhiteSpace(e.Nombres) ? "—" : e.Nombres!;
+                        var apellidos = string.IsNullOrWhiteSpace(e.Apellidos) ? "—" : e.Apellidos!;
+                        var email = string.IsNullOrWhiteSpace(e.Email) ? "—" : e.Email!;
+                        var tel = string.IsNullOrWhiteSpace(e.Telefono) ? "—" : e.Telefono!;
+                        var cargo = string.IsNullOrWhiteSpace(e.Cargo) ? "—" : e.Cargo!;
+
                         <tr>
-                            <td>@i</td>
-                            <td>@(string.IsNullOrWhiteSpace(e.Nombres) ? "—" : e.Nombres)</td>
-                            <td>@(string.IsNullOrWhiteSpace(e.Apellidos) ? "—" : e.Apellidos)</td>
-                            <td>@(string.IsNullOrWhiteSpace(e.Email) ? "—" : e.Email)</td>
-                            <td>@(string.IsNullOrWhiteSpace(e.Telefono) ? "—" : e.Telefono)</td>
-                            <td>@(string.IsNullOrWhiteSpace(e.Cargo) ? "—" : e.Cargo)</td>
+                            <td class="col-num text-muted"></td>
+                            <td class="td-ellipsis" title="@nombres">@nombres</td>
+                            <td class="td-ellipsis" title="@apellidos">@apellidos</td>
+                            <td class="d-none d-md-table-cell">
+                                @if (email == "—")
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                                else
+                                {
+
+                                    <a href="mailto:@email">@email</a>
+                                }
+                            </td>
+                            <td class="d-none d-lg-table-cell">
+                                @if (tel == "—")
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                                else
+                                {
+
+                                    <a href="tel:@tel">@tel</a>
+                                }
+                            </td>
+                            <td class="d-none d-sm-table-cell td-ellipsis" title="@cargo">@cargo</td>
                             <td class="text-end">
-                                <a class="btn btn-sm btn-outline-primary" asp-action="Detalle" asp-route-id="@e.Id">Ver</a>
+                                <a class="btn btn-sm btn-outline-primary" asp-action="Detalle" asp-route-id="@e.Id" title="Ver detalle">
+                                    <i class="bi bi-eye"></i>
+                                </a>
                             </td>
                         </tr>
-                        i++;
                     }
                 </tbody>
             </table>
@@ -55,7 +183,24 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    @* Toast de éxito tras crear (TempData["Ok"] viene del Redirect) *@
+    <!-- JS simple para filtrar la tabla por texto -->
+    <script>
+        (function () {
+          const input = document.getElementById('buscar');
+          const tabla = document.getElementById('tabla');
+          if (!input || !tabla) return;
+
+          input.addEventListener('input', function () {
+            const term = this.value.trim().toLowerCase();
+            const rows = tabla.tBodies[0]?.rows || [];
+            for (const tr of rows) {
+              const txt = tr.innerText.toLowerCase();
+              tr.style.display = txt.includes(term) ? '' : 'none';
+            }
+          });
+        })();
+    </script>
+
     @if (TempData["Ok"] is string ok && !string.IsNullOrWhiteSpace(ok))
     {
         <script>

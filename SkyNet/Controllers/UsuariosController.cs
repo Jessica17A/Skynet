@@ -1,7 +1,7 @@
-﻿// Controllers/UsuariosController.cs
+﻿
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SkyNet.Data;                    // tu DbContext
+using SkyNet.Data;                   
 using SkyNet.Models.Usuarios;
 
 public class UsuariosController : Controller
@@ -11,7 +11,7 @@ public class UsuariosController : Controller
 
     public async Task<IActionResult> Index()
     {
-        // base: users + (left join) empleados
+       
         var qBase =
             from u in _context.Users.AsNoTracking()
             join e in _context.Empleados.AsNoTracking() on u.Id equals e.UserId into ue
@@ -26,12 +26,10 @@ public class UsuariosController : Controller
 
         var baseList = await qBase.ToListAsync();
 
-        // 1) Trae todos los userIds que aparecerán en el grid
+     
         var userIds = baseList.Select(x => x.Id).ToList();
 
-        // 2) Trae (en una sola consulta) los roles de esos usuarios
-        //    y pásalos a memoria (ToListAsync). El GroupBy y string.Join
-        //    se hacen EN C# (no en SQL), evitando el error.
+   
         var rolesRaw = await (
             from ur in _context.UserRoles.AsNoTracking()
             join r in _context.Roles.AsNoTracking() on ur.RoleId equals r.Id
@@ -46,7 +44,7 @@ public class UsuariosController : Controller
                 g => string.Join(", ", g.Select(x => x.RoleName))
             );
 
-        // 3) Proyecta al ViewModel
+        
         var model = baseList.Select(x => new UsuarioListadoVm
         {
             UserId = x.Id,
@@ -54,7 +52,7 @@ public class UsuariosController : Controller
             Email = x.Email ?? "",
             Roles = rolesDict.TryGetValue(x.Id, out var r) ? r : "",
 
-            EmpleadoId = x.Empleado != null ? (long?)x.Empleado.Id : null,  // <- long?
+            EmpleadoId = x.Empleado != null ? (long?)x.Empleado.Id : null,  
             Nombres = x.Empleado?.Nombres,
             Apellidos = x.Empleado?.Apellidos,
             Cargo = x.Empleado?.Cargo,
@@ -65,7 +63,5 @@ public class UsuariosController : Controller
     }
 
 
-    // (opcionales) acciones que llamarás desde la vista:
-    // public async Task<IActionResult> ToggleEstado(string id) { ... }
-    // public async Task<IActionResult> ResetPassword(string id) { ... }
+   
 }

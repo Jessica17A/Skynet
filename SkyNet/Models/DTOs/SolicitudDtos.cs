@@ -1,8 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Collections.Generic;
-using Microsoft.AspNetCore.Http; // <- necesario para IFormFile
-
+using Microsoft.AspNetCore.Http; 
 namespace SkyNet.Models.DTOs
 {
     public class SolicitudCreateDto
@@ -28,7 +27,7 @@ namespace SkyNet.Models.DTOs
       
         public List<IFormFile>? Archivos { get; set; }
 
-        // Geo
+       
         public string? Direccion { get; set; }
         public double? Latitud { get; set; }
         public double? Longitud { get; set; }
@@ -48,7 +47,7 @@ namespace SkyNet.Models.DTOs
         public string Ticket { get; set; } = "";
         public DateTime CreatedAtUtc { get; set; }
         public SkyNet.Models.SolicitudEstado Estado { get; set; }
-        public string? AdjuntoPublicId { get; set; } // si manejarás varios, cámbialo a List<string> AdjuntosPublicId
+        public string? AdjuntoPublicId { get; set; } 
         public string? Direccion { get; set; }
         public double? Latitud { get; set; }
         public double? Longitud { get; set; }

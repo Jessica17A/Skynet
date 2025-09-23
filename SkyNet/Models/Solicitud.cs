@@ -20,7 +20,7 @@ namespace SkyNet.Models
         [Required, StringLength(60)]
         public string Tipo { get; set; } = "";
 
-        [Required, StringLength(30)] // ← igual que en el DTO
+        [Required, StringLength(30)] 
         public string Prioridad { get; set; } = "";
 
         [Required, StringLength(1500)]

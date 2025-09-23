@@ -149,7 +149,7 @@
         wireToggle("pwdInput", "togglePwd");
         wireToggle("pwd2Input", "togglePwd2");
 
-        // Spinner y bloqueo SOLO si el formulario es válido
+        // Spinner y bloqueo SOLO si el formulario es valido
         (function () {
             const form = document.getElementById('registerForm');
             const btn  = document.getElementById('btnSubmit');
@@ -157,7 +157,7 @@
             if (!form || !btn || !spn) return;
 
             form.addEventListener('submit', function (e) {
-                // 1) Si está jQuery Validate (de _ValidationScriptsPartial), úsalo
+             
                 if (window.jQuery && typeof jQuery.fn.valid === 'function') {
                     if (!jQuery(form).valid()) {
                         e.preventDefault();
@@ -167,28 +167,28 @@
                     }
                 }
 
-                // 2) Validación nativa HTML5
+             
                 if (!form.checkValidity()) {
                     e.preventDefault();
-                    form.reportValidity();   // muestra los “globitos” nativos
+                    form.reportValidity();   
                     spn.classList.add('d-none');
                     btn.disabled = false;
                     return;
                 }
 
-                // ✅ Válido → activar loading
+            
                 btn.disabled = true;
                 spn.classList.remove('d-none');
             });
 
-            // Defensa extra: si algún control lanza "invalid", re-habilita
+      
             form.addEventListener('invalid', function () {
                 spn.classList.add('d-none');
                 btn.disabled = false;
             }, true);
         })();
 
-        // Mostrar resumen de validación solo si hay errores
+    
         (function () {
             const valSummary = document.getElementById('valSummary');
             if (!valSummary) return;

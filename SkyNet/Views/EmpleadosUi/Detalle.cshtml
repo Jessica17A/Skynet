@@ -4,40 +4,96 @@
 }
 
 <div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">Empleado #@Model.Id</h2>
-        <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">
+            <i class="bi bi-person-badge"></i> Detalle del empleado
+        </h2>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
     </div>
 
-    <div class="card">
+    <div class="card shadow-sm border-0">
         <div class="card-body">
-            <dl class="row">
-                <dt class="col-sm-3">Nombre</dt>
-                <dd class="col-sm-9">@Model.Nombres</dd>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-person-fill text-primary me-2 fs-5"></i>
+                        <div>
+                            <small class="text-muted d-block">Nombre</small>
+                            <span class="fw-semibold">@Model.Nombres</span>
+                        </div>
+                    </div>
 
-                <dt class="col-sm-3">DPI</dt>
-                <dd class="col-sm-9">@Model.DPI</dd>
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-credit-card-2-front text-primary me-2 fs-5"></i>
+                        <div>
+                            <small class="text-muted d-block">DPI</small>
+                            <span>@Model.DPI</span>
+                        </div>
+                    </div>
 
-                <dt class="col-sm-3">Dirección</dt>
-                <dd class="col-sm-9">@Model.Direccion</dd>
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-geo-alt text-primary me-2 fs-5"></i>
+                        <div>
+                            <small class="text-muted d-block">Dirección</small>
+                            <span>@Model.Direccion</span>
+                        </div>
+                    </div>
+                </div>
 
-                <dt class="col-sm-3">Teléfono</dt>
-                <dd class="col-sm-9">@Model.Telefono</dd>
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-telephone text-primary me-2 fs-5"></i>
+                        <div>
+                            <small class="text-muted d-block">Teléfono</small>
+                            <span>@Model.Telefono</span>
+                        </div>
+                    </div>
 
-                <dt class="col-sm-3">Email</dt>
-                <dd class="col-sm-9">@Model.Email</dd>
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-envelope text-primary me-2 fs-5"></i>
+                        <div>
+                            <small class="text-muted d-block">Email</small>
+                            <span>@Model.Email</span>
+                        </div>
+                    </div>
 
-                <dt class="col-sm-3">Cargo</dt>
-                <dd class="col-sm-9">@Model.Cargo</dd>
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-briefcase text-primary me-2 fs-5"></i>
+                        <div>
+                            <small class="text-muted d-block">Cargo</small>
+                            <span>@Model.Cargo</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                <dt class="col-sm-3">Estado</dt>
-                <dd class="col-sm-9">
-                    @(Model.Estado == 1 ? "Activo" : "Inactivo")
-                </dd>
+            <hr />
 
-                <dt class="col-sm-3">Creado (UTC)</dt>
-                <dd class="col-sm-9">@Model.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm")</dd>
-            </dl>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-circle-fill me-2 fs-6 @(Model.Estado == 1 ? "text-success" : "text-secondary")"></i>
+                        <div>
+                            <small class="text-muted d-block">Estado</small>
+                            <span class="badge @(Model.Estado == 1 ? "bg-success" : "bg-secondary")">
+                                @(Model.Estado == 1 ? "Activo" : "Inactivo")
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-calendar-date text-primary me-2 fs-5"></i>
+                        <div>
+                            <small class="text-muted d-block">Creado (UTC)</small>
+                            <span>@Model.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

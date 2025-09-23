@@ -13,7 +13,7 @@ namespace SkyNet.Controllers
                 return RedirectToAction("Index",
                     User.IsInRole("Administrador") ? "Home" : "LayoutPrincipal" /*o "Vendedor"*/);
             }
-            return View(); // invitados ven la página principal pública
+            return View(); 
         }
 
         public IActionResult Nosotros()

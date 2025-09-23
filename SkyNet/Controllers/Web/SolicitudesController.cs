@@ -3,7 +3,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using SkyNet.Models.DTOs;
 using System.Globalization;
-using System.Net.Http.Json; // 👈 NECESARIO para ReadFromJsonAsync
+using System.Net.Http.Json; 
 
 namespace SkyNet.Controllers.Web
 {
@@ -28,7 +28,7 @@ namespace SkyNet.Controllers.Web
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([FromForm] SolicitudCreateDto form)
         {
-            // Validación mínima
+        
             if (string.IsNullOrWhiteSpace(form.Nombre) ||
                 string.IsNullOrWhiteSpace(form.Email) ||
                 string.IsNullOrWhiteSpace(form.Tipo) ||
@@ -45,7 +45,7 @@ namespace SkyNet.Controllers.Web
             using var mp = new MultipartFormDataContent();
             var inv = CultureInfo.InvariantCulture;
 
-            // Campos simples (los nombres deben coincidir con el DTO del API)
+          
             mp.Add(new StringContent(form.Nombre), "Nombre");
             mp.Add(new StringContent(form.Email), "Email");
             mp.Add(new StringContent(form.Telefono ?? ""), "Telefono");
@@ -56,7 +56,7 @@ namespace SkyNet.Controllers.Web
             mp.Add(new StringContent(form.Latitud?.ToString(inv) ?? ""), "Latitud");
             mp.Add(new StringContent(form.Longitud?.ToString(inv) ?? ""), "Longitud");
 
-            // Archivos múltiples: usa el mismo nombre "Archivos" en cada Add
+           
             if (form.Archivos is not null)
             {
                 foreach (var file in form.Archivos.Where(f => f is not null && f.Length > 0))
@@ -87,7 +87,7 @@ namespace SkyNet.Controllers.Web
                 return View();
             }
 
-            // Extraer ticket del JSON (case-insensitive)
+          
             string? ticket = null;
             try
             {
@@ -96,7 +96,7 @@ namespace SkyNet.Controllers.Web
                 if (root.TryGetProperty("ticket", out var t1)) ticket = t1.GetString();
                 else if (root.TryGetProperty("Ticket", out var t2)) ticket = t2.GetString();
             }
-            catch { /* ignore */ }
+            catch {  }
 
             if (string.IsNullOrWhiteSpace(ticket))
             {
@@ -110,9 +110,7 @@ namespace SkyNet.Controllers.Web
         }
 
 
-        // ============================
-        // Tracking por TICKET (GET)
-        // ============================
+        
         [HttpGet] // /Solicitudes/Tracking?ticket=...
         public async Task<IActionResult> Tracking(string? ticket, CancellationToken ct)
         {

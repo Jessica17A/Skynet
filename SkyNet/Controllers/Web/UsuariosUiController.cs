@@ -11,7 +11,7 @@ namespace SkyNet.Controllers.Web
         [HttpGet]
         public IActionResult Index() => View();
 
-        // (Opcional) Si prefieres consumir la API via proxy desde el mismo host
+     
         [HttpGet]
         public async Task<IActionResult> Json()
         {

@@ -7,19 +7,11 @@
 <div class="container-fluid">
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
         <h2 class="mb-0">Usuarios</h2>
-        <div class="d-flex gap-2">
-            <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-primary">
-                <i class="bi bi-person-plus me-1"></i> Nuevo usuario
-            </a>
-            <a asp-controller="Empleados" asp-action="Create" class="btn btn-outline-secondary">
-                <i class="bi bi-person-add me-1"></i> Nuevo empleado
-            </a>
-        </div>
     </div>
 
     <div class="card border-0 shadow-sm">
         <div class="card-body table-responsive">
-            <table class="table table-striped align-middle mb-0">
+            <table class="table table-striped align-middle mb-0" id="tablaUsuarios">
                 <thead class="table-light">
                     <tr>
                         <th>Empleado</th>
@@ -28,13 +20,14 @@
                         <th class="d-none d-lg-table-cell">Email</th>
                         <th class="d-none d-sm-table-cell">Roles</th>
                         <th class="d-none d-sm-table-cell">Estado</th>
-                        <th class="text-end">Acciones</th>
+                        <th class="text-end">Acción</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var u in Model)
                     {
-                        <tr>
+                        var esActivo = u.Estado == 1;
+                        <tr data-user-id="@u.UserId">
                             <td>
                                 @if (u.EmpleadoId.HasValue)
                                 {
@@ -49,38 +42,35 @@
                             <td>@u.UserName</td>
                             <td class="d-none d-lg-table-cell">@u.Email</td>
                             <td class="d-none d-sm-table-cell">@u.Roles</td>
-                            <td class="d-none d-sm-table-cell">
-                                @if (u.Estado == 1)
+
+                            <td class="d-none d-sm-table-cell estado-col">
+                                @if (esActivo)
                                 {
                                     <span class="badge bg-success">Activo</span>
                                 }
-                                else if (u.Estado == 0)
+                                else
                                 {
                                     <span class="badge bg-secondary">Inactivo</span>
                                 }
-                                else
-                                {
-                                    <span class="badge bg-warning text-dark">N/D</span>
-                                }
                             </td>
+
                             <td class="text-end">
-                                <div class="btn-group">
-                                    <a asp-controller="Usuarios" asp-action="ToggleEstado" asp-route-id="@u.UserId"
-                                       class="btn btn-sm btn-outline-warning">
-                                        <i class="bi bi-power"></i>
-                                    </a>
-                                    <a asp-controller="Usuarios" asp-action="ResetPassword" asp-route-id="@u.UserId"
-                                       class="btn btn-sm btn-outline-danger">
-                                        <i class="bi bi-key"></i>
-                                    </a>
-                                    @* Si tienes detalle/edición *@
-                                    <a asp-controller="Empleados" asp-action="Edit" asp-route-id="@u.EmpleadoId"
-                                       class="btn btn-sm btn-outline-primary" title="Editar empleado"
-                                       disabled="@(u.EmpleadoId == null)">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </a>
-                                </div>
+                                <button type="button"
+                                        class="btn btn-sm @(esActivo ? "btn-outline-warning" : "btn-outline-success") toggle-estado-btn"
+                                        data-estado-actual="@(u.Estado ?? 0)"
+                                        style="min-width: 110px;">
+                                
+                                    @if (esActivo)
+                                    {
+                                        <span><i class="bi bi-power"></i> Desactivar</span>
+                                    }
+                                    else
+                                    {
+                                        <span><i class="bi bi-check2-circle"></i> Activar</span>
+                                    }
+                                </button>
                             </td>
+
                         </tr>
                     }
                 </tbody>
@@ -88,3 +78,72 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        (function(){
+          const tabla = document.getElementById('tablaUsuarios');
+          if(!tabla) return;
+
+          tabla.addEventListener('click', async (ev) => {
+            const btn = ev.target.closest('.toggle-estado-btn');
+            if(!btn) return;
+
+            const tr = btn.closest('tr');
+            const userId = tr?.getAttribute('data-user-id');
+            if(!userId) return;
+
+            const estadoActual = parseInt(btn.getAttribute('data-estado-actual') || '0', 10);
+            const nuevoEstado = estadoActual === 1 ? 0 : 1;
+
+            // confirmación sencilla
+            const texto = nuevoEstado === 0 ? '¿Desactivar este usuario?'
+                                            : '¿Activar este usuario?';
+            if(!confirm(texto)) return;
+
+            try {
+              const resp = await fetch(`/api/usuarios/${encodeURIComponent(userId)}/estado`, {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ estado: nuevoEstado })
+              });
+
+              if (!resp.ok) {
+                const err = await safeJson(resp);
+                alert(err?.error || 'No se pudo actualizar el estado.');
+                return;
+              }
+
+              // Actualizar UI (badge y botón)
+              const estadoCol = tr.querySelector('.estado-col');
+              if (estadoCol) {
+                estadoCol.innerHTML = nuevoEstado === 1
+                  ? '<span class="badge bg-success">Activo</span>'
+                  : '<span class="badge bg-secondary">Inactivo</span>';
+              }
+
+              btn.setAttribute('data-estado-actual', String(nuevoEstado));
+              if (nuevoEstado === 1) {
+                btn.classList.remove('btn-outline-success');
+                btn.classList.add('btn-outline-warning');
+                btn.innerHTML = '<i class="bi bi-power"></i> Desactivar';
+              } else {
+                btn.classList.remove('btn-outline-warning');
+                btn.classList.add('btn-outline-success');
+                btn.innerHTML = '<i class="bi bi-check2-circle"></i> Activar';
+              }
+
+            } catch (e) {
+              console.error(e);
+              alert('Error de red al actualizar el estado.');
+            }
+          });
+
+          async function safeJson(resp){
+            try { return await resp.json(); } catch { return null; }
+          }
+        })();
+    </script>
+}

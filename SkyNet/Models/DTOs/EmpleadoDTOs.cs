@@ -29,7 +29,7 @@ namespace SkyNet.Models.DTOs
         public string? Telefono { get; set; }
         public string? Email { get; set; }
         public string? Cargo { get; set; }
-        public int? Estado { get; set; }   // null = usa el default del servidor (p.ej. 1)
+        public int? Estado { get; set; }   
     }
 
     // Editar (patch/put parcial, todo opcional)
