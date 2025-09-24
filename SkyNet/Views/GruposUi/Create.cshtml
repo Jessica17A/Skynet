@@ -1,0 +1,262 @@
+﻿@model SkyNet.Models.GrupoCreateVm
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+    ViewData["Title"] = "Nuevo Grupo";
+    var supervisores = ViewBag.Supervisores as IEnumerable<SelectListItem>;
+    var tecnicos = ViewBag.Tecnicos as IEnumerable<SelectListItem>;
+}
+
+<!-- Select2 + Theme Bootstrap 5 -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+
+<style>
+    :root {
+        --radius-lg: 18px;
+    }
+
+    .page-wrap {
+        max-width: 1100px;
+    }
+
+    .card-ux {
+        border: 1px solid #e9ecef;
+        border-radius: var(--radius-lg);
+        box-shadow: 0 10px 24px rgba(16,24,40,.06);
+        background: #fff;
+        overflow: hidden;
+    }
+
+        .card-ux .card-head {
+            padding: .9rem 1rem;
+            background: linear-gradient(180deg,#f8f9fb,#f2f4f8);
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .card-ux .card-body {
+            padding: 1rem;
+        }
+
+    .page-title {
+        font-weight: 700;
+        letter-spacing: .2px;
+    }
+
+    .subtle {
+        color: #6c757d;
+    }
+
+    /* Select2 Bootstrap5 - base */
+    .select2-container--bootstrap-5 .select2-selection {
+        border-radius: .75rem !important;
+        min-height: 42px;
+    }
+
+    .select2-container--bootstrap-5 .select2-selection--multiple {
+        padding: .2rem .25rem;
+    }
+
+    .select2-container--bootstrap-5 .select2-selection__choice__remove {
+        display: none !important;
+    }
+
+    /* Chips bonitos */
+    .s2-chip {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 50rem;
+        padding: .18rem .6rem;
+        gap: .35rem;
+        font-weight: 600;
+        font-size: .85rem;
+        color: #fff;
+        box-shadow: 0 1px 0 rgba(0,0,0,.06) inset, 0 1px 2px rgba(0,0,0,.05);
+    }
+
+        .s2-chip .x {
+            opacity: .9;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+            .s2-chip .x:hover {
+                opacity: 1;
+            }
+
+    /* Paleta (Bootstrap-like) */
+    .chip-primary {
+        background: #0d6efd;
+    }
+
+    .chip-success {
+        background: #198754;
+    }
+
+    .chip-info {
+        background: #0dcaf0;
+        color: #052c33;
+    }
+
+    .chip-warning {
+        background: #ffc107;
+        color: #3a2e00;
+    }
+
+    .chip-danger {
+        background: #dc3545;
+    }
+
+    .chip-purple {
+        background: #6f42c1;
+    }
+
+    /* Action bar sticky */
+    .action-bar {
+        position: sticky;
+        bottom: 0;
+        background: linear-gradient(180deg,transparent,#fff 22%);
+        margin-top: .75rem;
+    }
+
+        .action-bar .inner {
+            border-top: 1px solid #e9ecef;
+            padding: .75rem 0;
+            display: flex;
+            justify-content: flex-end;
+            gap: .6rem;
+        }
+</style>
+
+<div class="container page-wrap mt-4">
+    <div class="d-flex flex-wrap align-items-end justify-content-between mb-3">
+        <div>
+            <h2 class="page-title mb-1"><i class="bi bi-diagram-3 me-2"></i>Nuevo Grupo Supervisor – Técnicos</h2>
+            <div class="subtle">Asigne uno o varios técnicos al supervisor seleccionado.</div>
+        </div>
+        <div>
+            <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Volver</a>
+        </div>
+    </div>
+
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger d-none"></div>
+
+    <form asp-action="Create" method="post" novalidate>
+        <div class="row g-4">
+            <!-- Supervisor -->
+            <div class="col-12 col-lg-4">
+                <div class="card-ux h-100">
+                    <div class="card-head fw-semibold"><i class="bi bi-person-badge me-1"></i> Supervisor</div>
+                    <div class="card-body">
+                        <label class="form-label">Seleccione el supervisor</label>
+                        <select asp-for="SupervisorId"
+                                asp-items="supervisores"
+                                class="form-select"
+                                id="selSupervisor" required>
+                            <option value="">— Seleccione —</option>
+                        </select>
+                        <span asp-validation-for="SupervisorId" class="text-danger"></span>
+
+                        <div class="small text-muted mt-3">Tip: escriba el apellido para filtrar más rápido.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Técnicos -->
+            <div class="col-12 col-lg-8">
+                <div class="card-ux h-100">
+                    <div class="card-head fw-semibold"><i class="bi bi-people me-1"></i> Técnicos</div>
+                    <div class="card-body">
+                        <label class="form-label">Seleccione uno o varios técnicos</label>
+                        <select asp-for="TecnicosIds"
+                                asp-items="tecnicos"
+                                class="form-select"
+                                id="selTecnicos"
+                                multiple>
+                        </select>
+                        <span asp-validation-for="TecnicosIds" class="text-danger"></span>
+
+                        <div class="d-flex align-items-center justify-content-between mt-2">
+                            <div class="small text-muted">Use el buscador; quite un técnico con la “x”.</div>
+                            <div id="tecCount" class="small fw-semibold text-secondary"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Acciones -->
+        <div class="action-bar">
+            <div class="inner">
+                <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Guardar asignación</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.full.min.js"></script>
+
+    <script>
+        (function () {
+          const sup = $('#selSupervisor');
+          const tec = $('#selTecnicos');
+          const count = document.getElementById('tecCount');
+
+          sup.select2({ theme: 'bootstrap-5', width: '100%', placeholder: 'Seleccione un supervisor', allowClear: true });
+
+          function templateSelection(data) {
+            if (!data.id) return data.text;
+            return $(`<span class="s2-chip" data-val="${data.id}"><span class="txt">${data.text}</span></span>`);
+          }
+
+          tec.select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: 'Seleccione uno o varios técnicos',
+            closeOnSelect: false,
+            allowClear: false,   
+            templateSelection: templateSelection
+          });
+
+          const palette = ['chip-primary','chip-success','chip-info','chip-warning','chip-danger','chip-purple'];
+          function hashId(id){ let h=0,s=String(id); for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0; return h; }
+
+          function colorizeChips(){
+            $('.select2-selection__choice .s2-chip').each(function(){
+              const id = this.getAttribute('data-val');
+              const idx = hashId(id) % palette.length;
+              this.classList.remove(...palette);
+              this.classList.add(palette[idx]);
+
+              if (!this.querySelector('.x')){
+                const btn = document.createElement('span');
+                btn.className = 'x';
+                btn.textContent = '×';
+                btn.onclick = () => {
+                  const vals = tec.val() || [];
+                  tec.val(vals.filter(v => v !== id)).trigger('change');
+                };
+                this.prepend(btn);
+              }
+            });
+          }
+
+          function updateCount(){
+            const total = (tec.val() || []).length;
+            count.textContent = total ? `${total} técnico${total>1?'s':''} seleccionado${total>1?'s':''}` : '';
+          }
+
+          tec.on('change select2:select select2:unselect', function(){
+            colorizeChips();
+            updateCount();
+          });
+
+          colorizeChips();
+          updateCount();
+        })();
+    </script>
+}

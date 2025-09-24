@@ -1,0 +1,127 @@
+﻿@model IEnumerable<SkyNet.Models.GrupoSupervisorTec>
+@{
+    ViewData["Title"] = "Grupos Supervisor – Técnicos";
+    var supervisores = ViewBag.Supervisores as IEnumerable<dynamic>;
+    long supSel = ViewBag.SupSel ?? 0L;
+}
+
+<div class="container mt-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h4 class="mb-0"><i class="bi bi-people"></i> Grupos Supervisor – Técnicos</h4>
+        <div class="d-flex gap-2">
+            <form method="get" class="d-flex align-items-center gap-2">
+                <select name="sup" class="form-select form-select-sm">
+                    <option value="0">-- Todos los supervisores --</option>
+                    @foreach (var s in supervisores)
+                    {
+                        if (supSel == (long)s.Id)
+                        {
+                            <option value="@s.Id" selected>@s.Nombre</option>
+                        }
+                        else
+                        {
+                            <option value="@s.Id">@s.Nombre</option>
+                        }
+                    }
+                </select>
+                <button class="btn btn-sm btn-outline-secondary" type="submit">
+                    <i class="bi bi-funnel"></i> Filtrar
+                </button>
+            </form>
+            <a class="btn btn-sm btn-primary" asp-action="Create">
+                <i class="bi bi-plus-circle"></i> Nuevo
+            </a>
+        </div>
+    </div>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    @if (TempData["ok"] is bool ok && ok)
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Solicitud enviada!',
+                    text: 'Acción realizada con éxito',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#0d6efd'
+                });
+            });
+        </script>
+    }
+
+    <div class="table-responsive">
+        <table class="table table-sm table-striped align-middle shadow-sm">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Supervisor</th>
+                    <th>Técnico</th>
+                    <th>Creado (UTC)</th>
+                    <th>Estado</th>
+                    <th style="width:160px;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var g in Model)
+                    {
+                        <tr>
+                            <td>@g.IdGrupo</td>
+                            <td>
+                                @(g.Supervisor != null
+                                                        ? g.Supervisor.Nombres + " " + g.Supervisor.Apellidos
+                                                        : g.FkSupervisor.ToString())
+                                                                                </td>
+                                                                                <td>
+                                @(g.Tecnico != null
+                                                        ? g.Tecnico.Nombres + " " + g.Tecnico.Apellidos
+                                                        : g.FkTecnico.ToString())
+                    </td>
+                    <td>@g.FechaCreacionUtc.ToString("yyyy-MM-dd HH:mm")</td>
+                    <td>
+                        @if (g.Estado)
+                                {
+                                    <span class="badge bg-success">Activo</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Inactivo</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <form asp-action="Toggle" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@g.IdGrupo" />
+                                    <button class="btn btn-sm btn-outline-warning" type="submit" title="Activar/Desactivar">
+                                        <i class="bi bi-power"></i>
+                                    </button>
+                                </form>
+                                <form asp-action="Delete" method="post" class="d-inline"
+                                      onsubmit="return confirm('¿Eliminar relación?');">
+                                    <input type="hidden" name="id" value="@g.IdGrupo" />
+                                    <button class="btn btn-sm btn-outline-danger" type="submit" title="Eliminar">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">No hay grupos registrados.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    .table td, .table th {
+        vertical-align: middle;
+    }
+</style>
