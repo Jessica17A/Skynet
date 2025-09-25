@@ -61,25 +61,15 @@
                 </a>
             </li>
 
-            <li class="nav-title">Operación</li>
-            <li class="nav-item">
-                <a class="nav-link @(IsActive("ClientesUi") ? "active" : "")" asp-controller="ClientesUi" asp-action="Index">
-                    <i class="bi bi-people me-2"></i> Clientes
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link @(IsActive("Visitas") ? "active" : "")" asp-controller="Visitas" asp-action="Index">
-                    <i class="bi bi-calendar-check me-2"></i> Visitas
-                </a>
-            </li>
-
             <li class="nav-title">Administración</li>
 
             <!-- Menú desplegable (NAV-GROUP) -->
             <li class="nav-item nav-group">
                 <a class="nav-link nav-group-toggle" href="#" role="button">
-                    <i class="bi bi-menu-button"></i> Gestión de usuarios
+                    <i class="bi bi-menu-button"></i> Gestión de usuarios🔻
+                    
                 </a>
+
                 <ul class="nav-group-items">
                     <li class="nav-item">
                         <a class="nav-link" asp-area="Identity" asp-page="/Account/Register">
@@ -107,9 +97,12 @@
 
 
 
-            <li class="nav-title">Extras</li>
+            <li class="nav-title">Supervisores</li>
             <li class="nav-item">
-                <a class="nav-link" href="#"><i class="bi bi-file-earmark-text me-2"></i> Pages</a>
+                <a class="nav-link @(IsActive("GruposUi") ? "active" : "")"
+                   asp-area="" asp-controller="GruposUi" asp-action="Index">
+                    <i class="bi bi-person-video2"></i> Grupos
+                </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" target="_blank" href="https://coreui.io/docs/"><i class="bi bi-journal-code me-2"></i> Docs</a>

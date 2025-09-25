@@ -300,54 +300,9 @@
     "Order": 0,
     "Parameters": [
       {
-        "Name": "Nombre",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "Email",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "Telefono",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "Tipo",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "Prioridad",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "Descripcion",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "Archivos",
-        "Type": "System.Collections.Generic.List\u00601[[Microsoft.AspNetCore.Http.IFormFile, Microsoft.AspNetCore.Http.Features, Version=8.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60]]",
-        "IsRequired": false
-      },
-      {
-        "Name": "Direccion",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "Latitud",
-        "Type": "System.Nullable\u00601[[System.Double, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "IsRequired": false
-      },
-      {
-        "Name": "Longitud",
-        "Type": "System.Nullable\u00601[[System.Double, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "IsRequired": false
+        "Name": "dto",
+        "Type": "SkyNet.Models.DTOs.SolicitudCreateDto",
+        "IsRequired": true
       }
     ],
     "ReturnTypes": [
@@ -371,6 +326,35 @@
       {
         "Name": "id",
         "Type": "System.Int64",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "SkyNet.Models.DTOs.SolicitudDto",
+        "MediaTypes": [
+          "application/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "SkyNet.Controllers.Api.SolicitudesApiController",
+    "Method": "CambiarEstado",
+    "RelativePath": "api/solicitudes/{id}/estado",
+    "HttpMethod": "PATCH",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int64",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "SkyNet.Models.DTOs.CambiarEstadoDto",
         "IsRequired": true
       }
     ],

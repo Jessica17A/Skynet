@@ -81,18 +81,24 @@ namespace SkyNet.Controllers.Api
 
             foreach (var tecId in tecValidos.Distinct())
             {
+                // SOLO dup si ya existe ACTIVO
                 var dup = await _db.GruposSupervisoresTec
-                    .AnyAsync(g => g.FkSupervisor == dto.SupervisorId && g.FkTecnico == tecId);
+                    .AnyAsync(g => g.FkSupervisor == dto.SupervisorId
+                                && g.FkTecnico == tecId
+                                && g.Estado); // <--- clave
+
                 if (!dup)
                 {
                     _db.GruposSupervisoresTec.Add(new GrupoSupervisorTec
                     {
                         FkSupervisor = dto.SupervisorId,
                         FkTecnico = tecId,
-                        Estado = true
+                        Estado = true,
+                        FechaCreacionUtc = DateTime.UtcNow
                     });
                 }
             }
+
 
             await _db.SaveChangesAsync();
             return StatusCode(201);

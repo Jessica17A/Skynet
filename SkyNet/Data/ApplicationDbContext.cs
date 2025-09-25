@@ -90,7 +90,10 @@ namespace SkyNet.Data
                 e.Property(x => x.FkSupervisor).HasColumnName("FKSUPERVISOR");
                 e.Property(x => x.FkTecnico).HasColumnName("FKTECNICO");
                 e.Property(x => x.FechaCreacionUtc).HasColumnName("FECHA_CREACION_UTC");
-                e.Property(x => x.Estado).HasColumnName("ESTADO");
+                e.Property(x => x.Estado)
+                .HasColumnType("bit")
+                .HasColumnName("ESTADO")
+                .ValueGeneratedNever();
 
                 e.HasOne(x => x.Supervisor)
                  .WithMany()

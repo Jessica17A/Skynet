@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Http; 
 namespace SkyNet.Models.DTOs
 {
+
+
     public class SolicitudCreateDto
     {
         [Required, StringLength(120)]
@@ -51,5 +53,21 @@ namespace SkyNet.Models.DTOs
         public string? Direccion { get; set; }
         public double? Latitud { get; set; }
         public double? Longitud { get; set; }
+        public List<ArchivoDto> Adjuntos { get; set; } = new();
     }
+
+    public class CambiarEstadoDto
+    {
+        public int Estado { get; set; }        
+       
+    }
+
+    public class ArchivoDto
+    {
+        public int Id { get; set; }                 
+        public string PublicId { get; set; } = "";
+        public DateTime CreatedAtUtc { get; set; }
+    }
+
+
 }

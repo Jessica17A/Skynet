@@ -1,0 +1,137 @@
+﻿@model IEnumerable<SkyNet.Models.DTOs.SolicitudDto>
+@{
+    ViewData["Title"] = "Solicitudes";
+
+    string EstadoNombre(int e) => e switch
+    {
+        0 => "Rechazado",
+        1 => "Pendiente",
+        2 => "Revisada",
+        3 => "Aceptada",
+        4 => "En proceso",
+        5 => "Finalizado",
+        _ => "Desconocido"
+    };
+    string EstadoBadge(int e) => e switch
+    {
+        0 => "badge bg-danger",
+        1 => "badge bg-secondary",
+        2 => "badge bg-info",
+        3 => "badge bg-success",
+        4 => "badge bg-warning text-dark",
+        5 => "badge bg-primary",
+        _ => "badge bg-dark"
+    };
+    var estados = new (int, string)[] { (0,"Rechazado"),(1,"Pendiente"),(2,"Revisada"),
+        (3,"Aceptada"),(4,"En proceso"),(5,"Finalizado") };
+    var items = Model?.ToList() ?? new List<SkyNet.Models.DTOs.SolicitudDto>();
+}
+
+<div class="container mt-4">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+        <h3 class="mb-0"><i class="bi bi-list-task"></i> Solicitudes</h3>
+        <div class="d-flex flex-wrap gap-2">
+            <div class="input-group">
+                <label class="input-group-text" for="filtroEstado"><i class="bi bi-funnel"></i></label>
+                <select id="filtroEstado" class="form-select form-select-sm">
+                    <option value="">Todos</option>
+                    @foreach (var e in estados)
+                    {
+                        <option value="@e.Item1">@e.Item2</option>
+                    }
+                </select>
+            </div>
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input id="searchBox" class="form-control form-control-sm" placeholder="Buscar…" />
+            </div>
+        </div>
+    </div>
+
+    <div class="small text-muted mb-2">
+        <span id="countShown">@items.Count</span> de <span id="countTotal">@items.Count</span> solicitudes
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table id="tablaSolicitudes" class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width:80px;">ID</th>
+                        <th>Ticket</th>
+                        <th>Solicitante</th>
+                        <th>Email</th>
+                        <th>Tipo</th>
+                        <th>Prioridad</th>
+                        <th>Estado</th>
+                        <th style="width:160px;">Creado (UTC)</th>
+                        <th style="width:90px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in items)
+                    {
+                        var e = (int)s.Estado;
+                        <tr data-estado="@e">
+                            <td class="text-muted">@s.Id</td>
+                            <td class="fw-semibold">@s.Ticket</td>
+                            <td>@s.Nombre</td>
+                            <td class="text-nowrap">@s.Email</td>
+                            <td>@s.Tipo</td>
+                            <td><span class="badge rounded-pill bg-light text-dark border">@s.Prioridad</span></td>
+                            <td><span class="@EstadoBadge(e)">@EstadoNombre(e)</span></td>
+                            <td class="text-nowrap">@s.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td class="text-end">
+                                <a asp-action="Details" asp-route-id="@s.Id" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i> Ver
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                    <tr id="noRows" style="display:none">
+                        <td colspan="9" class="text-center text-muted py-4">Sin resultados.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer d-flex justify-content-between small text-muted">
+            <div>Mostrando <span id="countShownFooter">@items.Count</span> de @items.Count</div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (() => {
+          const $estado = document.getElementById('filtroEstado');
+          const $search = document.getElementById('searchBox');
+          const $rows = Array.from(document.querySelectorAll('#tablaSolicitudes tbody tr')).filter(tr=>tr.id!=='noRows');
+          const $countShown = document.getElementById('countShown');
+          const $countShownFooter = document.getElementById('countShownFooter');
+          const $noRows = document.getElementById('noRows');
+
+          const norm = s => (s||'').toString().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'');
+          const cache = new Map();
+          const textOf = tr => { if(!cache.has(tr)) cache.set(tr, norm(tr.innerText)); return cache.get(tr); };
+
+          function apply(){
+            const e = $estado.value;
+            const q = norm($search.value);
+            let shown = 0;
+            for(const tr of $rows){
+              const matchE = !e || tr.dataset.estado === e;
+              const matchQ = !q || textOf(tr).includes(q);
+              const show = matchE && matchQ;
+              tr.style.display = show ? '' : 'none';
+              if (show) shown++;
+            }
+            $countShown.textContent = shown;
+            $countShownFooter.textContent = shown;
+            $noRows.style.display = shown ? 'none' : '';
+          }
+
+          $estado.addEventListener('change', apply);
+          $search.addEventListener('input', apply);
+        })();
+    </script>
+}

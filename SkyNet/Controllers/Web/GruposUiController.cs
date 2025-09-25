@@ -61,7 +61,10 @@ namespace SkyNet.Controllers.Web
             foreach (var tecId in tecnicos)
             {
                 var dup = await _db.GruposSupervisoresTec
-                    .AnyAsync(g => g.FkSupervisor == vm.SupervisorId && g.FkTecnico == tecId);
+                 .AnyAsync(g => g.FkSupervisor == vm.SupervisorId
+                 && g.FkTecnico == tecId
+                 && g.Estado);   
+
 
                 if (!dup)
                 {
@@ -94,17 +97,7 @@ namespace SkyNet.Controllers.Web
             return RedirectToAction(nameof(Index));
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Delete(int id)
-        {
-            var g = await _db.GruposSupervisoresTec.FindAsync(id);
-            if (g == null) return NotFound();
-
-            _db.GruposSupervisoresTec.Remove(g);
-            await _db.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
+      
         private async Task CargarSelects()
         {
             // Supervisores activos

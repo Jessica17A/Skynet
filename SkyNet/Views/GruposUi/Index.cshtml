@@ -1,4 +1,6 @@
 ﻿@model IEnumerable<SkyNet.Models.GrupoSupervisorTec>
+@using System.Linq
+
 @{
     ViewData["Title"] = "Grupos Supervisor – Técnicos";
     var supervisores = ViewBag.Supervisores as IEnumerable<dynamic>;
@@ -28,9 +30,11 @@
                     <i class="bi bi-funnel"></i> Filtrar
                 </button>
             </form>
-            <a class="btn btn-sm btn-primary" asp-action="Create">
-                <i class="bi bi-plus-circle"></i> Nuevo
+            <a class="btn btn-sm btn-primary d-inline-flex align-items-center justify-content-center" asp-action="Create">
+                <i class="bi bi-plus-circle me-1"></i>
+                <span>Nuevo</span>
             </a>
+
         </div>
     </div>
 
@@ -55,18 +59,18 @@
         <table class="table table-sm table-striped align-middle shadow-sm">
             <thead class="table-light">
                 <tr>
-                    <th>#</th>
+                    <th style="width:50px;">#</th>
                     <th>Supervisor</th>
                     <th>Técnico</th>
-                    <th>Creado (UTC)</th>
-                    <th>Estado</th>
-                    <th style="width:160px;"></th>
+                    <th style="width:180px;">Creado (UTC)</th>
+                    <th style="width:100px;">Estado</th>
+                    <th style="width:120px;" class="text-center">Acciones</th>
                 </tr>
             </thead>
             <tbody>
-                @if (Model != null && Model.Any())
+                @if (Model is IEnumerable<SkyNet.Models.GrupoSupervisorTec> rows && rows.Any())
                 {
-                    foreach (var g in Model)
+                    foreach (var g in rows)
                     {
                         <tr>
                             <td>@g.IdGrupo</td>
@@ -75,13 +79,13 @@
                                                         ? g.Supervisor.Nombres + " " + g.Supervisor.Apellidos
                                                         : g.FkSupervisor.ToString())
                                                                                 </td>
-                                                                                <td>
+                        <td>
                                 @(g.Tecnico != null
                                                         ? g.Tecnico.Nombres + " " + g.Tecnico.Apellidos
                                                         : g.FkTecnico.ToString())
-                    </td>
-                    <td>@g.FechaCreacionUtc.ToString("yyyy-MM-dd HH:mm")</td>
-                    <td>
+                        </td>
+                        <td>@g.FechaCreacionUtc.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>
                         @if (g.Estado)
                                 {
                                     <span class="badge bg-success">Activo</span>
@@ -91,15 +95,8 @@
                                     <span class="badge bg-secondary">Inactivo</span>
                                 }
                             </td>
-                            <td class="text-end">
+                            <td class="text-center">
                                 <form asp-action="Toggle" method="post" class="d-inline">
-                                    <input type="hidden" name="id" value="@g.IdGrupo" />
-                                    <button class="btn btn-sm btn-outline-warning" type="submit" title="Activar/Desactivar">
-                                        <i class="bi bi-power"></i>
-                                    </button>
-                                </form>
-                                <form asp-action="Delete" method="post" class="d-inline"
-                                      onsubmit="return confirm('¿Eliminar relación?');">
                                     <input type="hidden" name="id" value="@g.IdGrupo" />
                                     <button class="btn btn-sm btn-outline-danger" type="submit" title="Eliminar">
                                         <i class="bi bi-trash"></i>
@@ -123,5 +120,10 @@
 <style>
     .table td, .table th {
         vertical-align: middle;
+        padding: .35rem .5rem; 
+    }
+
+    .table th {
+        white-space: nowrap;
     }
 </style>

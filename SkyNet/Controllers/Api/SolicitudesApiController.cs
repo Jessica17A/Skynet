@@ -1,7 +1,4 @@
-﻿using System.Net;
-using CloudinaryDotNet;
-using CloudinaryDotNet.Actions;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SkyNet.Data;
 using SkyNet.Models;
@@ -15,16 +12,15 @@ namespace SkyNet.Controllers.Api
     public class SolicitudesApiController : ControllerBase
     {
         private readonly ApplicationDbContext _db;
-        private readonly Cloudinary _cloud;
         private readonly ILogger<SolicitudesApiController> _logger;
 
-        public SolicitudesApiController(ApplicationDbContext db, Cloudinary cloud, ILogger<SolicitudesApiController> logger)
+        public SolicitudesApiController(ApplicationDbContext db, ILogger<SolicitudesApiController> logger)
         {
             _db = db;
-            _cloud = cloud;
             _logger = logger;
         }
 
+        // GET: /api/solicitudes
         [HttpGet]
         public async Task<ActionResult<IEnumerable<SolicitudDto>>> GetAll(CancellationToken ct)
         {
@@ -42,7 +38,6 @@ namespace SkyNet.Controllers.Api
                     Ticket = s.Ticket,
                     CreatedAtUtc = s.CreatedAtUtc,
                     Estado = s.Estado,
-                   
                     Direccion = s.Direccion,
                     Latitud = s.Latitud,
                     Longitud = s.Longitud
@@ -52,32 +47,28 @@ namespace SkyNet.Controllers.Api
             return Ok(list);
         }
 
+        // GET: /api/solicitudes/{id}
         [HttpGet("{id:long}")]
         public async Task<ActionResult<SolicitudDto>> GetById(long id, CancellationToken ct)
         {
             var s = await _db.Solicitudes.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
-            return s is null ? NotFound() : Map(s);
+            return s is null ? NotFound() : Ok(Map(s));
         }
 
+        // GET: /api/solicitudes/by-ticket/{ticket}
         [HttpGet("by-ticket/{ticket}")]
         public async Task<ActionResult<SolicitudDto>> GetByTicket(string ticket, CancellationToken ct)
         {
             var s = await _db.Solicitudes.AsNoTracking().FirstOrDefaultAsync(x => x.Ticket == ticket, ct);
-            return s is null ? NotFound() : Map(s);
+            return s is null ? NotFound() : Ok(Map(s));
         }
 
+        // POST: /api/solicitudes
         [HttpPost]
-        [RequestSizeLimit(25_000_000)] 
-        public async Task<ActionResult<SolicitudDto>> Create([FromForm] SolicitudCreateDto dto, CancellationToken ct)
+        public async Task<ActionResult<SolicitudDto>> Create([FromBody] SolicitudCreateDto dto, CancellationToken ct)
         {
             if (!ModelState.IsValid)
                 return ValidationProblem(ModelState);
-
-            // Coordenadas: ambas o ninguna, y dentro de rango
-            if (dto.Latitud.HasValue ^ dto.Longitud.HasValue)
-                return BadRequest(new { error = "Debe proporcionar latitud y longitud juntas." });
-            if ((dto.Latitud is < -90 or > 90) || (dto.Longitud is < -180 or > 180))
-                return BadRequest(new { error = "Coordenadas fuera de rango." });
 
             var ticket = GenerateTicket();
 
@@ -98,90 +89,28 @@ namespace SkyNet.Controllers.Api
             };
 
             _db.Solicitudes.Add(entidad);
-            await _db.SaveChangesAsync(ct); 
+            await _db.SaveChangesAsync(ct);
 
-           
-            var archivos = dto.Archivos?.Where(f => f is not null && f.Length > 0).ToList() ?? new();
-            if (archivos.Count > 0)
-            {
-                var imgExt = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
-                var pdfExt = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".pdf" };
-                var wordExt = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".doc", ".docx" };
-                var xlsExt = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".xls", ".xlsx" };
-                const long MAX_FILE_BYTES = 10_000_000; 
-
-                foreach (var file in archivos)
-                {
-                    if (file.Length > MAX_FILE_BYTES)
-                        return BadRequest(new { error = $"El archivo {file.FileName} supera 10 MB." });
-
-                    var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-                    bool esImagen = imgExt.Contains(ext);
-                    bool esPdf = pdfExt.Contains(ext);
-                    bool esWord = wordExt.Contains(ext);
-                    bool esExcel = xlsExt.Contains(ext);
-
-                    if (!(esImagen || esPdf || esWord || esExcel))
-                        return BadRequest(new { error = $"Tipo de archivo no permitido: {file.FileName}" });
-
-                    string publicId;
-
-                    await using (var stream = file.OpenReadStream())
-                    {
-                        if (esImagen)
-                        {
-                            var up = new ImageUploadParams
-                            {
-                                File = new FileDescription(file.FileName, stream),
-                                Folder = $"solicitudes/{ticket}",
-                                UseFilename = true,
-                                UniqueFilename = true,
-                                Overwrite = false
-                            };
-
-                            var res = await _cloud.UploadAsync(up); // sin CancellationToken
-                            if (res.StatusCode != HttpStatusCode.OK && res.StatusCode != HttpStatusCode.Created)
-                                return StatusCode((int)res.StatusCode, new { error = $"Error subiendo imagen {file.FileName}." });
-
-                            publicId = res.PublicId!;
-                        }
-                        else
-                        {
-                            var up = new RawUploadParams
-                            {
-                                File = new FileDescription(file.FileName, stream),
-                                Folder = $"solicitudes/{ticket}",
-                                UseFilename = true,
-                                UniqueFilename = true,
-                                Overwrite = false
-                               
-                            };
-
-                            var res = await _cloud.UploadAsync(up);
-                            if (res.StatusCode != HttpStatusCode.OK && res.StatusCode != HttpStatusCode.Created)
-                                return StatusCode((int)res.StatusCode, new { error = $"Error subiendo archivo {file.FileName}." });
-
-                            publicId = res.PublicId!;
-                        }
-                    }
-
-                    _db.ArchivosSolicitudes.Add(new ArchivoSolicitud
-                    {
-                        Fk_Solicitud = entidad.Id,  
-                        PublicId = publicId,
-                        CreatedAtUtc = DateTime.UtcNow
-                    });
-                }
-
-                await _db.SaveChangesAsync(ct);
-            }
-
-            var outDto = Map(entidad);
-            return CreatedAtAction(nameof(GetById), new { id = entidad.Id }, outDto);
+            return CreatedAtAction(nameof(GetById), new { id = entidad.Id }, Map(entidad));
         }
 
+        // PATCH: /api/solicitudes/{id}/estado
+        [HttpPatch("{id:long}/estado")]
+        public async Task<ActionResult<SolicitudDto>> CambiarEstado(long id, [FromBody] CambiarEstadoDto dto, CancellationToken ct)
+        {
+            if (dto is null || dto.Estado < 0 || dto.Estado > 5)
+                return BadRequest(new { error = "Estado inválido. Debe ser 0..5" });
 
+            var s = await _db.Solicitudes.FirstOrDefaultAsync(x => x.Id == id, ct);
+            if (s is null) return NotFound();
 
+            s.Estado = (SolicitudEstado)dto.Estado;
+            await _db.SaveChangesAsync(ct);
+
+            return Ok(Map(s));
+        }
+
+        // Helpers
         private static string GenerateTicket()
         {
             var date = DateTime.UtcNow.ToString("yyyyMMdd");
@@ -203,10 +132,10 @@ namespace SkyNet.Controllers.Api
             Ticket = s.Ticket,
             CreatedAtUtc = s.CreatedAtUtc,
             Estado = s.Estado,
-           
             Direccion = s.Direccion,
             Latitud = s.Latitud,
             Longitud = s.Longitud
         };
     }
+
 }

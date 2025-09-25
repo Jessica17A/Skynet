@@ -2,7 +2,15 @@
 
 namespace SkyNet.Models
 {
-    public enum SolicitudEstado { Pendiente = 1, EnProceso = 4, Cerrada = 5 }
+    public enum SolicitudEstado
+    {
+        Rechazado = 0,
+        Pendiente = 1,
+        Revisada = 2,
+        Aceptada = 3,
+        EnProceso = 4,
+        Finalizado = 5
+    }
 
     public class Solicitud
     {
@@ -50,6 +58,7 @@ namespace SkyNet.Models
         public string PublicId { get; set; } = null!;
 
         public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
-        public int Estado = 1;
+        public int Estado { get; set; } = 1;
+
     }
 }
