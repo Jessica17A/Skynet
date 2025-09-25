@@ -228,6 +228,7 @@
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         (() => {
             const estados = {
@@ -302,36 +303,72 @@
                 }
             }
 
-            async function cambiarEstado(id, nuevo){
-                if (nuevo === 0 && !confirm("¿Seguro que quieres RECHAZAR esta solicitud?")) return;
-                if (nuevo === 5 && !confirm("¿Marcar como FINALIZADO?")) return;
+        
 
-                try {
-                    const resp = await fetch(`/api/solicitudes/${id}/estado`, {
-                        method: "PATCH",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ estado: nuevo })
+ 
+        async function cambiarEstado(id, nuevo) {
+            try {
+                if (nuevo === 0) {
+                    const res = await Swal.fire({
+                        title: "¿Seguro?",
+                        text: "¿Quieres RECHAZAR esta solicitud?",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonText: "Sí, rechazar",
+                        cancelButtonText: "Cancelar"
                     });
-                    if (!resp.ok) { alert("No se pudo actualizar el estado."); return; }
-
-                    const data = await resp.json();
-
-                    // badge
-                    const badge = document.getElementById('estadoBadge');
-                    badge.className = estados[data.estado].cls + ' fade-update';
-                    badge.textContent = estados[data.estado].text;
-
-                    // dataset + stepper
-                    const cont = document.getElementById('solicitud');
-                    cont.dataset.estado = data.estado;
-                    actualizarStepper(data.estado);
-
-                    renderBotones();
-                } catch (e) {
-                    console.error(e);
-                    alert("Error de red al cambiar estado.");
+                    if (!res.isConfirmed) return;
                 }
+
+                if (nuevo === 5) {
+                    const res = await Swal.fire({
+                        title: "¿Finalizar?",
+                        text: "¿Marcar como FINALIZADO?",
+                        icon: "question",
+                        showCancelButton: true,
+                        confirmButtonText: "Sí, finalizar",
+                        cancelButtonText: "Cancelar"
+                    });
+                    if (!res.isConfirmed) return;
+                }
+
+                const resp = await fetch(`/api/solicitudes/${id}/estado`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ estado: nuevo })
+                });
+
+                if (!resp.ok) {
+                    Swal.fire("Error", "No se pudo actualizar el estado.", "error");
+                    return;
+                }
+
+                const data = await resp.json();
+
+                const badge = document.getElementById('estadoBadge');
+                badge.className = estados[data.estado].cls + ' fade-update';
+                badge.textContent = estados[data.estado].text;
+
+                const cont = document.getElementById('solicitud');
+                cont.dataset.estado = data.estado;
+                actualizarStepper(data.estado);
+
+                renderBotones();
+
+                Swal.fire({
+                    title: "¡Actualizado!",
+                    text: "El estado se cambió correctamente.",
+                    icon: "success",
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+
+            } catch (e) {
+                console.error(e);
+                Swal.fire("Error", "Error de red al cambiar estado.", "error");
             }
+        }
+   
 
             function actualizarStepper(curr){
                 const stepper = document.getElementById('stepper');
@@ -355,5 +392,6 @@
 
             document.addEventListener('DOMContentLoaded', renderBotones);
         })();
+      
     </script>
 }
