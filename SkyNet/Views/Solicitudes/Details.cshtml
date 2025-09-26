@@ -97,22 +97,33 @@
         opacity: 1;
         transform: translateY(0)
     }
+    
 
-    }
-
-    /* Chips */
     .chip {
         display: inline-block;
-        padding: .25rem .65rem;
-        border-radius: 999px;
+        padding: .35rem .9rem;
+        border-radius: 50px; /* más redondo */
         font-size: .85rem;
-        line-height: 1
+        line-height: 1;
+        background: #f0f4f8; /* color suave */
+        color: #333;
+        border: 1px solid #d1d9e6;
+        box-shadow: 0 2px 4px rgba(0,0,0,.08); /* sombrita ligera */
+        transition: all 0.25s ease-in-out;
+        cursor: default;
     }
 
+        .chip:hover {
+            background: #e1ecf4;
+            border-color: #a7c7e7;
+            transform: translateY(-2px); /* pequeño efecto al pasar el mouse */
+        }
+
     .chip-lg {
-        padding: .35rem .8rem;
-        font-size: .9rem
+        padding: .45rem 1rem;
+        font-size: .95rem;
     }
+
 
     /* Botonera “Siguientes pasos” */
     .section-hint {

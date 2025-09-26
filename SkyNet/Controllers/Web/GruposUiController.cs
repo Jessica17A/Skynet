@@ -1,15 +1,28 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using SkyNet.Data;
 using SkyNet.Models;
+using SkyNet.Models.DTOs;
+
+
 
 namespace SkyNet.Controllers.Web
 {
     public class GruposUiController : Controller
     {
         private readonly ApplicationDbContext _db;
-        public GruposUiController(ApplicationDbContext db) => _db = db;
+        private readonly UserManager<IdentityUser> _userManager;
+
+        public GruposUiController(ApplicationDbContext db, UserManager<IdentityUser> userManager)
+        {
+            _db = db ?? throw new ArgumentNullException(nameof(db));
+            _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
+        }
+
+
+
 
         public async Task<IActionResult> Index(long? sup)
         {
@@ -121,5 +134,49 @@ namespace SkyNet.Controllers.Web
                 .Select(e => new SelectListItem { Value = e.Id.ToString(), Text = e.Nombres + " " + e.Apellidos })
                 .ToListAsync();
         }
+
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<GrupoItemDto>>> Get([FromQuery] long? sup, [FromQuery] bool mine = false)
+        {
+        
+            if (mine)
+            {
+                var userId = _userManager.GetUserId(User);
+                if (!string.IsNullOrWhiteSpace(userId))
+                {
+                    var supEmp = await _db.Empleados
+                        .FirstOrDefaultAsync(e => e.UserId == userId && e.Estado == 1 && e.Cargo == "Supervisor");
+                    if (supEmp != null) sup = supEmp.Id;
+                }
+            }
+
+            var q = _db.GruposSupervisoresTec
+                .Include(x => x.Supervisor)
+                .Include(x => x.Tecnico)
+                .AsQueryable();
+
+            if (sup.HasValue && sup.Value > 0)
+                q = q.Where(x => x.FkSupervisor == sup.Value);
+
+            var data = await q
+                .Where(x => x.Estado)
+                .OrderByDescending(x => x.IdGrupo)
+                .Select(x => new GrupoItemDto
+                {
+                    IdGrupo = x.IdGrupo,
+                    SupervisorId = x.FkSupervisor,
+                    TecnicoId = x.FkTecnico,
+                    SupervisorNombre = x.Supervisor != null ? (x.Supervisor.Nombres + " " + x.Supervisor.Apellidos) : "",
+                    TecnicoNombre = x.Tecnico != null ? (x.Tecnico.Nombres + " " + x.Tecnico.Apellidos) : "",
+                    FechaCreacionUtc = x.FechaCreacionUtc,
+                    Estado = x.Estado
+                })
+                .ToListAsync();
+
+            return Ok(data);
+        }
+
+        public IActionResult MisTecnicos() => View();
+
     }
 }

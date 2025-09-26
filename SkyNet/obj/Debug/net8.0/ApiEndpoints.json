@@ -191,8 +191,24 @@
   },
   {
     "ContainingType": "SkyNet.Controllers.Api.GruposApiController",
+    "Method": "Create",
+    "RelativePath": "api/grupos",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "SkyNet.Models.DTOs.GrupoCreateDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SkyNet.Controllers.Api.GruposApiController",
     "Method": "Get",
-    "RelativePath": "api/GruposApi",
+    "RelativePath": "api/grupos",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -200,6 +216,11 @@
       {
         "Name": "sup",
         "Type": "System.Nullable\u00601[[System.Int64, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "mine",
+        "Type": "System.Boolean",
         "IsRequired": false
       }
     ],
@@ -217,24 +238,8 @@
   },
   {
     "ContainingType": "SkyNet.Controllers.Api.GruposApiController",
-    "Method": "Create",
-    "RelativePath": "api/GruposApi",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "dto",
-        "Type": "SkyNet.Models.DTOs.GrupoCreateDto",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "SkyNet.Controllers.Api.GruposApiController",
     "Method": "Delete",
-    "RelativePath": "api/GruposApi/{id}",
+    "RelativePath": "api/grupos/{id}",
     "HttpMethod": "DELETE",
     "IsController": true,
     "Order": 0,
@@ -250,7 +255,7 @@
   {
     "ContainingType": "SkyNet.Controllers.Api.GruposApiController",
     "Method": "Toggle",
-    "RelativePath": "api/GruposApi/{id}/toggle",
+    "RelativePath": "api/grupos/{id}/toggle",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
@@ -266,7 +271,17 @@
   {
     "ContainingType": "SkyNet.Controllers.Api.GruposApiController",
     "Method": "Lookups",
-    "RelativePath": "api/GruposApi/lookups",
+    "RelativePath": "api/grupos/lookups",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SkyNet.Controllers.Api.GruposApiController",
+    "Method": "MisTecnicos",
+    "RelativePath": "api/grupos/mis-tecnicos",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
