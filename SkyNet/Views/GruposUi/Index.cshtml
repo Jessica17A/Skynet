@@ -1,0 +1,138 @@
+﻿@using SkyNet.Models.DTOs
+@model IEnumerable<GrupoItemDto>
+
+@{
+    ViewData["Title"] = "Grupos Supervisor – Técnicos";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var supervisores = ViewBag.Supervisores as IEnumerable<OpcionEmpleadoDto> ?? Enumerable.Empty<OpcionEmpleadoDto>();
+    long supSel = ViewBag.SupSel is long v ? v : 0L;
+}
+
+<div class="container-xxl mt-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h4 class="mb-0"><i class="bi bi-people"></i> Grupos Supervisor – Técnicos</h4>
+        <div class="d-flex gap-2">
+            <form method="get" class="d-flex align-items-center gap-2">
+                <select name="sup" class="form-select form-select-sm">
+                    @* Opción "Todos" sin C# en atributos *@
+                    @if (supSel == 0)
+                    {
+                        <option value="0" selected>-- Todos los supervisores --</option>
+                    }
+                    else
+                    {
+                        <option value="0">-- Todos los supervisores --</option>
+                    }
+
+                    @* Opciones de supervisores *@
+                    @foreach (var s in supervisores)
+                    {
+                        if (supSel == s.Id)
+                        {
+                            <option value="@s.Id" selected>@s.Nombre</option>
+                        }
+                        else
+                        {
+                            <option value="@s.Id">@s.Nombre</option>
+                        }
+                    }
+                </select>
+                <button class="btn btn-sm btn-outline-secondary" type="submit">
+                    <i class="bi bi-funnel"></i> Filtrar
+                </button>
+            </form>
+
+            <a class="btn btn-sm btn-primary d-inline-flex align-items-center" asp-action="Create">
+                <i class="bi bi-plus-circle me-1"></i> Nuevo
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["ok"] is bool okFlag)
+    {
+        <div class="alert @(okFlag ? "alert-success" : "alert-danger") alert-dismissible fade show" role="alert">
+            @(okFlag ? "Acción realizada con éxito." : "No se pudo completar la acción.")
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="table-responsive">
+        <table class="table table-sm table-striped align-middle shadow-sm">
+            <thead class="table-light">
+                <tr>
+                    <th style="width:60px;">#</th>
+                    <th>Supervisor</th>
+                    <th>Técnico</th>
+                    <th style="width:200px;">Creado (UTC)</th>
+                    <th style="width:110px;">Estado</th>
+                    <th style="width:160px;" class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var g in Model)
+                    {
+                        <tr>
+                            <td>@g.IdGrupo</td>
+                            <td>@g.SupervisorNombre</td>
+                            <td>@g.TecnicoNombre</td>
+                            <td>@g.FechaCreacionUtc.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>
+                                @if (g.Estado)
+                                {
+                                    <span class="badge text-bg-success">Activo</span>
+                                }
+                                else
+                                {
+                                    <span class="badge text-bg-secondary">Inactivo</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group">
+                                    @* Alternar estado *@
+                                    <form asp-action="Toggle" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@g.IdGrupo" />
+                                        <input type="hidden" name="sup" value="@supSel" />
+                                        <button class="btn btn-sm btn-outline-warning" type="submit" title="Activar/Desactivar">
+                                            <i class="bi bi-power"></i>
+                                        </button>
+                                    </form>
+
+                                    @* Eliminar (DELETE) *@
+                                    <form asp-action="Delete" method="post" class="d-inline" onsubmit="return confirm('¿Eliminar este grupo?');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@g.IdGrupo" />
+                                        <input type="hidden" name="sup" value="@supSel" />
+                                        <button class="btn btn-sm btn-outline-danger" type="submit" title="Eliminar">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">No hay grupos registrados.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    .table td, .table th {
+        vertical-align: middle;
+        padding: .35rem .5rem;
+    }
+
+    .table th {
+        white-space: nowrap;
+    }
+</style>

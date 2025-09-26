@@ -1,3 +1,17 @@
-﻿@{
-    Layout = "/Views/Shared/_Layout.cshtml";
+﻿﻿@{
+if (User?.Identity != null && User.Identity.IsAuthenticated)
+{
+    if (User.IsInRole("Administrador"))
+    {
+        Layout = "/Views/Shared/_Admin.cshtml"; // Layout para el rol Admin
+    }
+    else
+    {
+        Layout = "/Views/Shared/_Vendedor.cshtml"; // Layout para otros roles autenticados
+    }
+}
+else
+{
+    Layout = "/Views/Shared/_Layout.cshtml"; // Layout para usuarios no autenticados
+}
 }

@@ -1,7 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
-
+﻿using System;
+using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Http; 
 namespace SkyNet.Models.DTOs
 {
+
+
     public class SolicitudCreateDto
     {
         [Required, StringLength(120)]
@@ -19,17 +23,18 @@ namespace SkyNet.Models.DTOs
         [Required, StringLength(30)]
         public string Prioridad { get; set; } = "";
 
-
         [Required, StringLength(1500)]
         public string Descripcion { get; set; } = "";
 
-        // archivo
-        public IFormFile? Adjunto { get; set; }
+      
+        public List<IFormFile>? Archivos { get; set; }
 
-        // geo
+       
         public string? Direccion { get; set; }
         public double? Latitud { get; set; }
         public double? Longitud { get; set; }
+
+      
     }
 
     public class SolicitudDto
@@ -44,13 +49,25 @@ namespace SkyNet.Models.DTOs
         public string Ticket { get; set; } = "";
         public DateTime CreatedAtUtc { get; set; }
         public SkyNet.Models.SolicitudEstado Estado { get; set; }
-        public string? AdjuntoPublicId { get; set; }
+        public string? AdjuntoPublicId { get; set; } 
         public string? Direccion { get; set; }
         public double? Latitud { get; set; }
         public double? Longitud { get; set; }
+        public List<ArchivoDto> Adjuntos { get; set; } = new();
     }
 
+    public class CambiarEstadoDto
+    {
+        public int Estado { get; set; }        
+       
+    }
 
+    public class ArchivoDto
+    {
+        public int Id { get; set; }                 
+        public string PublicId { get; set; } = "";
+        public DateTime CreatedAtUtc { get; set; }
+    }
 
 
 }

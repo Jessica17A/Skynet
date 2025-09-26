@@ -1,0 +1,113 @@
+﻿@{
+    ViewData["Title"] = "Mis técnicos";
+    Layout = "~/Views/Shared/_Admin.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h4 class="mb-0"><i class="bi bi-person-badge"></i> Mis técnicos</h4>
+        <div class="d-flex gap-2">
+            <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Volver a grupos
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="tblMisTecnicos" class="table table-sm table-striped align-middle w-100">
+                    <thead class="table-light">
+                        <tr class="text-center">
+                            <th style="width:60px;"># Grupo</th>
+                            <th class="text-start">Técnico</th>
+                            <th class="text-start">Supervisor</th>
+                            <th style="width:200px;">Creado (UTC)</th>
+                            <th style="width:100px;">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
+}
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        let dt;
+
+        function cargarMisTecnicos() {
+            if (dt) dt.destroy();
+
+            dt = $('#tblMisTecnicos').DataTable({
+                ajax: {
+                    url: '/api/grupos?mine=true',
+                    dataSrc: ''
+                },
+                responsive: true,
+                lengthChange: false,
+                pageLength: 10,
+                order: [[3, 'desc']],
+                columns: [
+                    { data: 'idGrupo', className: 'text-center' },
+                    { data: 'tecnicoNombre' },
+                    { data: 'supervisorNombre' },
+                    {
+                        data: 'fechaCreacionUtc',
+                        render: function (data) {
+                            if (!data) return '';
+                            const d = new Date(data);
+                            const yyyy = d.getUTCFullYear();
+                            const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+                            const dd = String(d.getUTCDate()).padStart(2, '0');
+                            const hh = String(d.getUTCHours()).padStart(2, '0');
+                            const mi = String(d.getUTCMinutes()).padStart(2, '0');
+                            return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
+                        },
+                        className: 'text-center'
+                    },
+                    {
+                        data: 'estado',
+                        render: v => v
+                            ? '<span class="badge bg-success">Activo</span>'
+                            : '<span class="badge bg-secondary">Inactivo</span>',
+                        className: 'text-center'
+                    }
+                ],
+                language: {
+                    search: 'Buscar:',
+                    paginate: { previous: 'Anterior', next: 'Siguiente' },
+                    emptyTable: 'No hay registros disponibles'
+                }
+            });
+
+            // (Opcional) log de errores AJAX
+            $('#tblMisTecnicos').on('xhr.dt', function (e, settings, json, xhr) {
+                if (xhr && xhr.status !== 200) {
+                    console.error('AJAX error', xhr.status, xhr.statusText, xhr.responseText);
+                }
+            });
+        }
+
+        $(document).ready(cargarMisTecnicos);
+    </script>
+}
+
+<style>
+    .table td, .table th {
+        vertical-align: middle;
+        padding: .35rem .5rem;
+    }
+
+    .table th {
+        white-space: nowrap;
+    }
+</style>

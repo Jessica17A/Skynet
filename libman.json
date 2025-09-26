@@ -1,0 +1,10 @@
+{
+  "version": "3.0",
+  "defaultProvider": "unpkg",
+  "libraries": [
+    {
+      "library": "@coreui/coreui@5.1.0",
+      "destination": "wwwroot/lib/coreui"
+    }
+  ]
+}

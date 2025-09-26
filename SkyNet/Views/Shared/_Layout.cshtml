@@ -16,7 +16,8 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
 
     <!-- CoreUI 5 -->
-    <link rel="stylesheet" href="~/lib/coreui/dist/css/coreui.min.css" />
+    @* <link rel="stylesheet" href="~/lib/coreui/dist/css/coreui.min.css" /> *@
+    <link rel="stylesheet" href="~/lib/coreui/css/coreui.min.css" />
 
     <!-- Iconos -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
@@ -47,12 +48,13 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-white @(IsActive("LayoutPrincipal") ? "active" : "")"
-                               asp-controller="LayoutPrincipal" asp-action="Nosotros">Nosotros</a>
+                               asp-controller="Solicitudes" asp-action="Create">Solicitudes</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-white @(IsActive("LayoutPrincipal") ? "active" : "")"
-                               asp-controller="Solicitudes" asp-action="Create">Solicitudes</a>
+                               asp-controller="LayoutPrincipal" asp-action="Nosotros">Nosotros</a>
                         </li>
+                        
                     </ul>
                     <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                        
@@ -88,7 +90,8 @@
     <!-- JS -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/lib/coreui/dist/js/coreui.bundle.min.js"></script>
+@*     <script src="~/lib/coreui/dist/js/coreui.bundle.min.js"></script> *@
+    <script src="~/lib/coreui/js/coreui.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     @await RenderSectionAsync("Scripts", required: false)

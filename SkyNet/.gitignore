@@ -1,4 +1,11 @@
-﻿# Ignorar configuración de conexión
-appsettings.json
-appsettings.Development.json
-
+# Visual Studio / .NET junk
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+*.cache/

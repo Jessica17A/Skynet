@@ -2,7 +2,15 @@
 
 namespace SkyNet.Models
 {
-    public enum SolicitudEstado { Pendiente = 1, EnProceso = 4, Cerrada = 5 }
+    public enum SolicitudEstado
+    {
+        Rechazado = 0,
+        Pendiente = 1,
+        Revisada = 2,
+        Aceptada = 3,
+        EnProceso = 4,
+        Finalizado = 5
+    }
 
     public class Solicitud
     {
@@ -20,27 +28,37 @@ namespace SkyNet.Models
         [Required, StringLength(60)]
         public string Tipo { get; set; } = "";
 
-        [StringLength(20)]
+        [Required, StringLength(30)] 
         public string Prioridad { get; set; } = "";
 
         [Required, StringLength(1500)]
         public string Descripcion { get; set; } = "";
 
-        // Ticket & estado
         [Required, StringLength(40)]
         public string Ticket { get; set; } = "";
 
         public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
-
         public SolicitudEstado Estado { get; set; } = SolicitudEstado.Pendiente;
 
-        // Cloudinary (opcional)
-        public string? AdjuntoPublicId { get; set; }
-
-        // Dirección / Geo
         [StringLength(300)]
         public string? Direccion { get; set; }
         public double? Latitud { get; set; }
         public double? Longitud { get; set; }
+
+        public ICollection<ArchivoSolicitud> Archivos { get; set; } = new List<ArchivoSolicitud>();
+    }
+
+    public class ArchivoSolicitud
+    {
+        public int Id { get; set; } 
+        public long Fk_Solicitud { get; set; } 
+        public Solicitud Solicitud { get; set; } = null!;
+
+        [Required, StringLength(512)]
+        public string PublicId { get; set; } = null!;
+
+        public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
+        public int Estado { get; set; } = 1;
+
     }
 }

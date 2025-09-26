@@ -14,7 +14,7 @@ namespace SkyNet.Controllers.Api
         private readonly ApplicationDbContext _db;
         public EmpleadosApiController(ApplicationDbContext db) => _db = db;
 
-        // helper para normalizar strings (null/empty -> "N/I")
+ 
         private static string F(string? s) => string.IsNullOrWhiteSpace(s) ? "N/I" : s.Trim();
 
         // GET: /api/empleados
@@ -82,7 +82,7 @@ namespace SkyNet.Controllers.Api
                 Email = F(dto.Email),
                 Cargo = dto.Cargo?.Trim(),
                 Estado = dto.Estado ?? 1   // default 1 (activo)
-                // CreatedAtUtc se llena con DateTime.UtcNow por el modelo
+             
             };
 
             _db.Empleados.Add(entidad);

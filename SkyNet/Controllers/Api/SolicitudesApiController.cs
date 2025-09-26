@@ -1,7 +1,4 @@
-﻿using System.Net;
-using CloudinaryDotNet;
-using CloudinaryDotNet.Actions;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SkyNet.Data;
 using SkyNet.Models;
@@ -15,16 +12,15 @@ namespace SkyNet.Controllers.Api
     public class SolicitudesApiController : ControllerBase
     {
         private readonly ApplicationDbContext _db;
-        private readonly Cloudinary _cloud;
         private readonly ILogger<SolicitudesApiController> _logger;
 
-        public SolicitudesApiController(ApplicationDbContext db, Cloudinary cloud, ILogger<SolicitudesApiController> logger)
+        public SolicitudesApiController(ApplicationDbContext db, ILogger<SolicitudesApiController> logger)
         {
             _db = db;
-            _cloud = cloud;
             _logger = logger;
         }
 
+        // GET: /api/solicitudes
         [HttpGet]
         public async Task<ActionResult<IEnumerable<SolicitudDto>>> GetAll(CancellationToken ct)
         {
@@ -42,7 +38,6 @@ namespace SkyNet.Controllers.Api
                     Ticket = s.Ticket,
                     CreatedAtUtc = s.CreatedAtUtc,
                     Estado = s.Estado,
-                    AdjuntoPublicId = s.AdjuntoPublicId,
                     Direccion = s.Direccion,
                     Latitud = s.Latitud,
                     Longitud = s.Longitud
@@ -52,71 +47,30 @@ namespace SkyNet.Controllers.Api
             return Ok(list);
         }
 
+        // GET: /api/solicitudes/{id}
         [HttpGet("{id:long}")]
         public async Task<ActionResult<SolicitudDto>> GetById(long id, CancellationToken ct)
         {
             var s = await _db.Solicitudes.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
-            return s is null ? NotFound() : Map(s);
+            return s is null ? NotFound() : Ok(Map(s));
         }
 
+        // GET: /api/solicitudes/by-ticket/{ticket}
         [HttpGet("by-ticket/{ticket}")]
         public async Task<ActionResult<SolicitudDto>> GetByTicket(string ticket, CancellationToken ct)
         {
             var s = await _db.Solicitudes.AsNoTracking().FirstOrDefaultAsync(x => x.Ticket == ticket, ct);
-            return s is null ? NotFound() : Map(s);
+            return s is null ? NotFound() : Ok(Map(s));
         }
 
-        // POST: multipart/form-data
+        // POST: /api/solicitudes
         [HttpPost]
-        [RequestSizeLimit(10_000_000)]
-        public async Task<ActionResult<SolicitudDto>> Create([FromForm] SolicitudCreateDto dto, CancellationToken ct)
+        public async Task<ActionResult<SolicitudDto>> Create([FromBody] SolicitudCreateDto dto, CancellationToken ct)
         {
             if (!ModelState.IsValid)
-            {
-                // devuelve 400 con los errores (para que el Web Controller lo muestre)
                 return ValidationProblem(ModelState);
-            }
-
-            // validar coordenadas si envían sólo una
-            if (dto.Latitud.HasValue ^ dto.Longitud.HasValue)
-                return BadRequest(new { error = "Debe proporcionar latitud y longitud juntas." });
-
-            if (dto.Latitud is < -90 or > 90 || dto.Longitud is < -180 or > 180)
-                return BadRequest(new { error = "Coordenadas fuera de rango." });
 
             var ticket = GenerateTicket();
-            string? publicId = null;
-
-            // Imagen (opcional)
-            if (dto.Adjunto is not null && dto.Adjunto.Length > 0)
-            {
-                if (!dto.Adjunto.ContentType?.StartsWith("image/") ?? true)
-                    return BadRequest(new { error = "Solo se permiten imágenes." });
-
-                if (dto.Adjunto.Length > 5_000_000)
-                    return BadRequest(new { error = "La imagen supera 5 MB." });
-
-                var ext = Path.GetExtension(dto.Adjunto.FileName).ToLowerInvariant();
-                var allowed = new[] { ".jpg", ".jpeg", ".png" };
-                if (!allowed.Contains(ext))
-                    return BadRequest(new { error = "Extensión no permitida. Usa JPG o PNG." });
-
-                await using var stream = dto.Adjunto.OpenReadStream();
-                var uploadParams = new ImageUploadParams
-                {
-                    File = new FileDescription(dto.Adjunto.FileName, stream),
-                    Folder = $"solicitudes/{ticket}",
-                    UseFilename = true,
-                    UniqueFilename = true,
-                    Overwrite = false
-                };
-                var result = await _cloud.UploadAsync(uploadParams, ct);
-
-                if (result.StatusCode != HttpStatusCode.OK && result.StatusCode != HttpStatusCode.Created)
-                    return StatusCode((int)result.StatusCode, new { error = "Error subiendo la imagen a Cloudinary." });
-
-                publicId = result.PublicId; // guardamos sólo el public_id
-            }
 
             var entidad = new Solicitud
             {
@@ -129,7 +83,6 @@ namespace SkyNet.Controllers.Api
                 Ticket = ticket,
                 CreatedAtUtc = DateTime.UtcNow,
                 Estado = SolicitudEstado.Pendiente,
-                AdjuntoPublicId = publicId,
                 Direccion = string.IsNullOrWhiteSpace(dto.Direccion) ? null : dto.Direccion.Trim(),
                 Latitud = dto.Latitud,
                 Longitud = dto.Longitud
@@ -138,11 +91,26 @@ namespace SkyNet.Controllers.Api
             _db.Solicitudes.Add(entidad);
             await _db.SaveChangesAsync(ct);
 
-            var outDto = Map(entidad);
-            // Created => JSON queda camelCase por defecto
-            return CreatedAtAction(nameof(GetById), new { id = entidad.Id }, outDto);
+            return CreatedAtAction(nameof(GetById), new { id = entidad.Id }, Map(entidad));
         }
 
+        // PATCH: /api/solicitudes/{id}/estado
+        [HttpPatch("{id:long}/estado")]
+        public async Task<ActionResult<SolicitudDto>> CambiarEstado(long id, [FromBody] CambiarEstadoDto dto, CancellationToken ct)
+        {
+            if (dto is null || dto.Estado < 0 || dto.Estado > 5)
+                return BadRequest(new { error = "Estado inválido. Debe ser 0..5" });
+
+            var s = await _db.Solicitudes.FirstOrDefaultAsync(x => x.Id == id, ct);
+            if (s is null) return NotFound();
+
+            s.Estado = (SolicitudEstado)dto.Estado;
+            await _db.SaveChangesAsync(ct);
+
+            return Ok(Map(s));
+        }
+
+        // Helpers
         private static string GenerateTicket()
         {
             var date = DateTime.UtcNow.ToString("yyyyMMdd");
@@ -164,10 +132,10 @@ namespace SkyNet.Controllers.Api
             Ticket = s.Ticket,
             CreatedAtUtc = s.CreatedAtUtc,
             Estado = s.Estado,
-            AdjuntoPublicId = s.AdjuntoPublicId,
             Direccion = s.Direccion,
             Latitud = s.Latitud,
             Longitud = s.Longitud
         };
     }
+
 }

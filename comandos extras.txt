@@ -17,3 +17,16 @@ VALUES (NEWID(), 'Tecnico', 'TECNICO', NEWID());
 --DELETE FROM AspNetRoles;
 
 --DBCC CHECKIDENT ('AspNetRoles', RESEED, 0);
+
+
+BEGIN TRAN;
+
+-- 1) Borra las relaciones (hijos)
+DELETE FROM dbo.Grupos_Supervisores_Tec;
+DBCC CHECKIDENT ('dbo.Grupos_Supervisores_Tec', RESEED, 0);
+
+-- 2) Ahora sí, borra empleados (padre)
+DELETE FROM dbo.Empleados;
+DBCC CHECKIDENT ('dbo.Empleados', RESEED, 0);
+
+COMMIT;

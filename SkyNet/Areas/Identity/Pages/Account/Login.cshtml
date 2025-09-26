@@ -4,7 +4,7 @@
 @{
     ViewData["Title"] = "Log in";
 }
-a
+
 <style>
     :root {
         --azul: #1f4ae0;
@@ -84,11 +84,12 @@ a
             <form id="account" method="post" novalidate>
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
 
-                <div class="form-floating mb-3">
-                    <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="Correo electrónico" />
-                    <label asp-for="Input.Email">Correo Electrónico</label>
-                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+                <div class="mb-3">
+                    <label asp-for="Input.UserName" class="form-label"></label>
+                    <input asp-for="Input.UserName" class="form-control" autocomplete="username" />
+                    <span asp-validation-for="Input.UserName" class="text-danger"></span>
                 </div>
+
 
                 <div class="form-floating mb-4">
                     <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Contraseña" />

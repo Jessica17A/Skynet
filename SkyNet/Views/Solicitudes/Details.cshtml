@@ -1,0 +1,408 @@
+﻿@model SkyNet.Models.DTOs.SolicitudDto
+@{
+    ViewData["Title"] = "Detalle solicitud";
+
+    string EstadoNombre(int e) => e switch
+    {
+        0 => "Rechazado",
+        1 => "Pendiente",
+        2 => "Revisada",
+        3 => "Aceptada",
+        4 => "En proceso",
+        5 => "Finalizado",
+        _ => "Desconocido"
+    };
+    string EstadoBadge(int e) => e switch
+    {
+        0 => "badge rounded-pill px-3 py-2 bg-danger",
+        1 => "badge rounded-pill px-3 py-2 bg-secondary",
+        2 => "badge rounded-pill px-3 py-2 bg-info",
+        3 => "badge rounded-pill px-3 py-2 bg-success",
+        4 => "badge rounded-pill px-3 py-2 bg-warning text-dark",
+        5 => "badge rounded-pill px-3 py-2 bg-primary",
+        _ => "badge rounded-pill px-3 py-2 bg-dark"
+    };
+
+    // color de chips por prioridad (y lo usamos para “Tipo” y “Prioridad”)
+    string PriClass(string? p) => (p ?? "").Trim().ToLower() switch
+    {
+        "alta" => "chip chip-lg bg-danger text-white",
+        "media" => "chip chip-lg bg-warning text-dark",
+        "baja" => "chip chip-lg bg-success text-white",
+        _ => "chip chip-lg bg-light text-dark border"
+    };
+
+    var steps = new (int val, string name)[] {
+        (1,"Pendiente"), (2,"Revisada"), (3,"Aceptada"), (4,"En proceso"), (5,"Finalizado")
+    };
+}
+
+<style>
+    /* Stepper */
+    .flow-stepper {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: center
+    }
+
+    .flow-dot {
+        width: 36px;
+        height: 36px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        font-weight: 700;
+        border: 2px solid var(--bs-border-color);
+        background: #fff;
+        color: #6c757d
+    }
+
+        .flow-dot.done {
+            background: #e7f1ff;
+            color: #0d6efd;
+            border-color: #cfe2ff
+        }
+
+        .flow-dot.active {
+            background: #0d6efd;
+            color: #fff;
+            border-color: #0d6efd
+        }
+
+    .flow-label {
+        font-size: .95rem;
+        color: #495057;
+        font-weight: 600
+    }
+
+    .flow-link {
+        width: 56px;
+        height: 3px;
+        background: var(--bs-border-color);
+        border-radius: 2px
+    }
+
+        .flow-link.done {
+            background: #0d6efd
+        }
+
+    .fade-update {
+        animation: fadeUp .3s ease-out
+    }
+   
+
+    to {
+        opacity: 1;
+        transform: translateY(0)
+    }
+    
+
+    .chip {
+        display: inline-block;
+        padding: .35rem .9rem;
+        border-radius: 50px; /* más redondo */
+        font-size: .85rem;
+        line-height: 1;
+        background: #f0f4f8; /* color suave */
+        color: #333;
+        border: 1px solid #d1d9e6;
+        box-shadow: 0 2px 4px rgba(0,0,0,.08); /* sombrita ligera */
+        transition: all 0.25s ease-in-out;
+        cursor: default;
+    }
+
+        .chip:hover {
+            background: #e1ecf4;
+            border-color: #a7c7e7;
+            transform: translateY(-2px); /* pequeño efecto al pasar el mouse */
+        }
+
+    .chip-lg {
+        padding: .45rem 1rem;
+        font-size: .95rem;
+    }
+
+
+    /* Botonera “Siguientes pasos” */
+    .section-hint {
+        font-size: .85rem;
+        color: #6c757d
+    }
+
+    .btn-pill {
+        border-radius: 999px;
+        padding: .45rem 1rem;
+        font-weight: 600
+    }
+</style>
+
+<div class="container mt-4" id="solicitud" data-id="@Model.Id" data-estado="@((int)Model.Estado)">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0">
+            <i class="bi bi-receipt"></i> Ticket <strong>@Model.Ticket</strong>
+        </h4>
+        <span id="estadoBadge" class="@EstadoBadge((int)Model.Estado)">
+            @EstadoNombre((int)Model.Estado)
+        </span>
+    </div>
+
+    <!-- Stepper centrado -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <div id="stepper" class="flow-stepper">
+                @{
+                    var curr = (int)Model.Estado;
+                    for (var i = 0; i < steps.Length; i++)
+                    {
+                        var s = steps[i];
+                        var dotCls = s.val < curr ? "flow-dot done" : (s.val == curr ? "flow-dot active" : "flow-dot");
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="@dotCls">@s.val</div>
+                            <div class="flow-label">@s.name</div>
+                        </div>
+                        if (i < steps.Length - 1)
+                        {
+                            var linkCls = steps[i].val < curr ? "flow-link done" : "flow-link";
+                            <div class="@linkCls"></div>
+                        }
+                    }
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-lg-8">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Nombre</label>
+                            <div>@Model.Nombre</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Email</label>
+                            <div>@Model.Email</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Teléfono</label>
+                            <div>@(Model.Telefono ?? "-")</div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Tipo</label>
+                            <div><span class="@PriClass(Model.Prioridad)">@Model.Tipo</span></div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Prioridad</label>
+                            <div><span class="@PriClass(Model.Prioridad)">@Model.Prioridad</span></div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Creado (UTC)</label>
+                            <div>@Model.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm")</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Dirección</label>
+                            <div>@(Model.Direccion ?? "-")</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <label class="form-label fw-bold">Descripción</label>
+                    <div class="border rounded p-3 bg-light h-100">@Model.Descripcion</div>
+                </div>
+
+                @if (Model.Latitud.HasValue && Model.Longitud.HasValue)
+                {
+                    <div class="col-12">
+                        <label class="form-label fw-bold">Ubicación</label>
+                        <div class="text-muted">Lat: @Model.Latitud, Lng: @Model.Longitud</div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Footer con Siguientes pasos -->
+        <div class="card-footer d-flex flex-wrap justify-content-between align-items-start">
+            <div class="d-flex flex-column gap-2">
+                <div class="fw-semibold">Siguientes pasos</div>
+                <div class="section-hint">Acciones disponibles según el estado actual</div>
+                <div id="acciones" class="d-flex flex-wrap gap-2"></div>
+            </div>
+            <a asp-action="Index" class="btn btn-outline-secondary btn-sm align-self-end">Volver</a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        (() => {
+            const estados = {
+                0: { text: "Rechazado",  cls: "badge rounded-pill px-3 py-2 bg-danger" },
+                1: { text: "Pendiente",  cls: "badge rounded-pill px-3 py-2 bg-secondary" },
+                2: { text: "Revisada",   cls: "badge rounded-pill px-3 py-2 bg-info" },
+                3: { text: "Aceptada",   cls: "badge rounded-pill px-3 py-2 bg-success" },
+                4: { text: "En proceso", cls: "badge rounded-pill px-3 py-2 bg-warning text-dark" },
+                5: { text: "Finalizado", cls: "badge rounded-pill px-3 py-2 bg-primary" }
+            };
+
+            // botón color x estado destino
+            function btnClassForState(state){
+                switch(state){
+                    case 0: return 'btn btn-pill btn-outline-danger';
+                    case 1: return 'btn btn-pill btn-info text-white';
+                    case 2: return 'btn btn-pill btn-primary';
+                    case 3: return 'btn btn-pill btn-success';
+                    case 4: return 'btn btn-pill btn-warning text-dark';
+                    case 5: return 'btn btn-pill btn-primary';
+                    default: return 'btn btn-pill btn-outline-secondary';
+                }
+            }
+
+            // Siguiente “forward only”
+            function siguiente(curr){
+                switch(curr){
+                    case 1: return 2;
+                    case 2: return 3;
+                    case 3: return 4;
+                    case 4: return 5;
+                    default: return null;
+                }
+            }
+
+            function renderBotones(){
+                const cont = document.getElementById('solicitud');
+                const id = cont.dataset.id;
+                const curr = parseInt(cont.dataset.estado, 10);
+                const zone = document.getElementById('acciones');
+                zone.innerHTML = '';
+
+                if (curr === 0 || curr === 5) return; // terminales
+
+                const nxt = siguiente(curr);
+
+                // Si estamos en 4 (En proceso), NO dupliques: solo mostramos Finalizar (5)
+                if (curr === 4){
+                    const bFin = document.createElement('button');
+                    bFin.className = btnClassForState(5);
+                    bFin.textContent = estados[5].text; // “Finalizado”
+                    bFin.onclick = () => cambiarEstado(id, 5);
+                    zone.appendChild(bFin);
+                } else {
+                    // Botón único del próximo estado
+                    if (nxt !== null){
+                        const bNext = document.createElement('button');
+                        bNext.className = btnClassForState(nxt);
+                        bNext.textContent = estados[nxt].text;
+                        bNext.onclick = () => cambiarEstado(id, nxt);
+                        zone.appendChild(bNext);
+                    }
+                }
+
+                // Rechazar solo en Pendiente/Revisada
+                if (curr === 1 || curr === 2){
+                    const bRej = document.createElement('button');
+                    bRej.className = btnClassForState(0);
+                    bRej.textContent = 'Rechazar';
+                    bRej.onclick = () => cambiarEstado(id, 0);
+                    zone.appendChild(bRej);
+                }
+            }
+
+        
+
+ 
+        async function cambiarEstado(id, nuevo) {
+            try {
+                if (nuevo === 0) {
+                    const res = await Swal.fire({
+                        title: "¿Seguro?",
+                        text: "¿Quieres RECHAZAR esta solicitud?",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonText: "Sí, rechazar",
+                        cancelButtonText: "Cancelar"
+                    });
+                    if (!res.isConfirmed) return;
+                }
+
+                if (nuevo === 5) {
+                    const res = await Swal.fire({
+                        title: "¿Finalizar?",
+                        text: "¿Marcar como FINALIZADO?",
+                        icon: "question",
+                        showCancelButton: true,
+                        confirmButtonText: "Sí, finalizar",
+                        cancelButtonText: "Cancelar"
+                    });
+                    if (!res.isConfirmed) return;
+                }
+
+                const resp = await fetch(`/api/solicitudes/${id}/estado`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ estado: nuevo })
+                });
+
+                if (!resp.ok) {
+                    Swal.fire("Error", "No se pudo actualizar el estado.", "error");
+                    return;
+                }
+
+                const data = await resp.json();
+
+                const badge = document.getElementById('estadoBadge');
+                badge.className = estados[data.estado].cls + ' fade-update';
+                badge.textContent = estados[data.estado].text;
+
+                const cont = document.getElementById('solicitud');
+                cont.dataset.estado = data.estado;
+                actualizarStepper(data.estado);
+
+                renderBotones();
+
+                Swal.fire({
+                    title: "¡Actualizado!",
+                    text: "El estado se cambió correctamente.",
+                    icon: "success",
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+
+            } catch (e) {
+                console.error(e);
+                Swal.fire("Error", "Error de red al cambiar estado.", "error");
+            }
+        }
+   
+
+            function actualizarStepper(curr){
+                const stepper = document.getElementById('stepper');
+                const dots = stepper.querySelectorAll('.flow-dot');
+                const links = stepper.querySelectorAll('.flow-link');
+
+                dots.forEach((dot, idx) => {
+                    const stepVal = idx + 1;
+                    dot.classList.remove('done','active');
+                    if (stepVal < curr) dot.classList.add('done');
+                    else if (stepVal === curr) dot.classList.add('active');
+                });
+                links.forEach((lnk, idx) => {
+                    const stepVal = idx + 1;
+                    lnk.classList.toggle('done', stepVal < curr);
+                });
+
+                stepper.classList.add('fade-update');
+                setTimeout(()=>stepper.classList.remove('fade-update'), 300);
+            }
+
+            document.addEventListener('DOMContentLoaded', renderBotones);
+        })();
+      
+    </script>
+}

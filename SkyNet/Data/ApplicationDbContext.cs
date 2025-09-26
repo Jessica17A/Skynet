@@ -14,12 +14,16 @@ namespace SkyNet.Data
         public DbSet<Cliente> Clientes => Set<Cliente>();
         public DbSet<Solicitud> Solicitudes => Set<Solicitud>();
         public DbSet<Empleado> Empleados => Set<Empleado>();
+        public DbSet<ArchivoSolicitud> ArchivosSolicitudes => Set<ArchivoSolicitud>();
 
-        protected override void OnModelCreating(ModelBuilder builder)
+        public DbSet<GrupoSupervisorTec> GruposSupervisoresTec => Set<GrupoSupervisorTec>();
+
+        protected override void OnModelCreating(ModelBuilder b)
         {
-            base.OnModelCreating(builder);
+            base.OnModelCreating(b);
 
-            builder.Entity<Empleado>(e =>
+            // ===== Empleado =====
+            b.Entity<Empleado>(e =>
             {
                 // AspNetUsers.Id suele ser nvarchar(450)
                 e.Property(x => x.UserId).HasMaxLength(450);
@@ -28,13 +32,83 @@ namespace SkyNet.Data
                 e.HasOne(x => x.User)
                  .WithMany()
                  .HasForeignKey(x => x.UserId)
-                 .OnDelete(DeleteBehavior.SetNull); // si borras el usuario, queda desvinculado
+                 .OnDelete(DeleteBehavior.SetNull);
 
-                // Un empleado no puede apuntar a 2 usuarios y permite muchos NULL
+                // Un Empleado apunta a lo sumo a 1 usuario; permite muchos NULL
                 e.HasIndex(x => x.UserId)
                  .IsUnique()
                  .HasFilter("[UserId] IS NOT NULL");
             });
+
+            // ===== Solicitud =====
+            b.Entity<Solicitud>(e =>
+            {
+                e.ToTable("Solicitudes");
+                e.HasKey(x => x.Id);
+
+                e.HasMany(x => x.Archivos)
+                 .WithOne(a => a.Solicitud)
+                 .HasForeignKey(a => a.Fk_Solicitud)
+                 .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // ===== ArchivoSolicitud =====
+            b.Entity<ArchivoSolicitud>(e =>
+            {
+                e.ToTable("Archivos_solicitudes");
+                e.HasKey(x => x.Id);
+
+                e.Property(x => x.Fk_Solicitud)
+                 .HasColumnName("fk_solicitud")
+                 .IsRequired();
+
+                e.Property(x => x.PublicId)
+                 .HasColumnName("public_id")
+                 .HasMaxLength(512)
+                 .IsRequired();
+
+                e.Property(x => x.CreatedAtUtc)
+                 .HasColumnName("created_at_utc")
+                 .IsRequired();
+
+                e.Property(x => x.Estado)
+                 .HasColumnName("estado");
+
+                e.HasOne(x => x.Solicitud)
+                 .WithMany(s => s.Archivos)
+                 .HasForeignKey(x => x.Fk_Solicitud)
+                 .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // ===== GrupoSupervisorTec =====
+            b.Entity<GrupoSupervisorTec>(e =>
+            {
+                e.ToTable("Grupos_Supervisores_Tec");
+                e.HasKey(x => x.IdGrupo);
+
+                e.Property(x => x.IdGrupo).HasColumnName("IDGRUPO");
+                e.Property(x => x.FkSupervisor).HasColumnName("FKSUPERVISOR");
+                e.Property(x => x.FkTecnico).HasColumnName("FKTECNICO");
+                e.Property(x => x.FechaCreacionUtc).HasColumnName("FECHA_CREACION_UTC");
+                e.Property(x => x.Estado)
+                 .HasColumnType("bit")
+                 .HasColumnName("ESTADO")
+                 .ValueGeneratedNever();
+
+                e.HasOne(x => x.Supervisor)
+                 .WithMany()
+                 .HasForeignKey(x => x.FkSupervisor)
+                 .HasConstraintName("FK_GRUPO_SUPERVISOR")
+                 .OnDelete(DeleteBehavior.NoAction);   // 👈 sin cascada
+
+                e.HasOne(x => x.Tecnico)
+                 .WithMany()
+                 .HasForeignKey(x => x.FkTecnico)
+                 .HasConstraintName("FK_GRUPO_TECNICO")
+                 .OnDelete(DeleteBehavior.NoAction);   // 👈 sin cascada
+            });
+
         }
+
     }
 }

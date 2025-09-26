@@ -1,50 +1,111 @@
 ﻿@model IEnumerable<SkyNet.Models.DTOs.EmpleadoDTO>
 @{
     ViewData["Title"] = "Empleados";
+    Layout = "~/Views/Shared/_Admin.cshtml";
 }
 
 <div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">Empleados</h2>
-        <a asp-action="Create" class="btn btn-primary">Nuevo empleado</a>
+
+    <!-- NUEVO centrado arriba -->
+    <div class="d-flex justify-content-center mb-3">
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-person-plus me-1"></i> Nuevo
+        </a>
+    </div>
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div class="d-flex align-items-center gap-3">
+            <h2 class="mb-0">Empleados</h2>
+            <span id="lblConteo" class="text-muted small"></span>
+        </div>
+
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <!-- Buscar con icono al lado -->
+            <div class="input-group input-group-sm" style="width: 280px;">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input id="buscarNombre" type="search" class="form-control" placeholder="Buscar por nombre..." />
+                <button id="btnClear" class="btn btn-outline-secondary" type="button" title="Limpiar">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <!-- PDF rojo -->
+            <button id="btnExportPdf" class="btn btn-danger btn-sm">
+                <i class="bi bi-filetype-pdf me-1"></i> Exportar PDF
+            </button>
+        </div>
     </div>
 
     @if (Model is null || !Model.Any())
     {
-        <div class="alert alert-light border">No hay empleados registrados.</div>
+        <div class="alert alert-light border d-flex align-items-center" role="alert">
+            <i class="bi bi-people me-2"></i>
+            <div>No hay empleados registrados.</div>
+        </div>
     }
     else
     {
-
-        var i = 1;
         <div class="table-responsive">
-            <table class="table table-hover align-middle">
+            <table class="table table-striped table-hover align-middle" id="tablaEmpleados">
                 <thead class="table-light">
                     <tr>
-                        <th>NO</th>
+                        <th style="width:60px">#</th>
                         <th>Nombres</th>
                         <th>Apellidos</th>
-                        <th>Email</th>
-                        <th>Teléfono</th>
-                        <th>Cargo</th>
-                        <th></th>
+                        <th class="d-none d-md-table-cell">Email</th>
+                        <th class="d-none d-lg-table-cell">Teléfono</th>
+                        <th class="d-none d-sm-table-cell">Cargo</th>
+                        <th class="text-end" style="width:120px;">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var e in Model)
                     {
+                        var nombres = string.IsNullOrWhiteSpace(e.Nombres) ? "—" : e.Nombres!;
+                        var apellidos = string.IsNullOrWhiteSpace(e.Apellidos) ? "—" : e.Apellidos!;
+                        var email = string.IsNullOrWhiteSpace(e.Email) ? "—" : e.Email!;
+                        var tel = string.IsNullOrWhiteSpace(e.Telefono) ? "—" : e.Telefono!;
+                        var cargo = string.IsNullOrWhiteSpace(e.Cargo) ? "—" : e.Cargo!;
+
+                        var isSup = e.Cargo?.Equals("Supervisor", StringComparison.OrdinalIgnoreCase) ?? false;
+                        var isTec = e.Cargo?.Equals("Tecnico", StringComparison.OrdinalIgnoreCase) ?? false;
+                        var cargoBadgeClass = isSup ? "text-bg-success" : (isTec ? "text-bg-primary" : "text-bg-secondary");
+
                         <tr>
-                            <td>@i</td>
-                            <td>@(string.IsNullOrWhiteSpace(e.Nombres) ? "—" : e.Nombres)</td>
-                            <td>@(string.IsNullOrWhiteSpace(e.Apellidos) ? "—" : e.Apellidos)</td>
-                            <td>@(string.IsNullOrWhiteSpace(e.Email) ? "—" : e.Email)</td>
-                            <td>@(string.IsNullOrWhiteSpace(e.Telefono) ? "—" : e.Telefono)</td>
-                            <td>@(string.IsNullOrWhiteSpace(e.Cargo) ? "—" : e.Cargo)</td>
+                            <td class="col-num text-muted"></td>
+                            <td title="@nombres">@nombres</td>
+                            <td title="@apellidos">@apellidos</td>
+                            <td class="d-none d-md-table-cell">
+                                @if (email == "—")
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                                else
+                                {
+
+                                    <a class="link-primary" href="mailto:@email">@email</a>
+                                }
+                            </td>
+                            <td class="d-none d-lg-table-cell">
+                                @if (tel == "—")
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                                else
+                                {
+
+                                    <a class="link-primary" href="tel:@tel">@tel</a>
+                                }
+                            </td>
+                            <td class="d-none d-sm-table-cell">
+                                <span class="badge @cargoBadgeClass">@cargo</span>
+                            </td>
                             <td class="text-end">
-                                <a class="btn btn-sm btn-outline-primary" asp-action="Detalle" asp-route-id="@e.Id">Ver</a>
+                                <a class="btn btn-sm btn-outline-primary" asp-action="Detalle" asp-route-id="@e.Id" title="Ver detalle">
+                                    <i class="bi bi-eye"></i>
+                                </a>
                             </td>
                         </tr>
-                        i++;
                     }
                 </tbody>
             </table>
@@ -53,20 +114,130 @@
 </div>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- jsPDF + autoTable -->
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.1/dist/jspdf.plugin.autotable.min.js"></script>
 
-    @* Toast de éxito tras crear (TempData["Ok"] viene del Redirect) *@
-    @if (TempData["Ok"] is string ok && !string.IsNullOrWhiteSpace(ok))
-    {
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-              Swal.fire({
-                icon:'success',
-                title:'¡Listo!',
-                text:@Html.Raw(System.Text.Json.JsonSerializer.Serialize(ok)),
-                toast:true, position:'top-end', timer:5000, showConfirmButton:false
-              });
+    <script>
+        $(function () {
+          const $tabla = $('#tablaEmpleados');
+          const $input = $('#buscarNombre');
+          const $btnClear = $('#btnClear');
+          const $btnExport = $('#btnExportPdf');
+          const $conteo = $('#lblConteo');
+
+          function renumerar() {
+            let n = 1;
+            $tabla.find('tbody tr:visible').each(function () {
+              $(this).find('td').eq(0).text(n++);
             });
-        </script>
-    }
+            const total = $tabla.find('tbody tr').length;
+            const vis = $tabla.find('tbody tr:visible').length;
+            $conteo.text(`Mostrando ${vis} de ${total}`);
+          }
+
+          function aplicarFiltro() {
+            const q = ($input.val() || '').toString().toLowerCase().trim();
+            $btnClear.toggle(!!q);
+
+            $tabla.find('tbody tr').each(function () {
+              const $tds = $(this).find('td');
+              const nom = ($tds.eq(1).text() || '').toLowerCase();
+              const ape = ($tds.eq(2).text() || '').toLowerCase();
+              const match = !q || nom.includes(q) || ape.includes(q) || (nom + ' ' + ape).includes(q);
+              $(this).toggle(match);
+            });
+
+            renumerar();
+          }
+
+          $input.on('input', aplicarFiltro);
+          $btnClear.on('click', function () { $input.val(''); aplicarFiltro(); });
+
+          async function loadLogoDataURL(url) {
+            try {
+              const res = await fetch(url, { cache: 'no-store' });
+              if (!res.ok) return null;
+              const blob = await res.blob();
+              return await new Promise(resolve => {
+                const fr = new FileReader();
+                fr.onload = () => resolve(fr.result);
+                fr.readAsDataURL(blob);
+              });
+            } catch { return null; }
+          }
+
+          // Exportar PDF (encabezado azul marino) y SIN columna Acciones
+          $btnExport.on('click', async function () {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+            const pageWidth = doc.internal.pageSize.getWidth();
+
+            // Título y subtítulo
+            doc.setTextColor(10, 40, 90); // azul marino
+            doc.setFontSize(18);
+            doc.text('REPORTE DE LISTADO DE EMPLEADOS — SKYNET', pageWidth / 2, 35, { align: 'center' });
+            doc.setFontSize(11);
+            doc.setTextColor(80);
+            doc.text(new Date().toLocaleString(), pageWidth / 2, 52, { align: 'center' });
+
+            // Logo opcional (pon tu archivo en wwwroot/img/logo.png)
+            const logoUrl = '@Url.Content("~/img/logo.png")';
+            const logoData = await loadLogoDataURL(logoUrl);
+            if (logoData) {
+              doc.addImage(logoData, 'PNG', 40, 18, 42, 42);
+            }
+
+            const head = [['#','Nombres','Apellidos','Email','Teléfono','Cargo']];
+            const body = [];
+            let idx = 1;
+
+            $tabla.find('tbody tr:visible').each(function () {
+              const $tds = $(this).find('td');
+              body.push([
+                String(idx++),
+                ($tds.eq(1).text() || '').trim(),
+                ($tds.eq(2).text() || '').trim(),
+                ($tds.eq(3).text() || '').trim(),
+                ($tds.eq(4).text() || '').trim(),
+                ($tds.eq(5).text() || '').trim()
+              ]);
+            });
+
+            if (body.length === 0) {
+              doc.setTextColor(200,0,0);
+              doc.text('No hay filas para exportar con el filtro actual.', 40, 80);
+              return doc.save('empleados.pdf');
+            }
+
+            doc.autoTable({
+              head, body, startY: 70,
+              styles: { fontSize: 9, cellPadding: 4 },
+              headStyles: { fillColor: [10,40,90], textColor: 255, halign: 'left' }, // azul marino
+              columnStyles: {
+                0: { cellWidth: 35 },
+                1: { cellWidth: 150 },
+                2: { cellWidth: 150 },
+                3: { cellWidth: 200 },
+                4: { cellWidth: 120 },
+                5: { cellWidth: 120 }
+              },
+              didDrawPage: function () {
+                const pageCount = doc.getNumberOfPages();
+                const str = `Página ${doc.getCurrentPageInfo().pageNumber} de ${pageCount}`;
+                doc.setFontSize(10);
+                doc.setTextColor(100);
+                doc.text(str, pageWidth - 110, doc.internal.pageSize.getHeight() - 20);
+              }
+            });
+
+            doc.save('empleados.pdf');
+          });
+
+          // inicio
+          aplicarFiltro();
+        });
+    </script>
 }
