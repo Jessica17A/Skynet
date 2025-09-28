@@ -1,0 +1,40 @@
+﻿// Models/DTOs/SolicitudAsignacionDtos.cs
+using System;
+
+namespace SkyNet.Models.DTOs
+{
+    // Para crear desde UI (POST)
+    public class SolicitudAsignacionCreateDto
+    {
+        public long IdSolicitud { get; set; }
+        public int IdGrupo { get; set; }
+        public long FkTecnico { get; set; }
+
+        public string? Notas { get; set; }
+    }
+
+    // Para devolver a la UI
+    public class SolicitudAsignacionDto
+    {
+        public long Id { get; set; }
+        public long IdSolicitud { get; set; }
+        public int IdGrupo { get; set; }
+        public long FkTecnico { get; set; }
+        public DateTime FechaAsignacionUtc { get; set; }
+        public string? AsignadoPorUserId { get; set; }
+        public string? Notas { get; set; }
+        public byte Estado { get; set; } // 1,2,0
+
+        // Datos enriquecidos opcionales para mostrar en UI
+        public string? TecnicoNombre { get; set; }
+        public string? SupervisorNombre { get; set; }
+        public string? GrupoEtiqueta { get; set; }
+    }
+
+    // Para cambiar estado (anular/finalizar)
+    public class SolicitudAsignacionEstadoDto
+    {
+        public byte Estado { get; set; } // 0 anular, 2 finalizar
+        public string? Nota { get; set; }
+    }
+}

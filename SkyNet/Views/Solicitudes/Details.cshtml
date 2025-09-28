@@ -1,6 +1,7 @@
 ﻿@model SkyNet.Models.DTOs.SolicitudDto
 @{
     ViewData["Title"] = "Detalle solicitud";
+    Layout = "~/Views/Shared/_Admin.cshtml";
 
     string EstadoNombre(int e) => e switch
     {
@@ -44,7 +45,7 @@
         align-items: center;
         gap: 1rem;
         flex-wrap: wrap;
-        justify-content: center
+        justify-content: center;
     }
 
     .flow-dot {
@@ -56,67 +57,62 @@
         font-weight: 700;
         border: 2px solid var(--bs-border-color);
         background: #fff;
-        color: #6c757d
+        color: #6c757d;
     }
 
         .flow-dot.done {
             background: #e7f1ff;
             color: #0d6efd;
-            border-color: #cfe2ff
+            border-color: #cfe2ff;
         }
 
         .flow-dot.active {
             background: #0d6efd;
             color: #fff;
-            border-color: #0d6efd
+            border-color: #0d6efd;
         }
 
     .flow-label {
         font-size: .95rem;
         color: #495057;
-        font-weight: 600
+        font-weight: 600;
     }
 
     .flow-link {
         width: 56px;
         height: 3px;
         background: var(--bs-border-color);
-        border-radius: 2px
+        border-radius: 2px;
     }
 
         .flow-link.done {
-            background: #0d6efd
+            background: #0d6efd;
         }
 
+    /* Suaves transiciones sin keyframes */
     .fade-update {
-        animation: fadeUp .3s ease-out
+        transition: opacity .25s ease, transform .25s ease;
     }
-   
 
-    to {
-        opacity: 1;
-        transform: translateY(0)
-    }
-    
-
+    /* Chips */
     .chip {
         display: inline-block;
         padding: .35rem .9rem;
-        border-radius: 50px; /* más redondo */
+        border-radius: 50px;
         font-size: .85rem;
         line-height: 1;
-        background: #f0f4f8; /* color suave */
+        background: #f0f4f8;
         color: #333;
         border: 1px solid #d1d9e6;
-        box-shadow: 0 2px 4px rgba(0,0,0,.08); /* sombrita ligera */
-        transition: all 0.25s ease-in-out;
+        box-shadow: 0 2px 4px rgba(0,0,0,.08);
+        transition: transform .25s ease, background .25s ease, border-color .25s ease;
         cursor: default;
     }
 
         .chip:hover {
             background: #e1ecf4;
             border-color: #a7c7e7;
-            transform: translateY(-2px); /* pequeño efecto al pasar el mouse */
+            transform: translateY(-2px);
         }
 
     .chip-lg {
@@ -124,34 +120,29 @@
         font-size: .95rem;
     }
 
-
     /* Botonera “Siguientes pasos” */
     .section-hint {
         font-size: .85rem;
-        color: #6c757d
+        color: #6c757d;
     }
 
     .btn-pill {
         border-radius: 999px;
         padding: .45rem 1rem;
-        font-weight: 600
+        font-weight: 600;
     }
 </style>
 
 <div class="container mt-4" id="solicitud" data-id="@Model.Id" data-estado="@((int)Model.Estado)">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="mb-0">
-            <i class="bi bi-receipt"></i> Ticket <strong>@Model.Ticket</strong>
-        </h4>
-        <span id="estadoBadge" class="@EstadoBadge((int)Model.Estado)">
-            @EstadoNombre((int)Model.Estado)
-        </span>
+        <h4 class="mb-0"><i class="bi bi-receipt"></i> Ticket <strong>@Model.Ticket</strong></h4>
+        <span id="estadoBadge" class="@EstadoBadge((int)Model.Estado)">@EstadoNombre((int)Model.Estado)</span>
     </div>
 
     <!-- Stepper centrado -->
     <div class="card mb-3">
         <div class="card-body">
-            <div id="stepper" class="flow-stepper">
+            <div id="stepper" class="flow-stepper fade-update">
                 @{
                     var curr = (int)Model.Estado;
                     for (var i = 0; i < steps.Length; i++)
@@ -184,7 +175,7 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label fw-bold">Email</label>
-                            <div>@Model.Email</div>
+                            <div class="text-nowrap">@Model.Email</div>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label fw-bold">Teléfono</label>
@@ -213,7 +204,7 @@
 
                 <div class="col-lg-4">
                     <label class="form-label fw-bold">Descripción</label>
-                    <div class="border rounded p-3 bg-light h-100">@Model.Descripcion</div>
+                    <div class="border rounded p-3 bg-light h-100" style="white-space:pre-wrap">@Model.Descripcion</div>
                 </div>
 
                 @if (Model.Latitud.HasValue && Model.Longitud.HasValue)
@@ -286,7 +277,7 @@
 
                 const nxt = siguiente(curr);
 
-                // Si estamos en 4 (En proceso), NO dupliques: solo mostramos Finalizar (5)
+                // Si estamos en 4 (En proceso), solo mostramos Finalizar (5)
                 if (curr === 4){
                     const bFin = document.createElement('button');
                     bFin.className = btnClassForState(5);
@@ -314,72 +305,108 @@
                 }
             }
 
-        
-
- 
-        async function cambiarEstado(id, nuevo) {
-            try {
-                if (nuevo === 0) {
-                    const res = await Swal.fire({
-                        title: "¿Seguro?",
-                        text: "¿Quieres RECHAZAR esta solicitud?",
-                        icon: "warning",
-                        showCancelButton: true,
-                        confirmButtonText: "Sí, rechazar",
-                        cancelButtonText: "Cancelar"
-                    });
-                    if (!res.isConfirmed) return;
-                }
-
-                if (nuevo === 5) {
-                    const res = await Swal.fire({
-                        title: "¿Finalizar?",
-                        text: "¿Marcar como FINALIZADO?",
-                        icon: "question",
-                        showCancelButton: true,
-                        confirmButtonText: "Sí, finalizar",
-                        cancelButtonText: "Cancelar"
-                    });
-                    if (!res.isConfirmed) return;
-                }
-
-                const resp = await fetch(`/api/solicitudes/${id}/estado`, {
-                    method: "PATCH",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ estado: nuevo })
+            // Efecto suave sin keyframes
+            function flash(el){
+                if (!el) return;
+                el.classList.add('fade-update');
+                el.style.opacity = '0.2';
+                el.style.transform = 'translateY(-2px)';
+                // siguiente frame
+                requestAnimationFrame(() => {
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                    setTimeout(() => {
+                        el.classList.remove('fade-update');
+                        el.style.opacity = '';
+                        el.style.transform = '';
+                    }, 300);
                 });
-
-                if (!resp.ok) {
-                    Swal.fire("Error", "No se pudo actualizar el estado.", "error");
-                    return;
-                }
-
-                const data = await resp.json();
-
-                const badge = document.getElementById('estadoBadge');
-                badge.className = estados[data.estado].cls + ' fade-update';
-                badge.textContent = estados[data.estado].text;
-
-                const cont = document.getElementById('solicitud');
-                cont.dataset.estado = data.estado;
-                actualizarStepper(data.estado);
-
-                renderBotones();
-
-                Swal.fire({
-                    title: "¡Actualizado!",
-                    text: "El estado se cambió correctamente.",
-                    icon: "success",
-                    timer: 2000,
-                    showConfirmButton: false
-                });
-
-            } catch (e) {
-                console.error(e);
-                Swal.fire("Error", "Error de red al cambiar estado.", "error");
             }
-        }
-   
+
+            async function cambiarEstado(id, nuevo) {
+                // evitar doble clic mientras se procesa
+                const zone = document.getElementById('acciones');
+                zone.querySelectorAll('button').forEach(b => b.disabled = true);
+
+                try {
+                    if (nuevo === 0) {
+                        const res = await Swal.fire({
+                            title: "¿Seguro?",
+                            text: "¿Quieres RECHAZAR esta solicitud?",
+                            icon: "warning",
+                            showCancelButton: true,
+                            confirmButtonText: "Sí, rechazar",
+                            cancelButtonText: "Cancelar"
+                        });
+                        if (!res.isConfirmed) return;
+                    }
+
+                    if (nuevo === 5) {
+                        const res = await Swal.fire({
+                            title: "¿Finalizar?",
+                            text: "¿Marcar como FINALIZADO?",
+                            icon: "question",
+                            showCancelButton: true,
+                            confirmButtonText: "Sí, finalizar",
+                            cancelButtonText: "Cancelar"
+                        });
+                        if (!res.isConfirmed) return;
+                    }
+
+                    const resp = await fetch(`/api/solicitudes/${id}/estado`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ estado: nuevo })
+                    });
+
+                    if (!resp.ok) {
+                        Swal.fire("Error", "No se pudo actualizar el estado.", "error");
+                        return;
+                    }
+
+                    const data = await resp.json();
+
+                    // Actualiza badge
+                    const badge = document.getElementById('estadoBadge');
+                    badge.className = estados[data.estado].cls;
+                    badge.textContent = estados[data.estado].text;
+                    flash(badge);
+
+                    // Actualiza stepper y botones
+                    const cont = document.getElementById('solicitud');
+                    cont.dataset.estado = data.estado;
+                    actualizarStepper(data.estado);
+                    renderBotones();
+
+                    // Si quedó Aceptada (3) => redirige al form de asignación
+                    if (data.estado === 3) {
+                        await Swal.fire({
+                            title: "¡Solicitud aceptada!",
+                            text: "Ahora asigna un técnico.",
+                            icon: "success",
+                            timer: 1200,
+                            showConfirmButton: false
+                        });
+                        window.location.href = `/GruposUi/Asignar?solicitudId=${id}`;
+                        return;
+                    }
+
+                    // Otros estados => solo confirmación
+                    Swal.fire({
+                        title: "¡Actualizado!",
+                        text: "El estado se cambió correctamente.",
+                        icon: "success",
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+
+                } catch (e) {
+                    console.error(e);
+                    Swal.fire("Error", "Error de red al cambiar estado.", "error");
+                } finally {
+                    zone.querySelectorAll('button').forEach(b => b.disabled = false);
+                }
+            }
 
             function actualizarStepper(curr){
                 const stepper = document.getElementById('stepper');
@@ -397,12 +424,10 @@
                     lnk.classList.toggle('done', stepVal < curr);
                 });
 
-                stepper.classList.add('fade-update');
-                setTimeout(()=>stepper.classList.remove('fade-update'), 300);
+                flash(stepper); // efecto suave sin keyframes
             }
 
             document.addEventListener('DOMContentLoaded', renderBotones);
         })();
-      
     </script>
 }

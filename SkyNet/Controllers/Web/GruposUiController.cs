@@ -210,5 +210,81 @@ namespace SkyNet.Controllers.Web
             public List<OpcionEmpleadoDto> Supervisores { get; set; } = new();
             public List<OpcionEmpleadoDto> Tecnicos { get; set; } = new();
         }
+
+
+
+
+
+        // GET /GruposUi/Asignar?solicitudId=123
+        // GET /GruposUi/Asignar?solicitudId=123
+        [HttpGet]
+        public IActionResult Asignar(long solicitudId)
+        {
+            ViewBag.SolicitudId = solicitudId;
+            // devolvemos la vista sin modelo; el JS hará fetch al API con la cookie del usuario
+            return View();
+        }
+
+
+        // POST /GruposUi/Asignar
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Asignar(long solicitudId, int? idGrupo, long? fkTecnico, string? notas)
+        {
+            if (solicitudId <= 0 || idGrupo is null || fkTecnico is null)
+            {
+                ModelState.AddModelError(string.Empty, "Seleccione un técnico.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                using var cRep = CreateClient();
+                var mis = await cRep.GetFromJsonAsync<List<GrupoItemDto>>("/api/grupos?mine=true")
+                          ?? new List<GrupoItemDto>();
+                ViewBag.SolicitudId = solicitudId;
+                return View("Asignar", mis);
+            }
+
+            try
+            {
+                using var c = CreateClient();
+                var payload = new SolicitudAsignacionCreateDto
+                {
+                    IdSolicitud = solicitudId,
+                    IdGrupo = idGrupo.Value,
+                    FkTecnico = fkTecnico.Value,
+                    Notas = notas
+                };
+
+                var resp = await c.PostAsJsonAsync($"/api/solicitudes/{solicitudId}/asignaciones", payload);
+                if (!resp.IsSuccessStatusCode)
+                {
+                    var msg = await resp.Content.ReadAsStringAsync();
+                    ModelState.AddModelError(string.Empty, $"No se pudo asignar: {resp.StatusCode} - {msg}");
+
+                    using var cRep = CreateClient();
+                    var mis = await cRep.GetFromJsonAsync<List<GrupoItemDto>>("/api/grupos?mine=true")
+                              ?? new List<GrupoItemDto>();
+                    ViewBag.SolicitudId = solicitudId;
+                    return View("Asignar", mis);
+                }
+
+                TempData["ok"] = true;
+                return RedirectToAction("Details", "Solicitudes", new { id = solicitudId });
+            }
+            catch (Exception ex)
+            {
+                _log.LogError(ex, "Error asignando técnico a solicitud {Id}", solicitudId);
+                ModelState.AddModelError(string.Empty, "Error inesperado al asignar.");
+
+                using var cRep = CreateClient();
+                var mis = await cRep.GetFromJsonAsync<List<GrupoItemDto>>("/api/grupos?mine=true")
+                          ?? new List<GrupoItemDto>();
+                ViewBag.SolicitudId = solicitudId;
+                return View("Asignar", mis);
+            }
+        }
+
+
     }
 }

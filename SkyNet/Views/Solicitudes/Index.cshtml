@@ -1,6 +1,7 @@
 ﻿@model IEnumerable<SkyNet.Models.DTOs.SolicitudDto>
 @{
     ViewData["Title"] = "Solicitudes";
+    Layout = "~/Views/Shared/_Admin.cshtml";
 
     string EstadoNombre(int e) => e switch
     {

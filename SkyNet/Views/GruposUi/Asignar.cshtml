@@ -1,0 +1,153 @@
+﻿@{
+    ViewData["Title"] = "Asignar técnico";
+    Layout = "~/Views/Shared/_Admin.cshtml";
+    long solicitudId = (long)(ViewBag.SolicitudId ?? 0L);
+}
+
+<div class="container mt-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+        <h4 class="mb-0"><i class="bi bi-person-plus"></i> Asignar técnico</h4>
+        <a asp-controller="Solicitudes" asp-action="Details" asp-route-id="@solicitudId"
+           class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Volver a detalle
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            @Html.ValidationSummary(false, "", new { @class = "text-danger mb-2" })
+
+            <form asp-action="Asignar" method="post" id="frmAsignar">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="solicitudId" value="@solicitudId" />
+                <input type="hidden" id="idGrupo" name="idGrupo" />
+                <input type="hidden" id="fkTecnico" name="fkTecnico" />
+                <input type="hidden" name="notas" id="notasHidden" />
+
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped align-middle w-100">
+                        <thead class="table-light">
+                            <tr class="text-center">
+                                <th style="width:40px;"></th>
+                                <th style="width:70px;"># Grupo</th>
+                                <th class="text-start">Técnico</th>
+                                <th class="text-start">Supervisor</th>
+                                <th style="width:200px;">Creado (UTC)</th>
+                                <th style="width:100px;">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyTecnicos">
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">Cargando…</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-3">
+                    <label class="form-label fw-semibold">Notas (opcional)</label>
+                    <textarea id="notasTextarea" class="form-control" rows="2" placeholder="Observaciones de la asignación..."></textarea>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-3">
+                    <a asp-controller="Solicitudes" asp-action="Details" asp-route-id="@solicitudId"
+                       class="btn btn-outline-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check2-circle"></i> Confirmar asignación
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function(){
+          const $tbody     = document.getElementById('tbodyTecnicos');
+          const $idGrupo   = document.getElementById('idGrupo');
+          const $fkTecnico = document.getElementById('fkTecnico');
+          const $frm       = document.getElementById('frmAsignar');
+
+          const fmtUtc = iso => {
+            try {
+              const d = new Date(iso);
+              const yyyy = d.getUTCFullYear();
+              const mm = String(d.getUTCMonth()+1).padStart(2,'0');
+              const dd = String(d.getUTCDate()).padStart(2,'0');
+              const hh = String(d.getUTCHours()).padStart(2,'0');
+              const mi = String(d.getUTCMinutes()).padStart(2,'0');
+              return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
+            } catch { return ''; }
+          };
+
+          async function cargarTecnicos(){
+            try{
+              // El navegador SI envía la cookie de auth
+              const r = await fetch('/api/grupos?mine=true', { credentials: 'same-origin' });
+              if(!r.ok) throw new Error('HTTP ' + r.status);
+              const data = await r.json();
+
+              if(!Array.isArray(data) || data.length === 0){
+                $tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">
+                  No hay técnicos asociados a tus grupos.
+                </td></tr>`;
+                return;
+              }
+
+              // Normaliza nombres por si el API usa camelCase
+              const rows = data.map(g => {
+                const idGrupo           = g.IdGrupo ?? g.idGrupo ?? g.grupoId ?? '';
+                const tecnicoId         = g.TecnicoId ?? g.tecnicoId ?? g.IdTecnico ?? g.idTecnico ?? '';
+                const tecnicoNombre     = g.TecnicoNombre ?? g.tecnicoNombre ?? '';
+                const supervisorNombre  = g.SupervisorNombre ?? g.supervisorNombre ?? '';
+                const fechaCreacionUtc  = g.FechaCreacionUtc ?? g.fechaCreacionUtc ?? null;
+                const estadoBool        = (g.Estado ?? g.estado) ? true : false;
+
+                const fechaTxt = fechaCreacionUtc ? fmtUtc(fechaCreacionUtc) : '';
+
+                return `
+                  <tr>
+                    <td class="text-center">
+                      <input class="form-check-input sel-radio" type="radio" name="sel"
+                             data-idgrupo="${idGrupo}" data-fktecnico="${tecnicoId}" />
+                    </td>
+                    <td class="text-center">${idGrupo}</td>
+                    <td>${tecnicoNombre}</td>
+                    <td>${supervisorNombre}</td>
+                    <td class="text-center">${fechaTxt}</td>
+                    <td class="text-center">${estadoBool ? '<span class="badge bg-success">Activo</span>' : '<span class="badge bg-secondary">Inactivo</span>'}</td>
+                  </tr>`;
+              }).join('');
+
+              $tbody.innerHTML = rows;
+
+              // Selección → rellena los hidden
+              $tbody.addEventListener('change', (ev) => {
+                const r = ev.target.closest('.sel-radio');
+                if(!r) return;
+                $idGrupo.value   = r.dataset.idgrupo || '';
+                $fkTecnico.value = r.dataset.fktecnico || '';
+              });
+
+            }catch(err){
+              console.error(err);
+              $tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">
+                Error al cargar técnicos.
+              </td></tr>`;
+            }
+          }
+
+          // Copia notas al hidden y valida selección
+          $frm.addEventListener('submit', function(e){
+            document.getElementById('notasHidden').value = document.getElementById('notasTextarea').value || '';
+            if(!$idGrupo.value || !$fkTecnico.value){
+              e.preventDefault();
+              alert('Selecciona un técnico antes de confirmar.');
+            }
+          });
+
+          cargarTecnicos();
+        })();
+    </script>
+}

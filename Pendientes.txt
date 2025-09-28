@@ -1,0 +1,11 @@
+USUARIOS------Reiniciar Contraseñas
+
+VISITAS-------Crear tablas para asignar visitas(coordinar), cuando se le de en el tracking aceptar abre formulario para insertar la coordinación de visitas---Asignar Tecnico-----vista general de visitas---solo aparecer antes de llegar al estado 3, de ahí solo aparecerá a supervisor y técnico que allá tomado
+
+
+
+geoposicionamiento & Mapas (integración)
+Supervisor, Técnico
+Embed de Google Maps: ver punto del cliente, indicaciones para llegar, validación de check-in por geocerca (si aplica).
+
+

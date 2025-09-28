@@ -1,9 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.Net.Http.Json;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using SkyNet.Models.DTOs;
+using System.Net.Http.Json;
 
 namespace SkyNet.Controllers.Web
 {
+    [Authorize]
     public class SolicitudesController : Controller
     {
         private readonly IHttpClientFactory _factory;
@@ -42,34 +45,92 @@ namespace SkyNet.Controllers.Web
             var http = _factory.CreateClient();
             http.BaseAddress ??= new Uri($"{Request.Scheme}://{Request.Host}/");
 
-            var solicitud = await http.GetFromJsonAsync<SolicitudDto>($"api/solicitudes/{id}", cancellationToken: ct);
-            return solicitud is null ? NotFound() : View(solicitud);
+            SolicitudDto? sol = null;
+            SolicitudAsignacionDto? asig = null;
+
+            try
+            {
+                sol = await http.GetFromJsonAsync<SolicitudDto>($"api/solicitudes/{id}", ct);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error cargando solicitud {Id}", id);
+            }
+
+            try
+            {
+                asig = await http.GetFromJsonAsync<SolicitudAsignacionDto>($"api/solicitudes/{id}/asignacion-activa", ct);
+            }
+            catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                // sin asignación activa está bien
+            }
+            catch (Exception ex)
+            {
+                _logger.LogInformation(ex, "No se pudo obtener asignación activa para solicitud {Id}", id);
+            }
+
+            if (sol == null)
+            {
+                TempData["Error"] = "No se pudo cargar el detalle de la solicitud.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            ViewBag.AsignacionActiva = asig;
+            return View(sol);
         }
 
         // FORMULARIO CREATE (GET)
         public IActionResult Create() => View(new SolicitudCreateDto());
 
-        // FORMULARIO CREATE (POST)
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AllowAnonymous]
         public async Task<IActionResult> Create(SolicitudCreateDto form)
         {
-            if (!ModelState.IsValid)
-                return View(form);
+            if (!ModelState.IsValid) return View(form);
 
             var http = _factory.CreateClient();
             http.BaseAddress ??= new Uri($"{Request.Scheme}://{Request.Host}/");
 
             var resp = await http.PostAsJsonAsync("api/solicitudes", form);
 
-            if (resp.IsSuccessStatusCode)
+            if (resp.IsSuccessStatusCode) // 201 Created
             {
-                TempData["Ok"] = "Solicitud creada correctamente.";
-                return RedirectToAction(nameof(Index));
+                var creado = await resp.Content.ReadFromJsonAsync<SolicitudDto>();
+
+                TempData["Success"] = true;
+                TempData["Ticket"] = creado?.Ticket ?? "";
+
+                return RedirectToAction(nameof(Create));
             }
 
-            ModelState.AddModelError(string.Empty, $"Error del API: {(int)resp.StatusCode} {resp.ReasonPhrase}");
+            var problema = await resp.Content.ReadAsStringAsync();
+            ModelState.AddModelError("", $"Error del API: {(int)resp.StatusCode} {resp.ReasonPhrase}. {problema}");
             return View(form);
+        }
+
+        [HttpGet] // /Solicitudes/Tracking?ticket=...
+        [AllowAnonymous]
+        public async Task<IActionResult> Tracking(string? ticket, CancellationToken ct)
+        {
+            ViewBag.QueryTried = !string.IsNullOrWhiteSpace(ticket);
+
+            if (string.IsNullOrWhiteSpace(ticket))
+                return View(model: null); // solo muestra el buscador
+
+            var cli = _factory.CreateClient();
+            cli.BaseAddress = new Uri($"{Request.Scheme}://{Request.Host}/");
+
+            var resp = await cli.GetAsync($"api/solicitudes/by-ticket/{Uri.EscapeDataString(ticket)}", ct);
+            if (!resp.IsSuccessStatusCode)
+            {
+                _logger.LogInformation("Tracking ticket {Ticket} API status: {StatusCode}", ticket, resp.StatusCode);
+                return View(model: null); // Ticket no encontrado
+            }
+
+            var model = await resp.Content.ReadFromJsonAsync<SolicitudDto>(cancellationToken: ct);
+            return View(model); // Views/Solicitudes/Tracking.cshtml
         }
     }
 }

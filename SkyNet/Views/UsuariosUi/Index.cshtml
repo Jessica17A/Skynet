@@ -35,14 +35,14 @@
 
 @section Scripts {
     <script>
-        (async function() {
+        (async function () {
             const apiBase = '@Url.Content("~/api/usuarios")';
 
             function renderSoloActivos(data) {
                 const tbody = document.querySelector('#tblUsers tbody');
                 tbody.innerHTML = '';
 
-               
+                // Solo usuarios con Estado == 2 (según tu lógica)
                 const soloActivos = data.filter(u => Number(u.estado ?? -1) === 2);
 
                 for (const u of soloActivos) {
@@ -62,6 +62,12 @@
                         <td class="d-none d-sm-table-cell">${roles}</td>
                         <td class="d-none d-sm-table-cell">${estadoBadge}</td>
                         <td class="text-end">
+                            <button class="btn btn-sm btn-outline-secondary me-1"
+                                    data-action="resetpwd"
+                                    data-id="${u.userId}"
+                                    title="Cambiar contraseña">
+                                <i class="bi bi-key"></i>
+                            </button>
                             <button class="btn btn-sm btn-outline-danger"
                                     data-action="delete"
                                     data-id="${u.userId}"
@@ -95,6 +101,7 @@
                 const action = btn.getAttribute('data-action');
 
                 try {
+                    // Desactivar usuario (estado = 0)
                     if (action === 'delete') {
                         if (!confirm('¿Desactivar este usuario (estado = 0)?')) return;
 
@@ -104,8 +111,46 @@
                             body: JSON.stringify({ estado: 0 })
                         });
 
-                        if (!resp.ok) throw new Error('No se pudo desactivar (actualizar estado a 0)');
-                        await loadUsers(); 
+                        if (!resp.ok) {
+                            let msg = 'No se pudo desactivar (actualizar estado a 0)';
+                            try {
+                                const text = await resp.text();
+                                if (text) msg = text;
+                            } catch (err) { /* ignore */ }
+                            throw new Error(msg);
+                        }
+
+                        await loadUsers();
+                    }
+
+                    // Resetear contraseña (admin define nueva)
+                    if (action === 'resetpwd') {
+                        const newPwd = prompt('Ingrese la nueva contraseña:');
+                        if (!newPwd) return;
+
+                        const resp = await fetch(`${apiBase}/${encodeURIComponent(id)}/reset-password`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            // IMPORTANTE: el API espera "NewPassword" (PascalCase)
+                            body: JSON.stringify({ NewPassword: newPwd })
+                        });
+
+                        if (!resp.ok) {
+                            // Mostrar el detalle que devuelve el API
+                            let msg = 'No se pudo cambiar la contraseña';
+                            try {
+                                const text = await resp.text();
+                                try {
+                                    const j = JSON.parse(text);
+                                    msg = j.error || j.title || msg;
+                                } catch (err) {
+                                    if (text) msg = text || msg;
+                                }
+                            } catch (err) { /* ignore */ }
+                            throw new Error(msg);
+                        }
+
+                        alert('Contraseña cambiada correctamente.');
                     }
                 } catch (err) {
                     console.error(err);
@@ -115,7 +160,10 @@
 
             // Inicial
             try { await loadUsers(); }
-            catch (err) { console.error(err); alert(err.message || 'Error cargando usuarios'); }
+            catch (err) {
+                console.error(err);
+                alert(err.message || 'Error cargando usuarios');
+            }
         })();
     </script>
 }

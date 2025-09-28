@@ -1,5 +1,5 @@
-﻿// Controllers/Api/UsuariosApiController.cs
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SkyNet.Data;
@@ -88,5 +88,33 @@ namespace SkyNet.Controllers.Api
             }
             return NoContent();
         }
+
+
+        [Authorize(Roles = "Administrador")]
+        [HttpPost("{id}/reset-password")]
+        public async Task<ActionResult> ResetPassword(
+         string id,
+         [FromBody] UsuarioResetDto dto,
+         [FromServices] UserManager<IdentityUser> userManager)
+        {
+            if (dto is null)
+                return BadRequest(new { error = "Body vacío o JSON inválido." });
+
+            if (string.IsNullOrWhiteSpace(dto.NewPassword))
+                return BadRequest(new { error = "NewPassword es requerido." });
+
+            var user = await userManager.FindByIdAsync(id);
+            if (user is null) return NotFound(new { error = "Usuario no encontrado." });
+
+            var token = await userManager.GeneratePasswordResetTokenAsync(user);
+            var result = await userManager.ResetPasswordAsync(user, token, dto.NewPassword);
+
+            if (!result.Succeeded)
+                return BadRequest(new { error = string.Join("; ", result.Errors.Select(e => e.Description)) });
+
+            await userManager.UpdateSecurityStampAsync(user); // opcional: cierra sesiones activas
+            return Ok(new { ok = true, message = "Contraseña reseteada correctamente." });
+        }
+
     }
 }

@@ -18,6 +18,8 @@ namespace SkyNet.Data
 
         public DbSet<GrupoSupervisorTec> GruposSupervisoresTec => Set<GrupoSupervisorTec>();
 
+        public DbSet<SolicitudAsignacion> SolicitudAsignaciones { get; set; } = null!;
+
         protected override void OnModelCreating(ModelBuilder b)
         {
             base.OnModelCreating(b);
@@ -106,6 +108,49 @@ namespace SkyNet.Data
                  .HasForeignKey(x => x.FkTecnico)
                  .HasConstraintName("FK_GRUPO_TECNICO")
                  .OnDelete(DeleteBehavior.NoAction);   // 👈 sin cascada
+            });
+
+
+            b.Entity<SolicitudAsignacion>(e =>
+            {
+                e.ToTable("Solicitudes_Asignaciones");
+
+                e.HasKey(x => x.Id);
+
+                e.Property(x => x.FkSolicitud)
+                 .IsRequired()
+                 .HasColumnName("FKSOLICITUD");
+
+                e.Property(x => x.IdGrupo)
+                 .IsRequired()
+                 .HasColumnName("IDGRUPO");
+
+                e.Property(x => x.FkTecnico)
+                 .IsRequired()
+                 .HasColumnName("FKTECNICO");
+
+                e.Property(x => x.FechaAsignacionUtc)
+                 .HasColumnName("FECHA_ASIGNACION_UTC");
+
+                e.Property(x => x.AsignadoPorUserId)
+                 .HasMaxLength(100)
+                 .HasColumnName("ASIGNADO_POR");
+
+                e.Property(x => x.Notas)
+                 .HasMaxLength(500)
+                 .HasColumnName("NOTAS");
+
+                e.Property(x => x.Estado)
+                 .HasConversion<byte>()
+                 .HasColumnName("ESTADO");
+
+            
+
+                // Regla: una sola asignación ACTIVA por solicitud
+                e.HasIndex(x => new { x.FkSolicitud, x.Estado })
+                 .HasDatabaseName("UX_Sol_Asig_Activa")
+                 .HasFilter("[ESTADO] = 1") // 1 = Activa
+                 .IsUnique();
             });
 
         }

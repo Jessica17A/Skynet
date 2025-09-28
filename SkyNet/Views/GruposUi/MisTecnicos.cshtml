@@ -3,13 +3,48 @@
     Layout = "~/Views/Shared/_Admin.cshtml";
 }
 
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
+    <style>
+        .table td, .table th {
+            vertical-align: middle;
+            padding: .35rem .5rem;
+        }
+
+        .table th {
+            white-space: nowrap;
+        }
+
+        .chip {
+            display: inline-block;
+            padding: .25rem .5rem;
+            border-radius: 999px;
+            background: #eef;
+            border: 1px solid #cfe2ff;
+            color: #084298;
+            font-size: .85rem
+        }
+    </style>
+}
+
 <div class="container mt-4">
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
         <h4 class="mb-0"><i class="bi bi-person-badge"></i> Mis técnicos</h4>
         <div class="d-flex gap-2">
-            <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
+            <a asp-action="Index" asp-controller="Grupos" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-arrow-left"></i> Volver a grupos
             </a>
+            <a asp-action="Index" asp-controller="Solicitudes" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-list-task"></i> Ir a solicitudes
+            </a>
+        </div>
+    </div>
+
+    <div id="contextoSolicitud" class="mb-3" style="display:none">
+        <div class="alert alert-info py-2 px-3 mb-0">
+            <i class="bi bi-info-circle"></i>
+            Asignando técnico para solicitud <span id="ctxSolicitud" class="chip"></span>.
+            Selecciona un técnico y pulsa <strong>Asignar</strong>.
         </div>
     </div>
 
@@ -24,6 +59,7 @@
                             <th class="text-start">Supervisor</th>
                             <th style="width:200px;">Creado (UTC)</th>
                             <th style="width:100px;">Estado</th>
+                            <th style="width:130px;" class="acciones-col">Acciones</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -33,10 +69,6 @@
     </div>
 </div>
 
-@section Styles {
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
-}
-
 @section Scripts {
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
@@ -44,8 +76,108 @@
     <script>
         let dt;
 
+        const solicitudId = new URLSearchParams(location.search).get('solicitudId');
+
+        // UI contextual si hay solicitudId
+        (function initContext(){
+            if (solicitudId) {
+                document.getElementById('contextoSolicitud').style.display = '';
+                document.getElementById('ctxSolicitud').textContent = '#' + solicitudId;
+            } else {
+                // Si no hay solicitud en contexto, ocultamos columna Acciones en el thead (estética).
+                document.querySelector('th.acciones-col')?.classList.add('d-none');
+            }
+        })();
+
+        async function asignarTecnico(idSolicitud, fila) {
+            try {
+                const payload = {
+                    idSolicitud: Number(idSolicitud),
+                    idGrupo: fila.idGrupo,
+                    fkTecnico: fila.fkTecnico ?? fila.idTecnico ?? null
+                };
+
+                if (!payload.fkTecnico) {
+                    alert('No se encontró el ID del técnico en la fila. Ajusta la API para enviar fkTecnico/idTecnico.');
+                    return;
+                }
+
+                const resp = await fetch(`/api/solicitudes/${idSolicitud}/asignaciones`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!resp.ok) {
+                    const t = await resp.text();
+                    alert('No se pudo asignar el técnico.\n' + t);
+                    return;
+                }
+
+                alert('Técnico asignado correctamente.');
+                // Opcional: redirige a detalle de solicitud o regresar al listado
+                // location.href = `/Solicitudes/Details/${idSolicitud}`;
+            } catch (err) {
+                console.error(err);
+                alert('Error de red al asignar el técnico.');
+            }
+        }
+
         function cargarMisTecnicos() {
             if (dt) dt.destroy();
+
+            // Columnas base del DataTable
+            const colsBase = [
+                { data: 'idGrupo', className: 'text-center' },
+                { data: 'tecnicoNombre' },
+                { data: 'supervisorNombre' },
+                {
+                    data: 'fechaCreacionUtc',
+                    render: function (data) {
+                        if (!data) return '';
+                        const d = new Date(data);
+                        const yyyy = d.getUTCFullYear();
+                        const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+                        const dd = String(d.getUTCDate()).padStart(2, '0');
+                        const hh = String(d.getUTCHours()).padStart(2, '0');
+                        const mi = String(d.getUTCMinutes()).padStart(2, '0');
+                        return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
+                    },
+                    className: 'text-center'
+                },
+                {
+                    data: 'estado',
+                    render: v => v
+                        ? '<span class="badge bg-success">Activo</span>'
+                        : '<span class="badge bg-secondary">Inactivo</span>',
+                    className: 'text-center'
+                }
+            ];
+
+            // Si hay solicitudId, agrega columna Acciones; si no, la ocultamos con CSS class
+            if (solicitudId) {
+                colsBase.push({
+                    data: null,
+                    orderable: false,
+                    className: 'text-center',
+                    width: '130px',
+                    render: function (_data, _type, row) {
+                        return `
+                            <button type="button" class="btn btn-sm btn-primary btn-asignar"
+                                    title="Asignar técnico" data-tecnico="${row.fkTecnico ?? row.idTecnico ?? ''}">
+                                <i class="bi bi-person-plus"></i> Asignar
+                            </button>
+                        `;
+                    }
+                });
+            } else {
+                colsBase.push({
+                    data: null,
+                    orderable: false,
+                    className: 'text-center d-none',
+                    defaultContent: ''
+                });
+            }
 
             dt = $('#tblMisTecnicos').DataTable({
                 ajax: {
@@ -56,32 +188,7 @@
                 lengthChange: false,
                 pageLength: 10,
                 order: [[3, 'desc']],
-                columns: [
-                    { data: 'idGrupo', className: 'text-center' },
-                    { data: 'tecnicoNombre' },
-                    { data: 'supervisorNombre' },
-                    {
-                        data: 'fechaCreacionUtc',
-                        render: function (data) {
-                            if (!data) return '';
-                            const d = new Date(data);
-                            const yyyy = d.getUTCFullYear();
-                            const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
-                            const dd = String(d.getUTCDate()).padStart(2, '0');
-                            const hh = String(d.getUTCHours()).padStart(2, '0');
-                            const mi = String(d.getUTCMinutes()).padStart(2, '0');
-                            return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
-                        },
-                        className: 'text-center'
-                    },
-                    {
-                        data: 'estado',
-                        render: v => v
-                            ? '<span class="badge bg-success">Activo</span>'
-                            : '<span class="badge bg-secondary">Inactivo</span>',
-                        className: 'text-center'
-                    }
-                ],
+                columns: colsBase,
                 language: {
                     search: 'Buscar:',
                     paginate: { previous: 'Anterior', next: 'Siguiente' },
@@ -89,7 +196,17 @@
                 }
             });
 
-            // (Opcional) log de errores AJAX
+            // Click en "Asignar"
+            $('#tblMisTecnicos tbody').on('click', '.btn-asignar', function () {
+                if (!solicitudId) return;
+                const rowData = dt.row($(this).closest('tr')).data();
+                if (!rowData) return;
+                if (confirm(`¿Asignar el técnico "${rowData.tecnicoNombre}" a la solicitud #${solicitudId}?`)) {
+                    asignarTecnico(solicitudId, rowData);
+                }
+            });
+
+            // Log de errores AJAX (opcional)
             $('#tblMisTecnicos').on('xhr.dt', function (e, settings, json, xhr) {
                 if (xhr && xhr.status !== 200) {
                     console.error('AJAX error', xhr.status, xhr.statusText, xhr.responseText);
@@ -100,14 +217,3 @@
         $(document).ready(cargarMisTecnicos);
     </script>
 }
-
-<style>
-    .table td, .table th {
-        vertical-align: middle;
-        padding: .35rem .5rem;
-    }
-
-    .table th {
-        white-space: nowrap;
-    }
-</style>

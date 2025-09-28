@@ -5,6 +5,7 @@
 
 @{
     ViewData["Title"] = "Nuevo Grupo";
+    Layout = "~/Views/Shared/_Admin.cshtml";
 
     // Construimos SelectListItem desde el Model (sin ViewBag)
     var supItems = (Model?.Supervisores ?? new List<OpcionEmpleadoDto>())

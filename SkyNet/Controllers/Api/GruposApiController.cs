@@ -20,11 +20,9 @@ namespace SkyNet.Controllers.Api
             _userManager = userManager;
         }
 
-        // GET: api/grupos/lookups?sup=123
-        // - Si sup está presente: Técnicos activos NO asignados activamente a ese supervisor
-        // - Si no: todos los técnicos activos
+        
         [HttpGet("lookups")]
-        public async Task<ActionResult<object>> Lookups([FromQuery] long? sup)
+        public async Task<ActionResult<object>> Lookups([FromQuery] bool availableOnly = true)
         {
             var supervisores = await _db.Empleados
                 .Where(e => e.Estado != 0 && e.Cargo == "Supervisor")
@@ -32,21 +30,24 @@ namespace SkyNet.Controllers.Api
                 .Select(e => new OpcionEmpleadoDto { Id = e.Id, Nombre = e.Nombres + " " + e.Apellidos })
                 .ToListAsync();
 
-            IQueryable<Empleado> baseTec = _db.Empleados
+            // base query de técnicos activos
+            IQueryable<Empleado> tQuery = _db.Empleados
                 .Where(e => e.Estado != 0 && e.Cargo == "Tecnico");
 
-            if (sup.HasValue && sup.Value > 0)
+            if (availableOnly)
             {
-                var tecOcupados = await _db.GruposSupervisoresTec
-                    .Where(g => g.Estado && g.FkSupervisor == sup.Value)
+                // técnicos que YA tienen una asignación ACTIVA
+                var ocupados = await _db.GruposSupervisoresTec
+                    .Where(g => g.Estado)
                     .Select(g => g.FkTecnico)
                     .Distinct()
                     .ToListAsync();
 
-                baseTec = baseTec.Where(e => !tecOcupados.Contains(e.Id));
+                // excluirlos del listado
+                tQuery = tQuery.Where(e => !ocupados.Contains(e.Id));
             }
 
-            var tecnicos = await baseTec
+            var tecnicos = await tQuery
                 .OrderBy(e => e.Nombres).ThenBy(e => e.Apellidos)
                 .Select(e => new OpcionEmpleadoDto { Id = e.Id, Nombre = e.Nombres + " " + e.Apellidos })
                 .ToListAsync();
@@ -54,51 +55,46 @@ namespace SkyNet.Controllers.Api
             return Ok(new { supervisores, tecnicos });
         }
 
+
+        // POST: api/grupos
         // POST: api/grupos
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] GrupoCreateDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            // Supervisor debe existir y estar activo (Estado != 0)
-            var existeSup = await _db.Empleados
-                .AnyAsync(e => e.Id == dto.SupervisorId && e.Estado != 0);
+            // supervisor válido (Estado != 0)
+            var existeSup = await _db.Empleados.AnyAsync(e => e.Id == dto.SupervisorId && e.Estado != 0);
             if (!existeSup) return NotFound($"Supervisor {dto.SupervisorId} no existe o está inactivo.");
 
-            // Técnicos válidos (Estado != 0)
+            // técnicos válidos (Estado != 0)
             var tecValidos = await _db.Empleados
                 .Where(e => dto.TecnicosIds.Contains(e.Id) && e.Estado != 0)
                 .Select(e => e.Id)
                 .ToListAsync();
+
             if (tecValidos.Count == 0) return BadRequest("No hay técnicos válidos.");
-
-            // Traemos existentes (activos e inactivos) para decidir si reactivar o crear
-            var existentes = await _db.GruposSupervisoresTec
-                .Where(g => g.FkSupervisor == dto.SupervisorId && tecValidos.Contains(g.FkTecnico))
-                .ToListAsync();
-
-            var existentesPorTec = existentes.ToDictionary(x => x.FkTecnico, x => x);
 
             foreach (var tecId in tecValidos.Distinct())
             {
-                if (existentesPorTec.TryGetValue(tecId, out var existente))
+                var existente = await _db.GruposSupervisoresTec
+                    .FirstOrDefaultAsync(g => g.FkSupervisor == dto.SupervisorId && g.FkTecnico == tecId);
+
+                if (existente != null)
                 {
                     if (existente.Estado)
                     {
-                        // YA asignado activamente => NO hacer nada (no insertar)
+                        // Ya existe ACTIVO -> no hacemos nada
                         continue;
                     }
-                    else
-                    {
-                        // Existe registro INACTIVO => reactivar
-                        existente.Estado = true;
-                        existente.FechaCreacionUtc = DateTime.UtcNow; // opcional: si prefieres mantener la original, quita esta línea
-                        // _db.Update(existente); // no necesario, EF ya trackea
-                    }
+
+                    // Existe pero INACTIVO -> reactivar
+                    existente.Estado = true;
+                    existente.FechaCreacionUtc = DateTime.UtcNow; // opcional: registra fecha de reactivación
                 }
                 else
                 {
-                    // No existe ningún registro => crear
+                    // No existe -> crear nuevo
                     _db.GruposSupervisoresTec.Add(new GrupoSupervisorTec
                     {
                         FkSupervisor = dto.SupervisorId,
@@ -112,6 +108,7 @@ namespace SkyNet.Controllers.Api
             await _db.SaveChangesAsync();
             return StatusCode(201);
         }
+
 
         // POST: api/grupos/{id}/toggle
         [HttpPost("{id:int}/toggle")]

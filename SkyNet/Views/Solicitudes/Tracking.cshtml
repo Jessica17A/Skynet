@@ -1,10 +1,11 @@
 ﻿@model SkyNet.Models.DTOs.SolicitudDto
 @{
+    Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Consultar estado de ticket";
+    var ticketQuery = Context.Request?.Query["ticket"].ToString();
     var hasData = Model != null && !string.IsNullOrWhiteSpace(Model?.Ticket);
-    var queryTried = (bool?)ViewBag.QueryTried ?? false;
+    var queryTried = (bool?)ViewBag.QueryTried ?? (!string.IsNullOrWhiteSpace(ticketQuery));
 
-    // Texto legible por estado
     string Texto(int e) => e switch
     {
         0 => "Rechazado",
@@ -16,7 +17,6 @@
         _ => "Desconocido"
     };
 
-    // Ícono por estado (Bootstrap Icons)
     string Icono(int e) => e switch
     {
         0 => "bi-x-circle",
@@ -28,198 +28,235 @@
         _ => "bi-question-circle"
     };
 
-    // Gradiente y color de acento por estado (para badges e icon containers)
     (string grad, string accent) Colors(int e) => e switch
     {
-        0 => ("linear-gradient(135deg,#ff6b6b,#f06595)", "#e03131"),     // rojo/rosa
-        1 => ("linear-gradient(135deg,#adb5bd,#ced4da)", "#5c677d"),     // gris moderno
-        2 => ("linear-gradient(135deg,#63e6be,#22b8cf)", "#0ca678"),     // aqua/teal
-        3 => ("linear-gradient(135deg,#69db7c,#38d9a9)", "#2b8a3e"),     // verde
-        4 => ("linear-gradient(135deg,#74c0fc,#4dabf7)", "#1c7ed6"),     // azul
-        5 => ("linear-gradient(135deg,#868e96,#343a40)", "#212529"),     // dark elegante
+        0 => ("linear-gradient(135deg,#ff6b6b,#f06595)", "#e03131"),
+        1 => ("linear-gradient(135deg,#adb5bd,#ced4da)", "#5c677d"),
+        2 => ("linear-gradient(135deg,#63e6be,#22b8cf)", "#0ca678"),
+        3 => ("linear-gradient(135deg,#69db7c,#38d9a9)", "#2b8a3e"),
+        4 => ("linear-gradient(135deg,#74c0fc,#4dabf7)", "#1c7ed6"),
+        5 => ("linear-gradient(135deg,#868e96,#343a40)", "#212529"),
         _ => ("linear-gradient(135deg,#e9ecef,#dee2e6)", "#868e96")
     };
 
-    // Porcentaje de avance (solo para la barra)
     int Pct(int e) => e switch { 0 => 0, 1 => 20, 2 => 40, 3 => 60, 4 => 80, 5 => 100, _ => 0 };
+
+    string FechaLocalStr(DateTime? utc) => utc.HasValue ? utc.Value.ToLocalTime().ToString("g") : "-";
 }
 
-<style>
-    :root {
-        --card-radius: 1rem;
-        --soft-shadow: 0 10px 30px rgba(0,0,0,.08);
-        --chip-radius: 999px;
-    }
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <style>
+        :root {
+            --card-radius: 1rem;
+            --soft-shadow: 0 10px 30px rgba(0,0,0,.08);
+            --chip-radius: 999px;
+        }
 
-    .card.rounded-4 {
-        border-radius: var(--card-radius);
-        box-shadow: var(--soft-shadow);
-    }
+        .card.rounded-4 {
+            border-radius: var(--card-radius);
+            box-shadow: var(--soft-shadow);
+        }
 
-    .card-header.header-hero {
-        background: linear-gradient(135deg,#7c4dff,#6c63ff 50%,#5a55ff);
-        color: #fff;
-        text-align: center;
-        border-top-left-radius: var(--card-radius) !important;
-        border-top-right-radius: var(--card-radius) !important;
-        padding: 1.25rem 1rem;
-    }
+        .card-header.header-hero {
+            background: linear-gradient(135deg,#7c4dff,#6c63ff 50%,#5a55ff);
+            color: #fff;
+            text-align: center;
+            border-top-left-radius: var(--card-radius) !important;
+            border-top-right-radius: var(--card-radius) !important;
+            padding: 1.25rem 1rem;
+        }
 
-    .header-hero h5 {
-        margin: 0;
-        letter-spacing: .2px;
-    }
+        .header-hero h5 {
+            margin: 0;
+            letter-spacing: .2px;
+        }
 
-    .icon-chip {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 44px;
-        height: 44px;
-        border-radius: 14px;
-        color: #fff;
-        box-shadow: inset 0 0 0 2px rgba(255,255,255,.12), var(--soft-shadow);
-        transition: transform .18s ease, box-shadow .18s ease;
-    }
-
-        .icon-chip.lg {
-            width: 56px;
-            height: 56px;
+        .icon-chip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 52px;
+            height: 52px;
             border-radius: 16px;
+            color: #fff;
+            box-shadow: inset 0 0 0 2px rgba(255,255,255,.12), var(--soft-shadow);
+            transition: transform .18s ease, box-shadow .18s ease;
         }
 
-        .icon-chip:hover {
-            transform: translateY(-2px);
-            box-shadow: inset 0 0 0 2px rgba(255,255,255,.16), 0 12px 26px rgba(0,0,0,.12);
+            .icon-chip.lg {
+                width: 64px;
+                height: 64px;
+                border-radius: 18px;
+            }
+
+            .icon-chip:hover {
+                transform: translateY(-2px);
+                box-shadow: inset 0 0 0 2px rgba(255,255,255,.16), 0 12px 26px rgba(0,0,0,.12);
+            }
+
+            .icon-chip i {
+                font-size: 1.55rem;
+            }
+
+            .icon-chip.lg i {
+                font-size: 1.9rem;
+            }
+
+        .badge-soft {
+            display: inline-flex;
+            align-items: center;
+            gap: .55rem;
+            padding: .65rem 1rem;
+            border-radius: 16px;
+            font-weight: 700;
+            color: #fff;
+            box-shadow: var(--soft-shadow);
+            border: none;
         }
 
-        .icon-chip i {
-            font-size: 1.35rem;
+            .badge-soft i {
+                font-size: 1.15rem;
+            }
+
+        .meta-chip {
+            background: #f8f9fa;
+            color: #343a40;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: .55rem .8rem;
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            font-weight: 500;
         }
 
-        .icon-chip.lg i {
-            font-size: 1.6rem;
+        .progress {
+            height: 16px;
+            background-color: #f1f3f5;
+            border-radius: var(--chip-radius);
         }
 
-    .badge-soft {
-        display: inline-flex;
-        align-items: center;
-        gap: .5rem;
-        padding: .6rem .9rem;
-        border-radius: 14px;
-        font-weight: 600;
-        color: #fff;
-        box-shadow: var(--soft-shadow);
-        border: none; /* quitamos borde bootstrap por claridad */
-    }
-
-        .badge-soft i {
-            font-size: 1.1rem;
+        .progress-bar {
+            border-radius: var(--chip-radius);
+            transition: width .6s ease;
         }
 
-    .meta-chip {
-        background: #f8f9fa;
-        color: #343a40;
-        border: 1px solid #e9ecef;
-        border-radius: 12px;
-        padding: .45rem .65rem;
-        display: inline-flex;
-        align-items: center;
-        gap: .45rem;
-    }
+        .legend {
+            font-size: 1.25rem;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 1rem;
+        }
 
-    .progress {
-        height: 14px;
-        background-color: #f1f3f5;
-        border-radius: var(--chip-radius);
-    }
+            .legend .item {
+                display: flex;
+                align-items: center;
+                gap: 1.2rem;
+                padding: .6rem 1rem;
+                border-radius: 12px;
+                font-weight: 600;
+            }
 
-    .progress-bar {
-        border-radius: var(--chip-radius);
-        background-image: linear-gradient(90deg, rgba(255,255,255,.18), rgba(255,255,255,0));
-        background-size: 200% 100%;
-        animation: shimmer 2.1s linear infinite;
-    }
-   
-    
+            .legend .dot {
+                width: 18px;
+                height: 18px;
+                border-radius: 50%;
+                box-shadow: 0 0 0 3px rgba(0,0,0,.04) inset;
+            }
 
-    .legend .item {
-        display: flex;
-        align-items: center;
-        gap: .45rem;
-        padding: .35rem .6rem;
-        border-radius: 10px;
-    }
+            .legend i {
+                font-size: 1.45rem;
+            }
 
-    .legend .dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        box-shadow: 0 0 0 3px rgba(0,0,0,.04) inset;
-    }
+        .input-group .form-control {
+            border-radius: 12px;
+            border-color: #e9ecef;
+        }
 
-    /* Inputs modernillos */
-    .input-group .form-control {
-        border-radius: 12px;
-        border-color: #e9ecef;
-    }
+        .input-group-text {
+            border-radius: 12px;
+            background: #f8f9fa;
+            border-color: #e9ecef;
+        }
 
-    .input-group-text {
-        border-radius: 12px;
-        background: #f8f9fa;
-        border-color: #e9ecef;
-    }
+        .btn-primary, .btn-outline-secondary {
+            border-radius: 12px;
+            box-shadow: var(--soft-shadow);
+        }
 
-    .btn-primary {
-        border-radius: 12px;
-        box-shadow: var(--soft-shadow);
-    }
+        .copy-btn {
+            border: none;
+            background: transparent;
+            padding: 0 .25rem;
+            line-height: 1;
+        }
 
-    .btn-outline-secondary {
-        border-radius: 12px;
-    }
-</style>
+            .copy-btn:focus {
+                outline: 2px solid #a5d8ff;
+                outline-offset: 2px;
+                border-radius: 8px;
+            }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0,0,0,0);
+            border: 0;
+        }
+    </style>
+}
 
 <div class="container py-4">
     <div class="row justify-content-center">
-        <div class="col-lg-8 col-xl-7">
+        <div class="col-12 col-lg-11">
             <div class="card border-0 rounded-4">
                 <div class="card-header header-hero">
                     <h5 class="mb-1"><i class="bi bi-clipboard-check"></i> @ViewData["Title"]</h5>
                     <div class="text-white-50 small">Ingresa el ticket y visualiza su estado con estilo</div>
                 </div>
-
                 <div class="card-body p-4">
-                    <!-- Buscador por ticket -->
-                    <form method="get" class="mb-4" id="trackForm">
-                        <label class="form-label fw-semibold">Número de ticket</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-hash"></i></span>
-                            <input name="ticket" class="form-control" placeholder="SKY-2025-000123"
-                                   value="@(Context.Request.Query["ticket"].ToString())" autocomplete="off" autofocus />
-                            <button class="btn btn-primary" type="submit">
-                                <i class="bi bi-search"></i> Consultar
-                            </button>
-                            <a asp-action="Tracking" class="btn btn-outline-secondary">Limpiar</a>
+
+                    @if (hasData)
+                    {
+                        var estadoIntTop = (int)Model.Estado;
+                        var (gradTop, accentTop) = Colors(estadoIntTop);
+
+                        <div class="text-end">
+                            <div class="fw-bold mb-1">Estado actual</div>
+                            <span class="badge-soft" style="background:@gradTop">
+                                <i class="bi @Icono(estadoIntTop)"></i> @Texto(estadoIntTop)
+                            </span>
                         </div>
-                        <div class="form-text">Ingresa el número exacto del ticket.</div>
+                    }
+
+                    <!-- Buscador -->
+                    <form method="get" class="mb-4" id="trackForm" role="search">
+                        <label class="form-label fw-semibold" for="ticketInput">Número de ticket</label>
+                        <div class="input-group">
+                            <span class="input-group-text" id="hashIcon"><i class="bi bi-hash"></i></span>
+                            <input id="ticketInput" name="ticket" class="form-control form-control-lg" placeholder="SKY-2025-000123" value="@ticketQuery" autocomplete="off" aria-describedby="hashIcon helpText" autofocus />
+                            <button class="btn btn-primary btn-lg" type="submit"><i class="bi bi-search"></i> <span class="d-none d-sm-inline">Consultar</span></button>
+                            <a asp-action="Tracking" class="btn btn-outline-secondary btn-lg">Limpiar</a>
+                        </div>
+                        <div id="helpText" class="form-text">Ingresa el número exacto del ticket.</div>
                     </form>
 
                     @if (!hasData && !queryTried)
                     {
                         <div class="text-center text-muted py-5">
-                            <div class="icon-chip lg" style="background:linear-gradient(135deg,#c0ebff,#d0bfff);">
-                                <i class="bi bi-search"></i>
-                            </div>
+                            <div class="icon-chip lg" style="background:linear-gradient(135deg,#c0ebff,#d0bfff);"><i class="bi bi-search"></i></div>
                             <div class="mt-3">Ingresa el ticket y presiona <strong>Consultar</strong>.</div>
                         </div>
                     }
                     else if (!hasData && queryTried)
                     {
-                        <div class="alert alert-warning d-flex align-items-center gap-2">
-                            <i class="bi bi-exclamation-triangle-fill"></i>
-                            <div>Ticket <strong>@Context.Request.Query["ticket"]</strong> no encontrado.</div>
-                        </div>
+                        <div class="alert alert-warning d-flex align-items-center gap-2"><i class="bi bi-exclamation-triangle-fill"></i><div>Ticket <strong>@Html.Encode(ticketQuery)</strong> no encontrado.</div></div>
                     }
                     else
                     {
@@ -227,57 +264,42 @@
                         var (grad, accent) = Colors(estadoInt);
                         var pct = Pct(estadoInt);
 
-                        <!-- Header de estado con icono grande -->
                         <div class="d-flex align-items-center gap-3 mb-3">
-                            <div class="icon-chip lg" style="background:@grad">
-                                <i class="bi @Icono(estadoInt)"></i>
-                            </div>
+                            <div class="icon-chip lg" style="background:@grad"><i class="bi @Icono(estadoInt)"></i></div>
                             <div>
-                                <div class="badge-soft" style="background:@grad">
-                                    <i class="bi @Icono(estadoInt)"></i>
-                                    @Texto(estadoInt)
-                                </div>
-                                <div class="mt-2 d-flex flex-wrap gap-2">
-                                    <span class="meta-chip"><i class="bi bi-clipboard"></i> @Model.Ticket</span>
+                                <div class="mt-1 d-flex flex-wrap gap-2 align-items-center">
+                                    <span class="meta-chip" id="ticketChip"><i class="bi bi-clipboard"></i><span>@Model.Ticket</span><button type="button" class="copy-btn" id="copyTicketBtn" title="Copiar"><i class="bi bi-copy"></i></button></span>
                                     <span class="meta-chip"><i class="bi bi-flag"></i> @Model.Prioridad</span>
                                     <span class="meta-chip"><i class="bi bi-ui-checks-grid"></i> @Model.Tipo</span>
                                 </div>
                             </div>
-                            <div class="ms-auto text-muted small text-end">
-                                <div>Creado</div>
-                                <div class="fw-semibold">@Model.CreatedAtUtc.ToLocalTime():g</div>
-                            </div>
+                            <div class="ms-auto text-muted small text-end"><div>Creado</div><div class="fw-semibold">@FechaLocalStr(Model?.CreatedAtUtc)</div></div>
                         </div>
 
-                        <!-- Barra de progreso con color dinámico -->
                         <div class="mb-3">
-                            <div class="progress" style="--accent:@accent;">
+                            <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="@pct">
                                 <div class="progress-bar" style="width:@pct%; background:@grad;"></div>
                             </div>
+                            <div class="small text-muted mt-1">@pct% completado</div>
                         </div>
 
-                        <!-- Leyenda bonita con íconos y puntos de color -->
-                        <div class="legend d-flex justify-content-between flex-wrap gap-2 text-muted small">
-                            <span class="item"><span class="dot" style="background:#ff6b6b"></span> <i class="bi bi-x-circle text-danger"></i> Rechazado</span>
-                            <span class="item"><span class="dot" style="background:#adb5bd"></span> <i class="bi bi-hourglass-split text-secondary"></i> Pendiente</span>
-                            <span class="item"><span class="dot" style="background:#63e6be"></span> <i class="bi bi-eye" style="color:#0ca678;"></i> Revisada</span>
-                            <span class="item"><span class="dot" style="background:#69db7c"></span> <i class="bi bi-check-circle text-success"></i> Aceptada</span>
-                            <span class="item"><span class="dot" style="background:#74c0fc"></span> <i class="bi bi-gear-fill text-primary"></i> En proceso</span>
-                            <span class="item"><span class="dot" style="background:#343a40"></span> <i class="bi bi-flag-fill text-dark"></i> Finalizado</span>
+                        <div class="legend d-flex justify-content-between flex-wrap gap-3">
+                            <span class="item"><span class="dot" style="background:#adb5bd"></span><i class="bi bi-hourglass-split text-secondary"></i> Pendiente</span>
+                            <span class="item"><span class="dot" style="background:#63e6be"></span><i class="bi bi-eye" style="color:#0ca678;"></i> Revisada</span>
+                            <span class="item"><span class="dot" style="background:#69db7c"></span><i class="bi bi-check-circle text-success"></i> Aceptada</span>
+                            <span class="item"><span class="dot" style="background:#74c0fc"></span><i class="bi bi-gear-fill text-primary"></i> En proceso</span>
+                            <span class="item"><span class="dot" style="background:#343a40"></span><i class="bi bi-flag-fill text-dark"></i> Finalizado</span>
                         </div>
 
-                        <!-- (Opcional) Detalles del solicitante -->
                         <div class="border rounded-4 p-3 mt-4" style="background:#f8f9fa; border-color:#eef0f2;">
                             <div class="small text-uppercase text-muted mb-1">Solicitante</div>
                             <div class="d-flex flex-wrap align-items-center gap-3">
-                                <div class="icon-chip" style="background:linear-gradient(135deg,#ffd43b,#ffa94d);">
-                                    <i class="bi bi-person"></i>
-                                </div>
+                                <div class="icon-chip" style="background:linear-gradient(135deg,#ffd43b,#ffa94d);"><i class="bi bi-person"></i></div>
                                 <div class="me-auto">
                                     <div class="fw-semibold">@Model.Nombre</div>
                                     <div class="text-muted">@Model.Email</div>
                                 </div>
-                                @if (!string.IsNullOrWhiteSpace(Model.Telefono))
+                                @if (!string.IsNullOrWhiteSpace(Model?.Telefono))
                                 {
                                     <span class="meta-chip"><i class="bi bi-telephone"></i> @Model.Telefono</span>
                                 }
@@ -285,44 +307,25 @@
                         </div>
                     }
                 </div>
-
-                <div class="card-footer bg-light rounded-bottom-4">
-                    <small class="text-muted">El tracking se basa únicamente en el estado actual de la solicitud.</small>
-                </div>
+                <div class="card-footer bg-light rounded-bottom-4"><small class="text-muted">El tracking se basa únicamente en el estado actual de la solicitud.</small></div>
             </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    <!-- Bootstrap Icons (cárgalo aquí si no está en tu _Layout) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-
     <script>
-        // Trim al enviar (evita espacios)
         (function(){
-            const form = document.getElementById('trackForm');
-            if(!form) return;
-            form.addEventListener('submit', ()=>{
-                const inp = form.querySelector('input[name="ticket"]');
-                if (inp) inp.value = (inp.value || '').trim();
-            });
+          const form=document.getElementById('trackForm');
+          if(form){form.addEventListener('submit',()=>{const inp=form.querySelector('input[name="ticket"]'); if(inp) inp.value=(inp.value||'').trim();});}
         })();
-
-        // Copiar ticket con feedback visual
         (function(){
-            const chip = document.querySelector('.meta-chip i.bi-clipboard')?.parentElement;
-            const txt = '@(Model?.Ticket ?? "")';
-            if(!chip || !txt) return;
-            chip.style.cursor = 'pointer';
-            chip.addEventListener('click', async ()=>{
-                try{
-                    await navigator.clipboard.writeText(txt);
-                    chip.classList.add('border','border-success','bg-success-subtle');
-                    setTimeout(()=> chip.classList.remove('border','border-success','bg-success-subtle'), 1200);
-                }catch{}
-            });
+          const btn=document.getElementById('copyTicketBtn');
+          const chip=document.getElementById('ticketChip');
+          const txt='@(Model?.Ticket ?? "")';
+          if(!btn||!chip||!txt) return;
+          const flash=()=>{chip.classList.add('border','border-success','bg-success-subtle'); setTimeout(()=>chip.classList.remove('border','border-success','bg-success-subtle'),1200);};
+          btn.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(txt); flash();}catch{}});
         })();
     </script>
 }
-t

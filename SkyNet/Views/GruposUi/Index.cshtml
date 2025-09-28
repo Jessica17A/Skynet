@@ -3,8 +3,7 @@
 
 @{
     ViewData["Title"] = "Grupos Supervisor – Técnicos";
-    Layout = "~/Views/Shared/_Layout.cshtml";
-
+    Layout = "~/Views/Shared/_Admin.cshtml";
     var supervisores = ViewBag.Supervisores as IEnumerable<OpcionEmpleadoDto> ?? Enumerable.Empty<OpcionEmpleadoDto>();
     long supSel = ViewBag.SupSel is long v ? v : 0L;
 }

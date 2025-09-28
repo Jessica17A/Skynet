@@ -1,5 +1,4 @@
-﻿// Models/DTOs/UsuarioDtos.cs
-namespace SkyNet.Models.DTOs
+﻿namespace SkyNet.Models.DTOs
 {
     public class UsuarioDto
     {
@@ -12,7 +11,7 @@ namespace SkyNet.Models.DTOs
         public string? Nombres { get; set; }
         public string? Apellidos { get; set; }
         public string? Cargo { get; set; }
-        public int? Estado { get; set; }             
+        public int? Estado { get; set; }
         public string NombreCompleto => $"{Nombres} {Apellidos}".Trim();
     }
 
@@ -21,4 +20,11 @@ namespace SkyNet.Models.DTOs
         // 1 = Activo, 0 = Inactivo
         public int Estado { get; set; }
     }
+
+    public class UsuarioResetDto
+    {
+        public string NewPassword { get; set; } = "";
+    }
+
+
 }
