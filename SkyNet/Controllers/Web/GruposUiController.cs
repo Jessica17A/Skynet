@@ -215,7 +215,7 @@ namespace SkyNet.Controllers.Web
 
 
 
-        // GET /GruposUi/Asignar?solicitudId=123
+       
         // GET /GruposUi/Asignar?solicitudId=123
         [HttpGet]
         public IActionResult Asignar(long solicitudId)
@@ -226,47 +226,88 @@ namespace SkyNet.Controllers.Web
         }
 
 
-        // POST /GruposUi/Asignar
+
+        // Controllers/Web/GruposUiController.cs
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Asignar(long solicitudId, int? idGrupo, long? fkTecnico, string? notas)
+        public async Task<IActionResult> Asignar(long solicitudId, string[] TecnicosIds, string? notas, DateTime? fechaVisita)
         {
-            if (solicitudId <= 0 || idGrupo is null || fkTecnico is null)
+            if (solicitudId <= 0 || TecnicosIds == null || TecnicosIds.Length == 0)
             {
-                ModelState.AddModelError(string.Empty, "Seleccione un técnico.");
+                ModelState.AddModelError(string.Empty, "Debes seleccionar al menos un técnico.");
+                ViewBag.SolicitudId = solicitudId;
+                return View(); // la vista carga técnicos por AJAX
             }
 
-            if (!ModelState.IsValid)
-            {
-                using var cRep = CreateClient();
-                var mis = await cRep.GetFromJsonAsync<List<GrupoItemDto>>("/api/grupos?mine=true")
-                          ?? new List<GrupoItemDto>();
-                ViewBag.SolicitudId = solicitudId;
-                return View("Asignar", mis);
-            }
+            // 1) Convertir la fecha (si viene) de hora local -> UTC
+            DateTime? visitaUtc = null;
+            if (fechaVisita.HasValue)
+                visitaUtc = DateTime.SpecifyKind(fechaVisita.Value, DateTimeKind.Local).ToUniversalTime();
+
+            var errores = new List<string>();
+            int okCount = 0;
 
             try
             {
                 using var c = CreateClient();
-                var payload = new SolicitudAsignacionCreateDto
-                {
-                    IdSolicitud = solicitudId,
-                    IdGrupo = idGrupo.Value,
-                    FkTecnico = fkTecnico.Value,
-                    Notas = notas
-                };
 
-                var resp = await c.PostAsJsonAsync($"/api/solicitudes/{solicitudId}/asignaciones", payload);
-                if (!resp.IsSuccessStatusCode)
+                // 2) Parsear "IdGrupo|FkTecnico"
+                var pares = TecnicosIds
+                    .Select(x => x?.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                    .Where(x => x != null && x.Length == 2)
+                    .Select(x => new { IdGrupo = int.Parse(x![0]), FkTecnico = long.Parse(x![1]) })
+                    .ToList();
+
+                foreach (var p in pares)
                 {
+                    var payload = new SolicitudAsignacionCreateDto
+                    {
+                        IdSolicitud = solicitudId,
+                        IdGrupo = p.IdGrupo,
+                        FkTecnico = p.FkTecnico,
+                        Notas = notas,
+                        Fecha_Inicio = visitaUtc // null si no se indicó
+                    };
+
+                    var resp = await c.PostAsJsonAsync($"/api/solicitudes/{solicitudId}/asignaciones", payload);
+                    if (resp.IsSuccessStatusCode)
+                    {
+                        okCount++;
+                        continue;
+                    }
+
+                    // Si la API devuelve Ok pero "ignored" (técnico ya activo), también lo tratamos como éxito suave
+                    if ((int)resp.StatusCode == StatusCodes.Status200OK)
+                    {
+                        okCount++;
+                        continue;
+                    }
+
                     var msg = await resp.Content.ReadAsStringAsync();
-                    ModelState.AddModelError(string.Empty, $"No se pudo asignar: {resp.StatusCode} - {msg}");
+                    errores.Add($"Grupo {p.IdGrupo}: {resp.StatusCode} - {msg}");
+                }
 
-                    using var cRep = CreateClient();
-                    var mis = await cRep.GetFromJsonAsync<List<GrupoItemDto>>("/api/grupos?mine=true")
-                              ?? new List<GrupoItemDto>();
+                // 3) Si hubo al menos una inserción/ignorados exitosos, puedes avanzar de estado
+                if (okCount > 0)
+                {
+                    // Cambiar estado a Aceptada (3)
+                    var patchReq = new HttpRequestMessage(HttpMethod.Patch, $"/api/solicitudes/{solicitudId}/estado")
+                    {
+                        Content = JsonContent.Create(new { estado = 3 })
+                    };
+                    var patchResp = await c.SendAsync(patchReq);
+                    if (!patchResp.IsSuccessStatusCode)
+                    {
+                        var msg = await patchResp.Content.ReadAsStringAsync();
+                        errores.Add($"Asignó técnico(s), pero no pudo actualizar estado: {patchResp.StatusCode} - {msg}");
+                    }
+                }
+
+                if (errores.Count > 0)
+                {
+                    ModelState.AddModelError(string.Empty, "Resultado parcial:\n" + string.Join("\n", errores));
                     ViewBag.SolicitudId = solicitudId;
-                    return View("Asignar", mis);
+                    return View();
                 }
 
                 TempData["ok"] = true;
@@ -274,16 +315,15 @@ namespace SkyNet.Controllers.Web
             }
             catch (Exception ex)
             {
-                _log.LogError(ex, "Error asignando técnico a solicitud {Id}", solicitudId);
+                _log.LogError(ex, "Error asignando técnicos a solicitud {Id}", solicitudId);
                 ModelState.AddModelError(string.Empty, "Error inesperado al asignar.");
-
-                using var cRep = CreateClient();
-                var mis = await cRep.GetFromJsonAsync<List<GrupoItemDto>>("/api/grupos?mine=true")
-                          ?? new List<GrupoItemDto>();
                 ViewBag.SolicitudId = solicitudId;
-                return View("Asignar", mis);
+                return View();
             }
         }
+
+
+
 
 
     }

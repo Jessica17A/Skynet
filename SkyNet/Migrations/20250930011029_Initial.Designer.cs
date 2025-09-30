@@ -12,7 +12,7 @@ using SkyNet.Data;
 namespace SkyNet.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250926154745_Initial")]
+    [Migration("20250930011029_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -425,6 +425,57 @@ namespace SkyNet.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Solicitudes", (string)null);
+                });
+
+            modelBuilder.Entity("SkyNet.Models.SolicitudAsignacion", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<byte>("Estado")
+                        .HasColumnType("tinyint")
+                        .HasColumnName("ESTADO");
+
+                    b.Property<DateTime>("FechaAsignacionUtc")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("FECHA_ASIGNACION_UTC");
+
+                    b.Property<DateTime>("Fecha_Fin")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("FECHA_FIN");
+
+                    b.Property<DateTime>("Fecha_Inicio")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("FECHA_INICIO");
+
+                    b.Property<long>("FkSolicitud")
+                        .HasColumnType("bigint")
+                        .HasColumnName("FKSOLICITUD");
+
+                    b.Property<long>("FkTecnico")
+                        .HasColumnType("bigint")
+                        .HasColumnName("FKTECNICO");
+
+                    b.Property<int>("IdGrupo")
+                        .HasColumnType("int")
+                        .HasColumnName("IDGRUPO");
+
+                    b.Property<string>("Notas")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("NOTAS");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FkSolicitud", "Estado")
+                        .IsUnique()
+                        .HasDatabaseName("UX_Sol_Asig_Activa")
+                        .HasFilter("[ESTADO] = 1");
+
+                    b.ToTable("Solicitudes_Asignaciones", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

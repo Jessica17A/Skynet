@@ -9,8 +9,9 @@ namespace SkyNet.Models.DTOs
         public long IdSolicitud { get; set; }
         public int IdGrupo { get; set; }
         public long FkTecnico { get; set; }
-
+        public DateTime? Fecha_Inicio { get; set; }
         public string? Notas { get; set; }
+      
     }
 
     // Para devolver a la UI
@@ -21,7 +22,7 @@ namespace SkyNet.Models.DTOs
         public int IdGrupo { get; set; }
         public long FkTecnico { get; set; }
         public DateTime FechaAsignacionUtc { get; set; }
-        public string? AsignadoPorUserId { get; set; }
+       
         public string? Notas { get; set; }
         public byte Estado { get; set; } // 1,2,0
 
@@ -29,6 +30,7 @@ namespace SkyNet.Models.DTOs
         public string? TecnicoNombre { get; set; }
         public string? SupervisorNombre { get; set; }
         public string? GrupoEtiqueta { get; set; }
+        public DateTime? Fecha_Inicio { get; internal set; }
     }
 
     // Para cambiar estado (anular/finalizar)

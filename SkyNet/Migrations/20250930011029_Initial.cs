@@ -89,6 +89,26 @@ namespace SkyNet.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Solicitudes_Asignaciones",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    FKSOLICITUD = table.Column<long>(type: "bigint", nullable: false),
+                    IDGRUPO = table.Column<int>(type: "int", nullable: false),
+                    FKTECNICO = table.Column<long>(type: "bigint", nullable: false),
+                    FECHA_ASIGNACION_UTC = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    FECHA_INICIO = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    FECHA_FIN = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    NOTAS = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    ESTADO = table.Column<byte>(type: "tinyint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Solicitudes_Asignaciones", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "AspNetRoleClaims",
                 columns: table => new
                 {
@@ -330,6 +350,13 @@ namespace SkyNet.Migrations
                 name: "IX_Grupos_Supervisores_Tec_FKTECNICO",
                 table: "Grupos_Supervisores_Tec",
                 column: "FKTECNICO");
+
+            migrationBuilder.CreateIndex(
+                name: "UX_Sol_Asig_Activa",
+                table: "Solicitudes_Asignaciones",
+                columns: new[] { "FKSOLICITUD", "ESTADO" },
+                unique: true,
+                filter: "[ESTADO] = 1");
         }
 
         /// <inheritdoc />
@@ -358,6 +385,9 @@ namespace SkyNet.Migrations
 
             migrationBuilder.DropTable(
                 name: "Grupos_Supervisores_Tec");
+
+            migrationBuilder.DropTable(
+                name: "Solicitudes_Asignaciones");
 
             migrationBuilder.DropTable(
                 name: "Solicitudes");

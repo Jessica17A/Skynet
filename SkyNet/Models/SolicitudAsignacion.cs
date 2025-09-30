@@ -25,8 +25,9 @@ namespace SkyNet.Models
 
         public DateTime FechaAsignacionUtc { get; set; } = DateTime.UtcNow;
 
-        // Quién asignó (opcional)
-        public string? AsignadoPorUserId { get; set; }
+        public DateTime? Fecha_Inicio { get; set; }
+
+        public DateTime? Fecha_Fin { get; set; }
 
         // Notas opcionales
         public string? Notas { get; set; }

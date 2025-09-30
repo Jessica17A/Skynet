@@ -131,10 +131,8 @@ namespace SkyNet.Data
 
                 e.Property(x => x.FechaAsignacionUtc)
                  .HasColumnName("FECHA_ASIGNACION_UTC");
-
-                e.Property(x => x.AsignadoPorUserId)
-                 .HasMaxLength(100)
-                 .HasColumnName("ASIGNADO_POR");
+                e.Property(x => x.Fecha_Inicio).HasColumnName("Fecha_Inicio").HasColumnType("datetime2").IsRequired(false);
+                e.Property(x => x.Fecha_Fin).HasColumnName("Fecha_Fin").HasColumnType("datetime2").IsRequired(false);
 
                 e.Property(x => x.Notas)
                  .HasMaxLength(500)
@@ -144,13 +142,12 @@ namespace SkyNet.Data
                  .HasConversion<byte>()
                  .HasColumnName("ESTADO");
 
-            
-
-                // Regla: una sola asignación ACTIVA por solicitud
-                e.HasIndex(x => new { x.FkSolicitud, x.Estado })
-                 .HasDatabaseName("UX_Sol_Asig_Activa")
-                 .HasFilter("[ESTADO] = 1") // 1 = Activa
+                e.HasIndex(x => new { x.FkSolicitud, x.FkTecnico, x.Estado })
+                 .HasDatabaseName("UX_Sol_Asig_ActivaPorTec")
+                 .HasFilter("[Estado] = 1")
                  .IsUnique();
+
+
             });
 
         }
