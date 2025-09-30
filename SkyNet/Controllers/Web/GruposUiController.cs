@@ -227,7 +227,8 @@ namespace SkyNet.Controllers.Web
 
 
 
-        // Controllers/Web/GruposUiController.cs
+
+        // POST /GruposUi/Asignar
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Asignar(long solicitudId, string[] TecnicosIds, string? notas, DateTime? fechaVisita)
@@ -239,7 +240,7 @@ namespace SkyNet.Controllers.Web
                 return View(); // la vista carga técnicos por AJAX
             }
 
-            // 1) Convertir la fecha (si viene) de hora local -> UTC
+            // 1) Convertir fecha local -> UTC (si viene)
             DateTime? visitaUtc = null;
             if (fechaVisita.HasValue)
                 visitaUtc = DateTime.SpecifyKind(fechaVisita.Value, DateTimeKind.Local).ToUniversalTime();
@@ -270,13 +271,14 @@ namespace SkyNet.Controllers.Web
                     };
 
                     var resp = await c.PostAsJsonAsync($"/api/solicitudes/{solicitudId}/asignaciones", payload);
+
                     if (resp.IsSuccessStatusCode)
                     {
                         okCount++;
                         continue;
                     }
 
-                    // Si la API devuelve Ok pero "ignored" (técnico ya activo), también lo tratamos como éxito suave
+                    // Si tu API devuelve 200 con {ignored:true} cuando el técnico ya estaba activo:
                     if ((int)resp.StatusCode == StatusCodes.Status200OK)
                     {
                         okCount++;
@@ -287,10 +289,10 @@ namespace SkyNet.Controllers.Web
                     errores.Add($"Grupo {p.IdGrupo}: {resp.StatusCode} - {msg}");
                 }
 
-                // 3) Si hubo al menos una inserción/ignorados exitosos, puedes avanzar de estado
+                // 3) Si hubo al menos una inserción, (opcional) cambiar a Aceptada(3)
                 if (okCount > 0)
                 {
-                    // Cambiar estado a Aceptada (3)
+                    // ⛔ Si NO quieres que cambie aquí, comenta este bloque.
                     var patchReq = new HttpRequestMessage(HttpMethod.Patch, $"/api/solicitudes/{solicitudId}/estado")
                     {
                         Content = JsonContent.Create(new { estado = 3 })
@@ -299,7 +301,7 @@ namespace SkyNet.Controllers.Web
                     if (!patchResp.IsSuccessStatusCode)
                     {
                         var msg = await patchResp.Content.ReadAsStringAsync();
-                        errores.Add($"Asignó técnico(s), pero no pudo actualizar estado: {patchResp.StatusCode} - {msg}");
+                        errores.Add($"Se asignó técnico(s), pero falló el cambio de estado: {patchResp.StatusCode} - {msg}");
                     }
                 }
 
@@ -321,10 +323,9 @@ namespace SkyNet.Controllers.Web
                 return View();
             }
         }
-
-
-
-
-
     }
+
+
+
 }
+

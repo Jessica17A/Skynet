@@ -24,7 +24,6 @@
         _ => "badge rounded-pill px-3 py-2 bg-dark"
     };
 
-    // color de chips por prioridad (y lo usamos para “Tipo” y “Prioridad”)
     string PriClass(string? p) => (p ?? "").Trim().ToLower() switch
     {
         "alta" => "chip chip-lg bg-danger text-white",
@@ -89,11 +88,6 @@
             background: #0d6efd;
         }
 
-    /* Suaves transiciones sin keyframes */
-    .fade-update {
-        transition: opacity .25s ease, transform .25s ease;
-    }
-
     /* Chips */
     .chip {
         display: inline-block;
@@ -120,12 +114,7 @@
         font-size: .95rem;
     }
 
-    /* Botonera “Siguientes pasos” */
-    .section-hint {
-        font-size: .85rem;
-        color: #6c757d;
-    }
-
+    /* Botonera */
     .btn-pill {
         border-radius: 999px;
         padding: .45rem 1rem;
@@ -139,10 +128,10 @@
         <span id="estadoBadge" class="@EstadoBadge((int)Model.Estado)">@EstadoNombre((int)Model.Estado)</span>
     </div>
 
-    <!-- Stepper centrado -->
+    <!-- Stepper -->
     <div class="card mb-3">
         <div class="card-body">
-            <div id="stepper" class="flow-stepper fade-update">
+            <div id="stepper" class="flow-stepper">
                 @{
                     var curr = (int)Model.Estado;
                     for (var i = 0; i < steps.Length; i++)
@@ -164,49 +153,25 @@
         </div>
     </div>
 
+    <!-- Datos -->
     <div class="card shadow-sm">
         <div class="card-body">
             <div class="row g-3">
                 <div class="col-lg-8">
                     <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Nombre</label>
-                            <div>@Model.Nombre</div>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label fw-bold">Email</label>
-                            <div class="text-nowrap">@Model.Email</div>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label fw-bold">Teléfono</label>
-                            <div>@(Model.Telefono ?? "-")</div>
-                        </div>
-
-                        <div class="col-md-3">
-                            <label class="form-label fw-bold">Tipo</label>
-                            <div><span class="@PriClass(Model.Prioridad)">@Model.Tipo</span></div>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label fw-bold">Prioridad</label>
-                            <div><span class="@PriClass(Model.Prioridad)">@Model.Prioridad</span></div>
-                        </div>
-
-                        <div class="col-md-3">
-                            <label class="form-label fw-bold">Creado (UTC)</label>
-                            <div>@Model.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm")</div>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label fw-bold">Dirección</label>
-                            <div>@(Model.Direccion ?? "-")</div>
-                        </div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Nombre</label><div>@Model.Nombre</div></div>
+                        <div class="col-md-3"><label class="form-label fw-bold">Email</label><div>@Model.Email</div></div>
+                        <div class="col-md-3"><label class="form-label fw-bold">Teléfono</label><div>@(Model.Telefono ?? "-")</div></div>
+                        <div class="col-md-3"><label class="form-label fw-bold">Tipo</label><div><span class="@PriClass(Model.Prioridad)">@Model.Tipo</span></div></div>
+                        <div class="col-md-3"><label class="form-label fw-bold">Prioridad</label><div><span class="@PriClass(Model.Prioridad)">@Model.Prioridad</span></div></div>
+                        <div class="col-md-3"><label class="form-label fw-bold">Creado (UTC)</label><div>@Model.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm")</div></div>
+                        <div class="col-md-3"><label class="form-label fw-bold">Dirección</label><div>@(Model.Direccion ?? "-")</div></div>
                     </div>
                 </div>
-
                 <div class="col-lg-4">
                     <label class="form-label fw-bold">Descripción</label>
                     <div class="border rounded p-3 bg-light h-100" style="white-space:pre-wrap">@Model.Descripcion</div>
                 </div>
-
                 @if (Model.Latitud.HasValue && Model.Longitud.HasValue)
                 {
                     <div class="col-12">
@@ -217,7 +182,6 @@
             </div>
         </div>
 
-        <!-- Footer con Siguientes pasos -->
         <div class="card-footer d-flex flex-wrap justify-content-between align-items-start">
             <div class="d-flex flex-column gap-2">
                 <div class="fw-semibold">Siguientes pasos</div>
@@ -234,16 +198,15 @@
     <script>
         (() => {
             const estados = {
-                0: { text: "Rechazado",  cls: "badge rounded-pill px-3 py-2 bg-danger" },
-                1: { text: "Pendiente",  cls: "badge rounded-pill px-3 py-2 bg-secondary" },
-                2: { text: "Revisada",   cls: "badge rounded-pill px-3 py-2 bg-info" },
-                3: { text: "Aceptada",   cls: "badge rounded-pill px-3 py-2 bg-success" },
-                4: { text: "En proceso", cls: "badge rounded-pill px-3 py-2 bg-warning text-dark" },
-                5: { text: "Finalizado", cls: "badge rounded-pill px-3 py-2 bg-primary" }
+                0: { text: "Rechazado", cls: "badge bg-danger" },
+                1: { text: "Pendiente", cls: "badge bg-secondary" },
+                2: { text: "Revisada", cls: "badge bg-info" },
+                3: { text: "Aceptada", cls: "badge bg-success" },
+                4: { text: "En proceso", cls: "badge bg-warning text-dark" },
+                5: { text: "Finalizado", cls: "badge bg-primary" }
             };
 
-            // botón color x estado destino
-            function btnClassForState(state){
+            function btnClassForState(state) {
                 switch(state){
                     case 0: return 'btn btn-pill btn-outline-danger';
                     case 1: return 'btn btn-pill btn-info text-white';
@@ -255,8 +218,7 @@
                 }
             }
 
-            // Siguiente “forward only”
-            function siguiente(curr){
+            function siguiente(curr) {
                 switch(curr){
                     case 1: return 2;
                     case 2: return 3;
@@ -266,37 +228,31 @@
                 }
             }
 
-            function renderBotones(){
+            function renderBotones() {
                 const cont = document.getElementById('solicitud');
                 const id = cont.dataset.id;
                 const curr = parseInt(cont.dataset.estado, 10);
                 const zone = document.getElementById('acciones');
                 zone.innerHTML = '';
 
-                if (curr === 0 || curr === 5) return; // terminales
+                if (curr === 0 || curr === 5) return;
 
                 const nxt = siguiente(curr);
-
-                // Si estamos en 4 (En proceso), solo mostramos Finalizar (5)
-                if (curr === 4){
+                if (curr === 4) {
                     const bFin = document.createElement('button');
                     bFin.className = btnClassForState(5);
-                    bFin.textContent = estados[5].text; // “Finalizado”
+                    bFin.textContent = estados[5].text;
                     bFin.onclick = () => cambiarEstado(id, 5);
                     zone.appendChild(bFin);
-                } else {
-                    // Botón único del próximo estado
-                    if (nxt !== null){
-                        const bNext = document.createElement('button');
-                        bNext.className = btnClassForState(nxt);
-                        bNext.textContent = estados[nxt].text;
-                        bNext.onclick = () => cambiarEstado(id, nxt);
-                        zone.appendChild(bNext);
-                    }
+                } else if (nxt !== null) {
+                    const bNext = document.createElement('button');
+                    bNext.className = btnClassForState(nxt);
+                    bNext.textContent = estados[nxt].text;
+                    bNext.onclick = () => cambiarEstado(id, nxt);
+                    zone.appendChild(bNext);
                 }
 
-                // Rechazar solo en Pendiente/Revisada
-                if (curr === 1 || curr === 2){
+                if (curr === 1 || curr === 2) {
                     const bRej = document.createElement('button');
                     bRej.className = btnClassForState(0);
                     bRej.textContent = 'Rechazar';
@@ -305,52 +261,20 @@
                 }
             }
 
-            // Efecto suave sin keyframes
-            function flash(el){
-                if (!el) return;
-                el.classList.add('fade-update');
-                el.style.opacity = '0.2';
-                el.style.transform = 'translateY(-2px)';
-                // siguiente frame
-                requestAnimationFrame(() => {
-                    el.style.opacity = '1';
-                    el.style.transform = 'translateY(0)';
-                    setTimeout(() => {
-                        el.classList.remove('fade-update');
-                        el.style.opacity = '';
-                        el.style.transform = '';
-                    }, 300);
-                });
-            }
-
             async function cambiarEstado(id, nuevo) {
-                // evitar doble clic mientras se procesa
                 const zone = document.getElementById('acciones');
                 zone.querySelectorAll('button').forEach(b => b.disabled = true);
 
                 try {
-                    if (nuevo === 0) {
-                        const res = await Swal.fire({
-                            title: "¿Seguro?",
-                            text: "¿Quieres RECHAZAR esta solicitud?",
-                            icon: "warning",
-                            showCancelButton: true,
-                            confirmButtonText: "Sí, rechazar",
-                            cancelButtonText: "Cancelar"
+                    if (nuevo === 3) { // interceptamos "Aceptada"
+                        await Swal.fire({
+                            title: "Asignar técnico",
+                            text: "Primero asigna al menos un técnico; luego se marcará la solicitud como Aceptada.",
+                            icon: "info",
+                            confirmButtonText: "Continuar"
                         });
-                        if (!res.isConfirmed) return;
-                    }
-
-                    if (nuevo === 5) {
-                        const res = await Swal.fire({
-                            title: "¿Finalizar?",
-                            text: "¿Marcar como FINALIZADO?",
-                            icon: "question",
-                            showCancelButton: true,
-                            confirmButtonText: "Sí, finalizar",
-                            cancelButtonText: "Cancelar"
-                        });
-                        if (!res.isConfirmed) return;
+                        window.location.href = `/GruposUi/Asignar?solicitudId=${id}`;
+                        return;
                     }
 
                     const resp = await fetch(`/api/solicitudes/${id}/estado`, {
@@ -365,33 +289,13 @@
                     }
 
                     const data = await resp.json();
-
-                    // Actualiza badge
                     const badge = document.getElementById('estadoBadge');
                     badge.className = estados[data.estado].cls;
                     badge.textContent = estados[data.estado].text;
-                    flash(badge);
+                    document.getElementById('solicitud').dataset.estado = data.estado;
 
-                    // Actualiza stepper y botones
-                    const cont = document.getElementById('solicitud');
-                    cont.dataset.estado = data.estado;
-                    actualizarStepper(data.estado);
                     renderBotones();
 
-                    // Si quedó Aceptada (3) => redirige al form de asignación
-                    if (data.estado === 3) {
-                        await Swal.fire({
-                            title: "¡Solicitud aceptada!",
-                            text: "Ahora asigna un técnico.",
-                            icon: "success",
-                            timer: 1200,
-                            showConfirmButton: false
-                        });
-                        window.location.href = `/GruposUi/Asignar?solicitudId=${id}`;
-                        return;
-                    }
-
-                    // Otros estados => solo confirmación
                     Swal.fire({
                         title: "¡Actualizado!",
                         text: "El estado se cambió correctamente.",
@@ -399,32 +303,12 @@
                         timer: 1500,
                         showConfirmButton: false
                     });
-
                 } catch (e) {
                     console.error(e);
                     Swal.fire("Error", "Error de red al cambiar estado.", "error");
                 } finally {
                     zone.querySelectorAll('button').forEach(b => b.disabled = false);
                 }
-            }
-
-            function actualizarStepper(curr){
-                const stepper = document.getElementById('stepper');
-                const dots = stepper.querySelectorAll('.flow-dot');
-                const links = stepper.querySelectorAll('.flow-link');
-
-                dots.forEach((dot, idx) => {
-                    const stepVal = idx + 1;
-                    dot.classList.remove('done','active');
-                    if (stepVal < curr) dot.classList.add('done');
-                    else if (stepVal === curr) dot.classList.add('active');
-                });
-                links.forEach((lnk, idx) => {
-                    const stepVal = idx + 1;
-                    lnk.classList.toggle('done', stepVal < curr);
-                });
-
-                flash(stepper); // efecto suave sin keyframes
             }
 
             document.addEventListener('DOMContentLoaded', renderBotones);
