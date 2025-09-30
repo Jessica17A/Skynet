@@ -98,8 +98,8 @@ namespace SkyNet.Migrations
                     IDGRUPO = table.Column<int>(type: "int", nullable: false),
                     FKTECNICO = table.Column<long>(type: "bigint", nullable: false),
                     FECHA_ASIGNACION_UTC = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    FECHA_INICIO = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    FECHA_FIN = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Fecha_Inicio = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Fecha_Fin = table.Column<DateTime>(type: "datetime2", nullable: true),
                     NOTAS = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     ESTADO = table.Column<byte>(type: "tinyint", nullable: false)
                 },
@@ -243,22 +243,22 @@ namespace SkyNet.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Archivos_solicitudes",
+                name: "ArchivosSolicitudes",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    fk_solicitud = table.Column<long>(type: "bigint", nullable: false),
-                    public_id = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: false),
-                    created_at_utc = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    estado = table.Column<int>(type: "int", nullable: false)
+                    Fk_Solicitud = table.Column<long>(type: "bigint", nullable: false),
+                    PublicId = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: false),
+                    CreatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Estado = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Archivos_solicitudes", x => x.Id);
+                    table.PrimaryKey("PK_ArchivosSolicitudes", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Archivos_solicitudes_Solicitudes_fk_solicitud",
-                        column: x => x.fk_solicitud,
+                        name: "FK_ArchivosSolicitudes_Solicitudes_Fk_Solicitud",
+                        column: x => x.Fk_Solicitud,
                         principalTable: "Solicitudes",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -291,9 +291,9 @@ namespace SkyNet.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Archivos_solicitudes_fk_solicitud",
-                table: "Archivos_solicitudes",
-                column: "fk_solicitud");
+                name: "IX_ArchivosSolicitudes_Fk_Solicitud",
+                table: "ArchivosSolicitudes",
+                column: "Fk_Solicitud");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
@@ -352,18 +352,18 @@ namespace SkyNet.Migrations
                 column: "FKTECNICO");
 
             migrationBuilder.CreateIndex(
-                name: "UX_Sol_Asig_Activa",
+                name: "UX_Sol_Asig_ActivaPorTec",
                 table: "Solicitudes_Asignaciones",
-                columns: new[] { "FKSOLICITUD", "ESTADO" },
+                columns: new[] { "FKSOLICITUD", "FKTECNICO", "ESTADO" },
                 unique: true,
-                filter: "[ESTADO] = 1");
+                filter: "[Estado] = 1");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Archivos_solicitudes");
+                name: "ArchivosSolicitudes");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");

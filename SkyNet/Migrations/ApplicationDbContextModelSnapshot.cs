@@ -233,28 +233,24 @@ namespace SkyNet.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("created_at_utc");
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("Estado")
-                        .HasColumnType("int")
-                        .HasColumnName("estado");
+                        .HasColumnType("int");
 
                     b.Property<long>("Fk_Solicitud")
-                        .HasColumnType("bigint")
-                        .HasColumnName("fk_solicitud");
+                        .HasColumnType("bigint");
 
                     b.Property<string>("PublicId")
                         .IsRequired()
                         .HasMaxLength(512)
-                        .HasColumnType("nvarchar(512)")
-                        .HasColumnName("public_id");
+                        .HasColumnType("nvarchar(512)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("Fk_Solicitud");
 
-                    b.ToTable("Archivos_solicitudes", (string)null);
+                    b.ToTable("ArchivosSolicitudes");
                 });
 
             modelBuilder.Entity("SkyNet.Models.Cliente", b =>
@@ -440,13 +436,13 @@ namespace SkyNet.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("FECHA_ASIGNACION_UTC");
 
-                    b.Property<DateTime>("Fecha_Fin")
+                    b.Property<DateTime?>("Fecha_Fin")
                         .HasColumnType("datetime2")
-                        .HasColumnName("FECHA_FIN");
+                        .HasColumnName("Fecha_Fin");
 
-                    b.Property<DateTime>("Fecha_Inicio")
+                    b.Property<DateTime?>("Fecha_Inicio")
                         .HasColumnType("datetime2")
-                        .HasColumnName("FECHA_INICIO");
+                        .HasColumnName("Fecha_Inicio");
 
                     b.Property<long>("FkSolicitud")
                         .HasColumnType("bigint")
@@ -467,10 +463,10 @@ namespace SkyNet.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("FkSolicitud", "Estado")
+                    b.HasIndex("FkSolicitud", "FkTecnico", "Estado")
                         .IsUnique()
-                        .HasDatabaseName("UX_Sol_Asig_Activa")
-                        .HasFilter("[ESTADO] = 1");
+                        .HasDatabaseName("UX_Sol_Asig_ActivaPorTec")
+                        .HasFilter("[Estado] = 1");
 
                     b.ToTable("Solicitudes_Asignaciones", (string)null);
                 });

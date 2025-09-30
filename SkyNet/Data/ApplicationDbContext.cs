@@ -54,33 +54,7 @@ namespace SkyNet.Data
                  .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // ===== ArchivoSolicitud =====
-            b.Entity<ArchivoSolicitud>(e =>
-            {
-                e.ToTable("Archivos_solicitudes");
-                e.HasKey(x => x.Id);
-
-                e.Property(x => x.Fk_Solicitud)
-                 .HasColumnName("fk_solicitud")
-                 .IsRequired();
-
-                e.Property(x => x.PublicId)
-                 .HasColumnName("public_id")
-                 .HasMaxLength(512)
-                 .IsRequired();
-
-                e.Property(x => x.CreatedAtUtc)
-                 .HasColumnName("created_at_utc")
-                 .IsRequired();
-
-                e.Property(x => x.Estado)
-                 .HasColumnName("estado");
-
-                e.HasOne(x => x.Solicitud)
-                 .WithMany(s => s.Archivos)
-                 .HasForeignKey(x => x.Fk_Solicitud)
-                 .OnDelete(DeleteBehavior.Cascade);
-            });
+           
 
             // ===== GrupoSupervisorTec =====
             b.Entity<GrupoSupervisorTec>(e =>

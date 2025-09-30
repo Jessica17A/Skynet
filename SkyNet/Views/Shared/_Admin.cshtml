@@ -184,6 +184,9 @@
                     <span class="badge bg-secondary ms-auto">NEW</span>
                 </a>
 
+
+                @*  USUARIOS *@
+
                 <!-- Toggler cerrado por defecto -->
                 <a class="nav-link collapsed"
                    data-bs-toggle="collapse"
@@ -212,11 +215,66 @@
                     <i class="bi bi-person-video2"></i> Empleados
                 </a>
 
-                <div class="nav-title mt-3">Supervisores</div>
-                <a class="nav-link @(IsActive("GruposUi") ? "active" : "")"
-                   asp-controller="GruposUi" asp-action="Index">
-                    <i class="bi bi-diagram-3"></i> Grupos
+
+
+               @*  GRUPOS TECNICOS *@
+
+                <div class="nav-title mt-3">Operación</div>
+
+                <!-- Toggler cerrado por defecto -->
+                <a class="nav-link collapsed"
+                   data-bs-toggle="collapse"
+                   href="#grpGrupos"
+                   role="button"
+                   aria-expanded="false"
+                   aria-controls="grpGrupos">
+                    <i class="bi bi-diagram-3"></i> Gestión de grupos
+                    <i class="bi bi-chevron-down ms-auto nav-caret"></i>
                 </a>
+
+                <!-- Submenú SIN 'show' (cerrado) + acordeón -->
+                <div class="collapse" id="grpGrupos" data-bs-parent="#sidebarMenu">
+                    <a class="nav-link @(IsActive("GruposUi") ? "active" : "")"
+                       asp-controller="GruposUi" asp-action="Index">
+                        <i class="bi bi-people"></i> Grupos
+                    </a>
+                    <a class="nav-link @(IsActive("GruposUi") ? "active" : "")"
+                       asp-controller="GruposUi" asp-action="MisTecnicos">
+                        <i class="bi bi-person-badge"></i> Mis Técnicos
+                    </a>
+                </div>
+
+
+                @*  SOLICITUDES *@
+                <div class="nav-title mt-3">Operación</div>
+
+                <!-- Toggler cerrado por defecto -->
+                <a class="nav-link collapsed"
+                   data-bs-toggle="collapse"
+                   href="#grpSolicitudes"
+                   role="button"
+                   aria-expanded="false"
+                   aria-controls="grpSolicitudes">
+                    <i class="bi bi-diagram-3"></i> Solicitudes
+                    <i class="bi bi-chevron-down ms-auto nav-caret"></i>
+                </a>
+
+                <!-- Submenú con ID único -->
+                <div class="collapse" id="grpSolicitudes" data-bs-parent="#sidebarMenu">
+                    <a class="nav-link @(IsActive("Solicitudes") ? "active" : "")"
+                       asp-controller="Solicitudes" asp-action="Index">
+                        <i class="bi bi-people"></i> Listado Solicitudes
+                    </a>
+                    <a class="nav-link @(IsActive("GrupoUi") ? "active" : "")"
+                       asp-controller="GrupoUi" asp-action="Asignar">
+                        <i class="bi bi-person-badge"></i> Asignación de Técnicos
+                    </a>
+                </div>
+
+
+
+
+
             </nav>
         </div>
     </aside>
