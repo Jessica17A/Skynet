@@ -24,7 +24,9 @@ namespace SkyNet.Controllers.Api
         [HttpGet]
         public async Task<ActionResult<IEnumerable<SolicitudDto>>> GetAll(CancellationToken ct)
         {
-            var list = await _db.Solicitudes.AsNoTracking()
+            var list = await _db.Solicitudes
+                .AsNoTracking()
+               .Where(s => (int)s.Estado >= 0 && (int)s.Estado <= 2)
                 .OrderByDescending(x => x.CreatedAtUtc)
                 .Select(s => new SolicitudDto
                 {

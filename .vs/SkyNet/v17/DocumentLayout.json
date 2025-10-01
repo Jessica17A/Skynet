@@ -1,66 +1,74 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\jgonzalez\\source\\repos\\Skynet\\",
+  "WorkspaceRootPath": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|c:\\users\\jgonzalez\\source\\repos\\skynet\\skynet\\views\\shared\\_admin.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|solutionrelative:skynet\\views\\shared\\_admin.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|c:\\users\\jgonzalez\\source\\repos\\skynet\\skynet\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
-      "RelativeMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|solutionrelative:skynet\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\jgonzalez\\source\\repos\\Skynet\\SkyNet\\Migrations\\20250930214718_Initial.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:SkyNet\\Migrations\\20250930214718_Initial.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|c:\\users\\jgonzalez\\source\\repos\\skynet\\skynet\\data\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|solutionrelative:skynet\\data\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|c:\\users\\jgonzalez\\source\\repos\\skynet\\skynet\\views\\solicitudes\\details.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|solutionrelative:skynet\\views\\solicitudes\\details.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|c:\\users\\jgonzalez\\source\\repos\\skynet\\skynet\\views\\solicitudes\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|solutionrelative:skynet\\views\\solicitudes\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|c:\\users\\jgonzalez\\source\\repos\\skynet\\skynet\\controllers\\web\\gruposuicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|c:\\users\\jessica gonzalez\\desktop\\skynet\\skynet\\controllers\\web\\gruposuicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|solutionrelative:skynet\\controllers\\web\\gruposuicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|c:\\users\\jgonzalez\\source\\repos\\skynet\\skynet\\views\\gruposui\\asignar.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|solutionrelative:skynet\\views\\gruposui\\asignar.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|c:\\users\\jgonzalez\\source\\repos\\skynet\\skynet\\controllers\\api\\solicitudesasignacionesapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|c:\\users\\jessica gonzalez\\desktop\\skynet\\skynet\\controllers\\api\\solicitudesasignacionesapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|solutionrelative:skynet\\controllers\\api\\solicitudesasignacionesapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|c:\\users\\jgonzalez\\source\\repos\\skynet\\skynet\\controllers\\api\\solicitudesapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|solutionrelative:skynet\\controllers\\api\\solicitudesapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|c:\\users\\jessica gonzalez\\desktop\\skynet\\skynet\\models\\dtos\\solicitudasignaciondtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|solutionrelative:skynet\\models\\dtos\\solicitudasignaciondtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|c:\\users\\jgonzalez\\source\\repos\\skynet\\skynet\\views\\gruposui\\mistecnicos.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "AbsoluteMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|c:\\users\\jessica gonzalez\\desktop\\skynet\\skynet\\views\\gruposui\\mistecnicos.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|solutionrelative:skynet\\views\\gruposui\\mistecnicos.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|c:\\users\\jgonzalez\\source\\repos\\skynet\\skynet\\views\\usuariosui\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "AbsoluteMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|c:\\users\\jessica gonzalez\\desktop\\skynet\\skynet\\views\\gruposui\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|solutionrelative:skynet\\views\\gruposui\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|c:\\users\\jessica gonzalez\\desktop\\skynet\\skynet\\views\\solicitudes\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|solutionrelative:skynet\\views\\solicitudes\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|c:\\users\\jessica gonzalez\\desktop\\skynet\\skynet\\controllers\\api\\solicitudesapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|solutionrelative:skynet\\controllers\\api\\solicitudesapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|c:\\users\\jessica gonzalez\\desktop\\skynet\\skynet\\views\\shared\\_admin.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|solutionrelative:skynet\\views\\shared\\_admin.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|c:\\users\\jessica gonzalez\\desktop\\skynet\\skynet\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|solutionrelative:skynet\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|c:\\users\\jessica gonzalez\\desktop\\skynet\\skynet\\data\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|solutionrelative:skynet\\data\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|c:\\users\\jessica gonzalez\\desktop\\skynet\\skynet\\views\\solicitudes\\details.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|solutionrelative:skynet\\views\\solicitudes\\details.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|c:\\users\\jessica gonzalez\\desktop\\skynet\\skynet\\views\\gruposui\\asignar.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|solutionrelative:skynet\\views\\gruposui\\asignar.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|c:\\users\\jessica gonzalez\\desktop\\skynet\\skynet\\views\\usuariosui\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|solutionrelative:skynet\\views\\usuariosui\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|c:\\users\\jgonzalez\\source\\repos\\skynet\\skynet\\controllers\\api\\usuariosapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|c:\\users\\jessica gonzalez\\desktop\\skynet\\skynet\\controllers\\api\\usuariosapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|solutionrelative:skynet\\controllers\\api\\usuariosapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|c:\\users\\jgonzalez\\source\\repos\\skynet\\skynet\\controllers\\web\\usuariosuicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|c:\\users\\jessica gonzalez\\desktop\\skynet\\skynet\\controllers\\web\\usuariosuicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|solutionrelative:skynet\\controllers\\web\\usuariosuicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|c:\\users\\jgonzalez\\source\\repos\\skynet\\skynet\\models\\dtos\\usuariodtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|c:\\users\\jessica gonzalez\\desktop\\skynet\\skynet\\models\\dtos\\usuariodtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|solutionrelative:skynet\\models\\dtos\\usuariodtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|c:\\users\\jessica gonzalez\\desktop\\skynet\\skynet\\migrations\\20250930214718_initial.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B49D6225-6CEF-4CE5-AA16-F9D4B756D8C7}|SkyNet\\SkyNet.csproj|solutionrelative:skynet\\migrations\\20250930214718_initial.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -70,8 +78,12 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 4,
+          "SelectedChildIndex": 12,
           "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:128:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
             {
               "$type": "Bookmark",
               "Name": "ST:0:0:{74946827-37a0-11d2-a273-00c04f8ef4ff}"
@@ -85,68 +97,88 @@
               "Name": "ST:2:0:{e8034f19-ab72-4f06-83fd-f6832b41aa63}"
             },
             {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "SolicitudAsignacionDtos.cs",
+              "DocumentMoniker": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\Models\\DTOs\\SolicitudAsignacionDtos.cs",
+              "RelativeDocumentMoniker": "SkyNet\\Models\\DTOs\\SolicitudAsignacionDtos.cs",
+              "ToolTip": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\Models\\DTOs\\SolicitudAsignacionDtos.cs",
+              "RelativeToolTip": "SkyNet\\Models\\DTOs\\SolicitudAsignacionDtos.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-01T04:57:29.933Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 4,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\Views\\GruposUi\\Index.cshtml",
+              "RelativeDocumentMoniker": "SkyNet\\Views\\GruposUi\\Index.cshtml",
+              "ToolTip": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\Views\\GruposUi\\Index.cshtml",
+              "RelativeToolTip": "SkyNet\\Views\\GruposUi\\Index.cshtml",
+              "ViewState": "AgIAAEkAAAAAAAAAAAAhwEoAAAAUAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-10-01T04:52:30.834Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
               "Title": "_Admin.cshtml",
-              "DocumentMoniker": "C:\\Users\\jgonzalez\\source\\repos\\Skynet\\SkyNet\\Views\\Shared\\_Admin.cshtml",
+              "DocumentMoniker": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\Views\\Shared\\_Admin.cshtml",
               "RelativeDocumentMoniker": "SkyNet\\Views\\Shared\\_Admin.cshtml",
-              "ToolTip": "C:\\Users\\jgonzalez\\source\\repos\\Skynet\\SkyNet\\Views\\Shared\\_Admin.cshtml",
+              "ToolTip": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\Views\\Shared\\_Admin.cshtml",
               "RelativeToolTip": "SkyNet\\Views\\Shared\\_Admin.cshtml",
-              "ViewState": "AgIAAO8AAAAAAAAAAAAowBABAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAPUAAAAAAAAAAAAowAsBAAAUAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
               "WhenOpened": "2025-09-30T22:04:17.873Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 16,
               "Title": "20250930214718_Initial.cs",
-              "DocumentMoniker": "C:\\Users\\jgonzalez\\source\\repos\\Skynet\\SkyNet\\Migrations\\20250930214718_Initial.cs",
+              "DocumentMoniker": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\Migrations\\20250930214718_Initial.cs",
               "RelativeDocumentMoniker": "SkyNet\\Migrations\\20250930214718_Initial.cs",
-              "ToolTip": "C:\\Users\\jgonzalez\\source\\repos\\Skynet\\SkyNet\\Migrations\\20250930214718_Initial.cs",
+              "ToolTip": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\Migrations\\20250930214718_Initial.cs",
               "RelativeToolTip": "SkyNet\\Migrations\\20250930214718_Initial.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-30T21:47:18.539Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-30T21:47:18.539Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 9,
               "Title": "ApplicationDbContext.cs",
-              "DocumentMoniker": "C:\\Users\\jgonzalez\\source\\repos\\Skynet\\SkyNet\\Data\\ApplicationDbContext.cs",
+              "DocumentMoniker": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\Data\\ApplicationDbContext.cs",
               "RelativeDocumentMoniker": "SkyNet\\Data\\ApplicationDbContext.cs",
-              "ToolTip": "C:\\Users\\jgonzalez\\source\\repos\\Skynet\\SkyNet\\Data\\ApplicationDbContext.cs",
+              "ToolTip": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\Data\\ApplicationDbContext.cs",
               "RelativeToolTip": "SkyNet\\Data\\ApplicationDbContext.cs",
               "ViewState": "AgIAAGgAAAAAAAAAAAAAAIIAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-30T14:29:24.089Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-30T14:29:24.089Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 8,
               "Title": "appsettings.json",
-              "DocumentMoniker": "C:\\Users\\jgonzalez\\source\\repos\\Skynet\\SkyNet\\appsettings.json",
+              "DocumentMoniker": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\appsettings.json",
               "RelativeDocumentMoniker": "SkyNet\\appsettings.json",
-              "ToolTip": "C:\\Users\\jgonzalez\\source\\repos\\Skynet\\SkyNet\\appsettings.json",
+              "ToolTip": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\appsettings.json",
               "RelativeToolTip": "SkyNet\\appsettings.json",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAABhAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAWAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
               "WhenOpened": "2025-09-30T14:18:15.875Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 11,
               "Title": "Asignar.cshtml",
-              "DocumentMoniker": "C:\\Users\\jgonzalez\\source\\repos\\Skynet\\SkyNet\\Views\\GruposUi\\Asignar.cshtml",
+              "DocumentMoniker": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\Views\\GruposUi\\Asignar.cshtml",
               "RelativeDocumentMoniker": "SkyNet\\Views\\GruposUi\\Asignar.cshtml",
-              "ToolTip": "C:\\Users\\jgonzalez\\source\\repos\\Skynet\\SkyNet\\Views\\GruposUi\\Asignar.cshtml",
+              "ToolTip": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\Views\\GruposUi\\Asignar.cshtml",
               "RelativeToolTip": "SkyNet\\Views\\GruposUi\\Asignar.cshtml",
               "ViewState": "AgIAAJoAAAAAAAAAAAAiwL4AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
@@ -154,47 +186,50 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 1,
               "Title": "SolicitudesAsignacionesApiController.cs",
-              "DocumentMoniker": "C:\\Users\\jgonzalez\\source\\repos\\Skynet\\SkyNet\\Controllers\\Api\\SolicitudesAsignacionesApiController.cs",
+              "DocumentMoniker": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\Controllers\\Api\\SolicitudesAsignacionesApiController.cs",
               "RelativeDocumentMoniker": "SkyNet\\Controllers\\Api\\SolicitudesAsignacionesApiController.cs",
-              "ToolTip": "C:\\Users\\jgonzalez\\source\\repos\\Skynet\\SkyNet\\Controllers\\Api\\SolicitudesAsignacionesApiController.cs",
+              "ToolTip": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\Controllers\\Api\\SolicitudesAsignacionesApiController.cs",
               "RelativeToolTip": "SkyNet\\Controllers\\Api\\SolicitudesAsignacionesApiController.cs",
-              "ViewState": "AgIAAC8AAAAAAAAAAAAYwGoAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAsAAAAAAAAAAAAQwAQAAAAUAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-30T02:59:37.95Z"
+              "WhenOpened": "2025-09-30T02:59:37.95Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "GruposUiController.cs",
+              "DocumentMoniker": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\Controllers\\Web\\GruposUiController.cs",
+              "RelativeDocumentMoniker": "SkyNet\\Controllers\\Web\\GruposUiController.cs",
+              "ToolTip": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\Controllers\\Web\\GruposUiController.cs",
+              "RelativeToolTip": "SkyNet\\Controllers\\Web\\GruposUiController.cs",
+              "ViewState": "AgIAAN0AAAAAAAAAAAAAwOQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-28T22:29:13.461Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 6,
-              "Title": "GruposUiController.cs",
-              "DocumentMoniker": "C:\\Users\\jgonzalez\\source\\repos\\Skynet\\SkyNet\\Controllers\\Web\\GruposUiController.cs",
-              "RelativeDocumentMoniker": "SkyNet\\Controllers\\Web\\GruposUiController.cs",
-              "ToolTip": "C:\\Users\\jgonzalez\\source\\repos\\Skynet\\SkyNet\\Controllers\\Web\\GruposUiController.cs",
-              "RelativeToolTip": "SkyNet\\Controllers\\Web\\GruposUiController.cs",
-              "ViewState": "AgIAAAABAAAAAAAAAAAYwOQAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-28T22:29:13.461Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 9,
               "Title": "SolicitudesApiController.cs",
-              "DocumentMoniker": "C:\\Users\\jgonzalez\\source\\repos\\Skynet\\SkyNet\\Controllers\\Api\\SolicitudesApiController.cs",
+              "DocumentMoniker": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\Controllers\\Api\\SolicitudesApiController.cs",
               "RelativeDocumentMoniker": "SkyNet\\Controllers\\Api\\SolicitudesApiController.cs",
-              "ToolTip": "C:\\Users\\jgonzalez\\source\\repos\\Skynet\\SkyNet\\Controllers\\Api\\SolicitudesApiController.cs",
+              "ToolTip": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\Controllers\\Api\\SolicitudesApiController.cs",
               "RelativeToolTip": "SkyNet\\Controllers\\Api\\SolicitudesApiController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAA4AAAAAAAAAAAAQwBwAAABDAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-28T22:29:08.109Z"
+              "WhenOpened": "2025-09-28T22:29:08.109Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 10,
               "Title": "Details.cshtml",
-              "DocumentMoniker": "C:\\Users\\jgonzalez\\source\\repos\\Skynet\\SkyNet\\Views\\Solicitudes\\Details.cshtml",
+              "DocumentMoniker": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\Views\\Solicitudes\\Details.cshtml",
               "RelativeDocumentMoniker": "SkyNet\\Views\\Solicitudes\\Details.cshtml",
-              "ToolTip": "C:\\Users\\jgonzalez\\source\\repos\\Skynet\\SkyNet\\Views\\Solicitudes\\Details.cshtml",
+              "ToolTip": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\Views\\Solicitudes\\Details.cshtml",
               "RelativeToolTip": "SkyNet\\Views\\Solicitudes\\Details.cshtml",
               "ViewState": "AgIAACIBAAAAAAAAAAAiwD0BAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
@@ -202,35 +237,37 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 3,
               "Title": "MisTecnicos.cshtml",
-              "DocumentMoniker": "C:\\Users\\jgonzalez\\source\\repos\\Skynet\\SkyNet\\Views\\GruposUi\\MisTecnicos.cshtml",
+              "DocumentMoniker": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\Views\\GruposUi\\MisTecnicos.cshtml",
               "RelativeDocumentMoniker": "SkyNet\\Views\\GruposUi\\MisTecnicos.cshtml",
-              "ToolTip": "C:\\Users\\jgonzalez\\source\\repos\\Skynet\\SkyNet\\Views\\GruposUi\\MisTecnicos.cshtml",
+              "ToolTip": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\Views\\GruposUi\\MisTecnicos.cshtml",
               "RelativeToolTip": "SkyNet\\Views\\GruposUi\\MisTecnicos.cshtml",
-              "ViewState": "AgIAALgAAAAAAAAAAAAqwNsAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAALIAAAAAAAAAAAASwMkAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-09-28T22:14:06.718Z"
+              "WhenOpened": "2025-09-28T22:14:06.718Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 5,
               "Title": "Index.cshtml",
-              "DocumentMoniker": "C:\\Users\\jgonzalez\\source\\repos\\Skynet\\SkyNet\\Views\\Solicitudes\\Index.cshtml",
+              "DocumentMoniker": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\Views\\Solicitudes\\Index.cshtml",
               "RelativeDocumentMoniker": "SkyNet\\Views\\Solicitudes\\Index.cshtml",
-              "ToolTip": "C:\\Users\\jgonzalez\\source\\repos\\Skynet\\SkyNet\\Views\\Solicitudes\\Index.cshtml",
+              "ToolTip": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\Views\\Solicitudes\\Index.cshtml",
               "RelativeToolTip": "SkyNet\\Views\\Solicitudes\\Index.cshtml",
-              "ViewState": "AgIAAGQAAAAAAAAAAAAiwIgAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAADkAAAAAAAAAAAAAAEEAAAAVAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-09-28T21:35:25.264Z"
+              "WhenOpened": "2025-09-28T21:35:25.264Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 12,
               "Title": "Index.cshtml",
-              "DocumentMoniker": "C:\\Users\\jgonzalez\\source\\repos\\Skynet\\SkyNet\\Views\\UsuariosUi\\Index.cshtml",
+              "DocumentMoniker": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\Views\\UsuariosUi\\Index.cshtml",
               "RelativeDocumentMoniker": "SkyNet\\Views\\UsuariosUi\\Index.cshtml",
-              "ToolTip": "C:\\Users\\jgonzalez\\source\\repos\\Skynet\\SkyNet\\Views\\UsuariosUi\\Index.cshtml",
+              "ToolTip": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\Views\\UsuariosUi\\Index.cshtml",
               "RelativeToolTip": "SkyNet\\Views\\UsuariosUi\\Index.cshtml",
               "ViewState": "AgIAAIQAAAAAAAAAAAAkwKkAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
@@ -238,11 +275,11 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 13,
               "Title": "UsuariosApiController.cs",
-              "DocumentMoniker": "C:\\Users\\jgonzalez\\source\\repos\\Skynet\\SkyNet\\Controllers\\Api\\UsuariosApiController.cs",
+              "DocumentMoniker": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\Controllers\\Api\\UsuariosApiController.cs",
               "RelativeDocumentMoniker": "SkyNet\\Controllers\\Api\\UsuariosApiController.cs",
-              "ToolTip": "C:\\Users\\jgonzalez\\source\\repos\\Skynet\\SkyNet\\Controllers\\Api\\UsuariosApiController.cs",
+              "ToolTip": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\Controllers\\Api\\UsuariosApiController.cs",
               "RelativeToolTip": "SkyNet\\Controllers\\Api\\UsuariosApiController.cs",
               "ViewState": "AgIAAF4AAAAAAAAAAAAywF0AAAApAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
@@ -250,11 +287,11 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 14,
               "Title": "UsuariosUiController.cs",
-              "DocumentMoniker": "C:\\Users\\jgonzalez\\source\\repos\\Skynet\\SkyNet\\Controllers\\Web\\UsuariosUiController.cs",
+              "DocumentMoniker": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\Controllers\\Web\\UsuariosUiController.cs",
               "RelativeDocumentMoniker": "SkyNet\\Controllers\\Web\\UsuariosUiController.cs",
-              "ToolTip": "C:\\Users\\jgonzalez\\source\\repos\\Skynet\\SkyNet\\Controllers\\Web\\UsuariosUiController.cs",
+              "ToolTip": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\Controllers\\Web\\UsuariosUiController.cs",
               "RelativeToolTip": "SkyNet\\Controllers\\Web\\UsuariosUiController.cs",
               "ViewState": "AgIAACUAAAAAAAAAAADwvzwAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
@@ -262,11 +299,11 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 15,
               "Title": "UsuarioDtos.cs",
-              "DocumentMoniker": "C:\\Users\\jgonzalez\\source\\repos\\Skynet\\SkyNet\\Models\\DTOs\\UsuarioDtos.cs",
+              "DocumentMoniker": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\Models\\DTOs\\UsuarioDtos.cs",
               "RelativeDocumentMoniker": "SkyNet\\Models\\DTOs\\UsuarioDtos.cs",
-              "ToolTip": "C:\\Users\\jgonzalez\\source\\repos\\Skynet\\SkyNet\\Models\\DTOs\\UsuarioDtos.cs",
+              "ToolTip": "C:\\Users\\JESSICA GONZALEZ\\Desktop\\Skynet\\SkyNet\\Models\\DTOs\\UsuarioDtos.cs",
               "RelativeToolTip": "SkyNet\\Models\\DTOs\\UsuarioDtos.cs",
               "ViewState": "AgIAAA8AAAAAAAAAAAAkwAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",

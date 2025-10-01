@@ -60,7 +60,7 @@
         <table class="table table-sm table-striped align-middle shadow-sm">
             <thead class="table-light">
                 <tr>
-                    <th style="width:60px;">#</th>
+                    <th style="width:60px;">NO</th>
                     <th>Supervisor</th>
                     <th>Técnico</th>
                     <th style="width:200px;">Creado (UTC)</th>
@@ -71,10 +71,13 @@
             <tbody>
                 @if (Model != null && Model.Any())
                 {
+                    
+                    var i = 1;
+                    
                     foreach (var g in Model)
                     {
                         <tr>
-                            <td>@g.IdGrupo</td>
+                            <td>@i</td>
                             <td>@g.SupervisorNombre</td>
                             <td>@g.TecnicoNombre</td>
                             <td>@g.FechaCreacionUtc.ToString("yyyy-MM-dd HH:mm")</td>
@@ -112,6 +115,7 @@
                                 </div>
                             </td>
                         </tr>
+                        i++;
                     }
                 }
                 else

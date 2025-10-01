@@ -7,24 +7,17 @@
     {
         0 => "Rechazado",
         1 => "Pendiente",
-        2 => "Revisada",
-        3 => "Aceptada",
-        4 => "En proceso",
-        5 => "Finalizado",
+        2 => "Revisada",       
         _ => "Desconocido"
     };
     string EstadoBadge(int e) => e switch
     {
         0 => "badge bg-danger",
         1 => "badge bg-secondary",
-        2 => "badge bg-info",
-        3 => "badge bg-success",
-        4 => "badge bg-warning text-dark",
-        5 => "badge bg-primary",
+        2 => "badge bg-info",       
         _ => "badge bg-dark"
     };
-    var estados = new (int, string)[] { (0,"Rechazado"),(1,"Pendiente"),(2,"Revisada"),
-        (3,"Aceptada"),(4,"En proceso"),(5,"Finalizado") };
+    var estados = new (int, string)[] { (0,"Rechazado"),(1,"Pendiente"),(2,"Revisada"),};
     var items = Model?.ToList() ?? new List<SkyNet.Models.DTOs.SolicitudDto>();
 }
 
@@ -56,7 +49,7 @@
             <table id="tablaSolicitudes" class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th style="width:80px;">ID</th>
+                        <th style="width:80px;">NO</th>
                         <th>Ticket</th>
                         <th>Solicitante</th>
                         <th>Email</th>
@@ -68,11 +61,14 @@
                     </tr>
                 </thead>
                 <tbody>
+                    @{
+                        var i = 1;
+                    }
                     @foreach (var s in items)
                     {
                         var e = (int)s.Estado;
                         <tr data-estado="@e">
-                            <td class="text-muted">@s.Id</td>
+                            <td class="text-muted">@i</td>
                             <td class="fw-semibold">@s.Ticket</td>
                             <td>@s.Nombre</td>
                             <td class="text-nowrap">@s.Email</td>
@@ -86,6 +82,7 @@
                                 </a>
                             </td>
                         </tr>
+                        i++;
                     }
                     <tr id="noRows" style="display:none">
                         <td colspan="9" class="text-center text-muted py-4">Sin resultados.</td>

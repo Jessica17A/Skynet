@@ -194,24 +194,7 @@
                     paginate: { previous: 'Anterior', next: 'Siguiente' },
                     emptyTable: 'No hay registros disponibles'
                 }
-            });
-
-            // Click en "Asignar"
-            $('#tblMisTecnicos tbody').on('click', '.btn-asignar', function () {
-                if (!solicitudId) return;
-                const rowData = dt.row($(this).closest('tr')).data();
-                if (!rowData) return;
-                if (confirm(`¿Asignar el técnico "${rowData.tecnicoNombre}" a la solicitud #${solicitudId}?`)) {
-                    asignarTecnico(solicitudId, rowData);
-                }
-            });
-
-            // Log de errores AJAX (opcional)
-            $('#tblMisTecnicos').on('xhr.dt', function (e, settings, json, xhr) {
-                if (xhr && xhr.status !== 200) {
-                    console.error('AJAX error', xhr.status, xhr.statusText, xhr.responseText);
-                }
-            });
+            });           
         }
 
         $(document).ready(cargarMisTecnicos);
