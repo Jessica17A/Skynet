@@ -237,10 +237,10 @@ namespace SkyNet.Controllers.Web
             {
                 ModelState.AddModelError(string.Empty, "Debes seleccionar al menos un técnico.");
                 ViewBag.SolicitudId = solicitudId;
-                return View(); // la vista carga técnicos por AJAX
+                return View(); 
             }
 
-            // 1) Convertir fecha local -> UTC (si viene)
+           
             DateTime? visitaUtc = null;
             if (fechaVisita.HasValue)
                 visitaUtc = DateTime.SpecifyKind(fechaVisita.Value, DateTimeKind.Local).ToUniversalTime();
@@ -252,7 +252,6 @@ namespace SkyNet.Controllers.Web
             {
                 using var c = CreateClient();
 
-                // 2) Parsear "IdGrupo|FkTecnico"
                 var pares = TecnicosIds
                     .Select(x => x?.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
                     .Where(x => x != null && x.Length == 2)
@@ -267,7 +266,7 @@ namespace SkyNet.Controllers.Web
                         IdGrupo = p.IdGrupo,
                         FkTecnico = p.FkTecnico,
                         Notas = notas,
-                        Fecha_Inicio = visitaUtc // null si no se indicó
+                        Fecha_Inicio = visitaUtc 
                     };
 
                     var resp = await c.PostAsJsonAsync($"/api/solicitudes/{solicitudId}/asignaciones", payload);
@@ -292,7 +291,7 @@ namespace SkyNet.Controllers.Web
                 // 3) Si hubo al menos una inserción, (opcional) cambiar a Aceptada(3)
                 if (okCount > 0)
                 {
-                    // ⛔ Si NO quieres que cambie aquí, comenta este bloque.
+               
                     var patchReq = new HttpRequestMessage(HttpMethod.Patch, $"/api/solicitudes/{solicitudId}/estado")
                     {
                         Content = JsonContent.Create(new { estado = 3 })

@@ -114,6 +114,7 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         (function () {
             const $sel = $("#tecnicos");
@@ -167,24 +168,36 @@
 
             // Validación envío
             $frm.on("submit", function (e) {
-                const vals = $sel.val();
-                if (!vals || vals.length === 0) {
+            const vals = $sel.val();
+            if (!vals || vals.length === 0) {
+                e.preventDefault();
+                Swal.fire({
+                    title: "Atención",
+                    text: "Debes seleccionar al menos un técnico.",
+                    icon: "warning",
+                    confirmButtonText: "Entendido"
+                });
+                return;
+            }
+
+            // valida fecha opcional
+            if ($fecha.value) {
+                const min = new Date($fecha.min);
+                const val = new Date($fecha.value);
+                if (isFinite(min) && isFinite(val) && val < min) {
                     e.preventDefault();
-                    alert("Debes seleccionar al menos un técnico.");
+                    Swal.fire({
+                        title: "Fecha inválida",
+                        text: "La fecha de visita no puede ser anterior al mínimo sugerido.",
+                        icon: "error",
+                        confirmButtonText: "Corregir"
+                    });
                     return;
                 }
-                // valida fecha opcional
-                if ($fecha.value) {
-                    const min = new Date($fecha.min);
-                    const val = new Date($fecha.value);
-                    if (isFinite(min) && isFinite(val) && val < min) {
-                        e.preventDefault();
-                        alert("La fecha de visita no puede ser anterior al mínimo sugerido.");
-                        return;
-                    }
-                }
-                $("#notasHidden").val($("#notasTextarea").val() || "");
-            });
+            }
+            $("#notasHidden").val($("#notasTextarea").val() || "");
+        });
+
         })();
     </script>
 }

@@ -197,6 +197,9 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         (() => {
+          
+            const okFlag = '@(TempData["ok"] != null ? "1" : "0")';
+
             const estados = {
                 0: { text: "Rechazado", cls: "badge bg-danger" },
                 1: { text: "Pendiente", cls: "badge bg-secondary" },
@@ -266,16 +269,23 @@
                 zone.querySelectorAll('button').forEach(b => b.disabled = true);
 
                 try {
-                    if (nuevo === 3) { // interceptamos "Aceptada"
-                        await Swal.fire({
-                            title: "Asignar técnico",
-                            text: "Primero asigna al menos un técnico; luego se marcará la solicitud como Aceptada.",
-                            icon: "info",
-                            confirmButtonText: "Continuar"
-                        });
+                if (nuevo === 3) {
+                    const result = await Swal.fire({
+                        title: "Asignar técnico",
+                        text: "Para dar seguimiento a la solicitud, debe asignar un técnico",
+                        icon: "info",
+                        showCancelButton: true,
+                        confirmButtonText: "Continuar",
+                        cancelButtonText: "Cancelar",
+                        reverseButtons: false
+                    });
+
+                    if (result.isConfirmed) {
                         window.location.href = `/GruposUi/Asignar?solicitudId=${id}`;
-                        return;
                     }
+                    return;
+                }
+
 
                     const resp = await fetch(`/api/solicitudes/${id}/estado`, {
                         method: "PATCH",
@@ -311,7 +321,20 @@
                 }
             }
 
-            document.addEventListener('DOMContentLoaded', renderBotones);
+            document.addEventListener('DOMContentLoaded', () => {
+                renderBotones();
+
+             
+                if (okFlag === "1") {
+                    Swal.fire({
+                        title: "¡Asignación creada!",
+                        text: "La planificacion de la visita fue coordinada correctamente",
+                        icon: "success",                      
+                        showConfirmButton: true
+                    });
+                }
+            });
         })();
     </script>
 }
+
