@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using CloudinaryDotNet;
 using SkyNet.Data;
+using Microsoft.OpenApi.Models;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,33 +14,46 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 // Identity
 builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 {
     
-    options.SignIn.RequireConfirmedAccount = false;   // en dev puedes poner false si te estorba
+    options.SignIn.RequireConfirmedAccount = false;   
 })
 .AddRoles<IdentityRole>()
 .AddEntityFrameworkStores<ApplicationDbContext>();
 
-// MVC + HttpClient
-builder.Services.AddControllersWithViews();   // basta para MVC + API con attribute routing
+
+builder.Services.AddControllersWithViews();
+// Swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+
 builder.Services.AddHttpClient();
 
 // Cloudinary
 var csec = builder.Configuration.GetSection("Cloudinary");
 var cloud = new Cloudinary(new Account(csec["CloudName"], csec["ApiKey"], csec["ApiSecret"]));
-cloud.Api.Secure = true; // URLs https
+cloud.Api.Secure = true; 
 builder.Services.AddSingleton(cloud);
 
 var app = builder.Build();
 
-// --- Pipeline ---
+
 if (app.Environment.IsDevelopment())
 {
     app.UseMigrationsEndPoint();
+    app.UseSwagger();
+    app.UseSwaggerUI();
+
 }
 else
 {
@@ -46,23 +61,20 @@ else
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();   // ⬅️ faltaba
+app.UseHttpsRedirection();  
 app.UseStaticFiles();
 
 app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
-
-// API (attribute routed controllers: /api/...)
 app.MapControllers();
 
-// MVC convencional
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=LayoutPrincipal}/{action=Index}/{id?}");
 
-// Razor Pages (Identity UI)
 app.MapRazorPages();
 
 app.Run();

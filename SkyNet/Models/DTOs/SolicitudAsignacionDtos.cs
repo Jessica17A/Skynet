@@ -1,4 +1,5 @@
 ﻿// Models/DTOs/SolicitudAsignacionDtos.cs
+using Microsoft.EntityFrameworkCore;
 using System;
 
 namespace SkyNet.Models.DTOs
@@ -24,12 +25,8 @@ namespace SkyNet.Models.DTOs
         public DateTime FechaAsignacionUtc { get; set; }
        
         public string? Notas { get; set; }
-        public byte Estado { get; set; } // 1,2,0
+        public byte Estado { get; set; } 
 
-        // Datos enriquecidos opcionales para mostrar en UI
-        public string? TecnicoNombre { get; set; }
-        public string? SupervisorNombre { get; set; }
-        public string? GrupoEtiqueta { get; set; }
         public DateTime? Fecha_Inicio { get; internal set; }
     }
 
@@ -38,5 +35,23 @@ namespace SkyNet.Models.DTOs
     {
         public byte Estado { get; set; } // 0 anular, 2 finalizar
         public string? Nota { get; set; }
+    }
+
+
+    [Keyless]
+    public class SolicitudAsignacionListado // o usa tu SolicitudAsignacionDto si prefieres
+    {
+        public long Id { get; set; }
+        public long IdSolicitud { get; set; }
+        public int IdGrupo { get; set; }
+        public long FkTecnico { get; set; }
+        public DateTime FechaAsignacionUtc { get; set; }
+        public DateTime? Fecha_Inicio { get; set; }
+        public DateTime? Fecha_Fin { get; set; }
+        public string? Notas { get; set; }
+        public byte Estado { get; set; }
+        public string? TecnicoNombre { get; set; }
+        public string? SupervisorNombre { get; set; }
+        public string? GrupoEtiqueta { get; set; }
     }
 }

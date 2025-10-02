@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using SkyNet.Models;
+using SkyNet.Models.DTOs;
 
 namespace SkyNet.Data
 {
@@ -20,9 +21,14 @@ namespace SkyNet.Data
 
         public DbSet<SolicitudAsignacion> SolicitudAsignaciones { get; set; } = null!;
 
+        public DbSet<SolicitudAsignacionListado> SolicitudAsignacionListado { get; set; } = default!;
+
+
         protected override void OnModelCreating(ModelBuilder b)
-        {
+        {           
             base.OnModelCreating(b);
+
+            b.Entity<SolicitudAsignacionListado>().HasNoKey().ToView(null);
 
             // ===== Empleado =====
             b.Entity<Empleado>(e =>

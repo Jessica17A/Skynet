@@ -35,3 +35,18 @@ COMMIT;
 TRUNCATE TABLE dbo.Solicitudes_Asignaciones;
 DELETE FROM dbo.Solicitudes_Asignaciones;
 DBCC CHECKIDENT ('dbo.Solicitudes_Asignaciones', RESEED, 0);
+
+
+-- habilitar sa
+ALTER LOGIN sa ENABLE;
+
+-- quitar lock si está bloqueado por intentos fallidos
+ALTER LOGIN sa WITH CHECK_POLICY = OFF;
+ALTER LOGIN sa WITH CHECK_EXPIRATION = OFF;
+
+-- nueva contraseña fuerte (cámbiala)
+ALTER LOGIN sa WITH PASSWORD = 'test2025';
+
+-- opcional: volver a políticas
+-- ALTER LOGIN sa WITH CHECK_POLICY = ON, CHECK_EXPIRATION = ON;
+

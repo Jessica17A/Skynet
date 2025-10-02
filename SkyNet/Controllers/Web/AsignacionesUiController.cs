@@ -2,7 +2,7 @@
 using System.Net.Http.Json;
 using SkyNet.Models.DTOs;
 
-[Route("[controller]")]
+
 public class AsignacionesUiController : Controller
 {
     private readonly ILogger<AsignacionesUiController> _log;
@@ -16,16 +16,41 @@ public class AsignacionesUiController : Controller
     [HttpGet("Index")]
     public IActionResult Index() => View();
 
+    public async Task<IActionResult> Todas()
+    {
+        var c = _http.CreateClient();
+        c.BaseAddress ??= new Uri($"{Request.Scheme}://{Request.Host}{Request.PathBase}/");
+
+        List<SolicitudAsignacionListado> data;
+        try
+        {
+            data = await c.GetFromJsonAsync<List<SolicitudAsignacionListado>>(
+                "api/solicitudes/asignaciones", HttpContext.RequestAborted
+            ) ?? new();
+        }
+        catch
+        {
+            // Manejo simple de error
+            ModelState.AddModelError("", "No se pudo contactar el API.");
+            data = new();
+        }
+
+        return View(data);
+    }
+
+
+
+
     [HttpGet("Detalle/{solicitudId:long}")]
     public async Task<IActionResult> Detalle(long solicitudId)
     {
         var c = _http.CreateClient();
 
-        // Asegura BaseAddress de la app actual
+      
         if (c.BaseAddress is null)
         {
             var baseUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}/";
-            c.BaseAddress = new Uri(baseUrl); // OJO: con slash final
+            c.BaseAddress = new Uri(baseUrl); 
         }
 
         // Usa ruta relativa (sin slash inicial)
@@ -33,21 +58,21 @@ public class AsignacionesUiController : Controller
         if (sol == null) return NotFound();
 
         ViewBag.Solicitud = sol;
-        return View(); // JS hará fetch de /api/solicitudes/{id}/asignaciones
+        return View(); 
     }
 
 
-    // ==== UNIFICAR AQUÍ LA ASIGNACIÓN ====
+   
 
     // GET: /AsignacionesUi/Asignar?solicitudId=123
     [HttpGet("Asignar")]
     public IActionResult Asignar(long solicitudId)
     {
         ViewBag.SolicitudId = solicitudId;
-        return View(); // misma vista que ya usas (Select2 + AJAX)
+        return View(); 
     }
 
-    // POST: /AsignacionesUi/Asignar
+    
     [HttpPost("Asignar")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Asignar(long solicitudId, string[] TecnicosIds, string? notas, DateTime? fechaVisita)
@@ -64,12 +89,12 @@ public class AsignacionesUiController : Controller
         if (fechaVisita.HasValue)
             visitaUtc = DateTime.SpecifyKind(fechaVisita.Value, DateTimeKind.Local).ToUniversalTime();
 
-        // Crear HttpClient y asignar BaseAddress de la app actual
+       
         var c = _http.CreateClient();
         if (c.BaseAddress == null)
         {
             var baseUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}/";
-            c.BaseAddress = new Uri(baseUrl);   // 👈 importante el slash final
+            c.BaseAddress = new Uri(baseUrl);   
         }
 
         var pares = TecnicosIds

@@ -18,30 +18,19 @@ public class SolicitudesAsignacionesApiController : ControllerBase
         _db = db; _log = log;
     }
 
-    
-    // GET /api/solicitudes/{id}/asignaciones (todas)
-    [HttpGet("{id:long}/asignaciones")]
-    public async Task<ActionResult<IEnumerable<SolicitudAsignacionDto>>> ListarAsignaciones(long id)
-    {
-        var list = await _db.SolicitudAsignaciones
-            .Where(a => a.FkSolicitud == id)
-            .OrderByDescending(a => a.FechaAsignacionUtc)
-            .Select(a => new SolicitudAsignacionDto
-            {
-                Id = a.Id,
-                IdSolicitud = a.FkSolicitud,
-                IdGrupo = a.IdGrupo,
-                FkTecnico = a.FkTecnico,
-                FechaAsignacionUtc = a.FechaAsignacionUtc,
-                Fecha_Inicio = a.Fecha_Inicio,
 
-                Notas = a.Notas,
-                Estado = (byte)a.Estado
-            })
-            .ToListAsync();
+   [HttpGet("asignaciones")]
+public async Task<ActionResult<IEnumerable<SolicitudAsignacionListado>>> ListarAsignacionesTodas()
+{
+    var rows = await _db.SolicitudAsignacionListado
+        .FromSqlRaw("EXEC dbo.usp_SolicitudesAsignaciones_Todas")
+        .AsNoTracking()
+        .ToListAsync();
 
-        return Ok(list);
-    }
+    return Ok(rows);
+}
+
+
 
     // Controllers/Api/SolicitudesAsignacionesApiController.cs
     [HttpPost("{id:long}/asignaciones")]
@@ -49,30 +38,16 @@ public class SolicitudesAsignacionesApiController : ControllerBase
     {
         if (dto is null) return BadRequest("Body requerido.");
         if (id != dto.IdSolicitud) return BadRequest("Id de ruta no coincide con el body.");
-        if (dto.IdGrupo <= 0 || dto.FkTecnico <= 0) return BadRequest("Grupo y Técnico son requeridos.");
-
-        // Validaciones básicas de existencia (opcionalmente deja solo la de solicitud)
-        var solicitudExiste = await _db.Solicitudes.AnyAsync(s => s.Id == id);
-        if (!solicitudExiste) return NotFound("La solicitud no existe.");
-
-        // (Opcional) valida que el técnico exista
-        var tecnicoExiste = await _db.Empleados.AnyAsync(e => e.Id == dto.FkTecnico && e.Estado != 0);
-        if (!tecnicoExiste) return NotFound("El técnico no existe o está inactivo.");
-
-        // (Opcional) valida que el grupo exista
-        var grupoExiste = await _db.GruposSupervisoresTec.AnyAsync(g => g.IdGrupo == dto.IdGrupo && g.Estado);
-        if (!grupoExiste) return NotFound("El grupo no existe o está inactivo.");
-
-        // *** PERMITIR varias activas ***
-        // Solo evitamos duplicar el MISMO técnico activo en la misma solicitud
+       
+       
         var yaEstaEseTecnico = await _db.SolicitudAsignaciones.AnyAsync(a =>
             a.FkSolicitud == id &&
             a.FkTecnico == dto.FkTecnico &&
-            a.Estado == SolicitudAsignacionEstado.Activa);
+            a.Estado == SolicitudAsignacionEstado.Asignada);
 
         if (yaEstaEseTecnico)
         {
-            // No lo consideres error: simplemente ignora y devuelve ok informativo
+            
             return Ok(new { ok = true, ignored = true, reason = "El técnico ya está activo en esta solicitud." });
         }
 
@@ -81,9 +56,9 @@ public class SolicitudesAsignacionesApiController : ControllerBase
             FkSolicitud = id,
             IdGrupo = dto.IdGrupo,
             FkTecnico = dto.FkTecnico,
-            Fecha_Inicio = dto.Fecha_Inicio, // puede ser null
+            Fecha_Inicio = dto.Fecha_Inicio, 
             Notas = dto.Notas,
-            Estado = SolicitudAsignacionEstado.Activa,
+            Estado = SolicitudAsignacionEstado.Asignada,
             FechaAsignacionUtc = DateTime.UtcNow
         };
 
@@ -129,7 +104,6 @@ public class SolicitudesAsignacionesApiController : ControllerBase
         return Ok(new { ok = true, estado = (byte)asign.Estado });
     }
 
-    // GET /api/solicitudes/{id}/asignacion-activa
     [HttpGet("{id:long}/asignacion-activa")]
     public async Task<IActionResult> GetActiva(long id)
     {

@@ -5,9 +5,11 @@ namespace SkyNet.Models
 {
     public enum SolicitudAsignacionEstado : byte
     {
-        Activa = 1,     // asignación vigente
-        Finalizada = 2, // cuando la solicitud cierra o se completa el trabajo
-        Anulada = 0     // se anuló/reemplazó la asignación
+        Activa = 1,     
+        Finalizada = 2, 
+        Anulada = 0,
+        Asignada = 3,
+        Proceso = 4
     }
 
     public class SolicitudAsignacion
