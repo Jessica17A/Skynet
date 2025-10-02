@@ -1,0 +1,114 @@
+﻿@{
+    Layout = "~/Views/Shared/_Admin.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h4 class="mb-0"><i class="bi bi-list-check"></i> Asignaciones</h4>
+        <a class="btn btn-sm btn-outline-secondary" asp-controller="Solicitudes" asp-action="Index">
+            <i class="bi bi-arrow-left"></i> Volver a solicitudes
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-sm-4">
+                    <label class="form-label fw-semibold">ID de solicitud</label>
+                    <input id="qId" type="number" class="form-control" placeholder="Ej: 123">
+                </div>
+                <div class="col-sm-4">
+                    <label class="form-label fw-semibold">Ticket</label>
+                    <input id="qTicket" type="text" class="form-control" placeholder="Ej: TCK-000123">
+                </div>
+                <div class="col-sm-4">
+                    <button id="btnBuscar" class="btn btn-primary">
+                        <i class="bi bi-search"></i> Buscar
+                    </button>
+                </div>
+            </div>
+
+            <hr>
+
+            <div id="result" class="row g-3"></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        (() => {
+            const $qId = document.getElementById('qId');
+            const $qTicket = document.getElementById('qTicket');
+            const $res = document.getElementById('result');
+
+            async function buscar(){
+                const id = ($qId.value || '').trim();
+                const t  = ($qTicket.value || '').trim();
+
+                if(!id && !t){
+                    Swal.fire("Atención", "Ingresa un ID de solicitud o un Ticket.", "warning");
+                    return;
+                }
+
+                try{
+                    // 1) Resolver ID por ticket si solo vino ticket
+                    let solicitudId = id;
+                    if(!solicitudId){
+                        // Suponiendo endpoint de detalle por ticket. Si no existe, omite esta parte y pide ID.
+                        const rSol = await fetch(`/api/solicitudes/by-ticket/${encodeURIComponent(t)}`);
+                        if(!rSol.ok){ Swal.fire("No encontrado", "No existe una solicitud con ese ticket.", "info"); return; }
+                        const sol = await rSol.json();
+                        solicitudId = sol.id;
+                    }
+
+                    // 2) Asignación activa
+                    const rAct = await fetch(`/api/solicitudes/${solicitudId}/asignacion-activa`);
+                    const activa = rAct.ok ? await rAct.json() : null;
+
+                    // 3) Histórico
+                    const rHis = await fetch(`/api/solicitudes/${solicitudId}/asignaciones`);
+                    const hist = rHis.ok ? await rHis.json() : [];
+
+                    // Render
+                    $res.innerHTML = `
+                        <div class="col-12 d-flex justify-content-between align-items-center">
+                            <div class="fw-semibold">Solicitud #${solicitudId}</div>
+                            <a class="btn btn-outline-primary btn-sm" href="/AsignacionesUi/Detalle/${solicitudId}">
+                                Ver detalle <i class="bi bi-arrow-right"></i>
+                            </a>
+                        </div>
+                        <div class="col-12">
+                            <div class="border rounded p-3">
+                                <div class="fw-semibold mb-2">Asignación activa</div>
+                                ${activa ? `
+                                    <div>Grupo: <span class="chip">#${activa.idGrupo}</span></div>
+                                    <div>Técnico: ${activa.fkTecnico}</div>
+                                    <div>Inicio: ${activa.fecha_Inicio ? new Date(activa.fecha_Inicio).toLocaleString() : "-"}</div>
+                                ` : `<div class="text-muted">No hay asignación activa.</div>`}
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="border rounded p-3 mt-3">
+                                <div class="fw-semibold mb-2">Histórico</div>
+                                ${Array.isArray(hist) && hist.length
+                                    ? `<ul class="mb-0">${hist.map(h => `
+                                        <li>
+                                          [${h.estado}] Grupo #${h.idGrupo}, Técnico ${h.fkTecnico}
+                                          — Asignado: ${h.fechaAsignacionUtc ? new Date(h.fechaAsignacionUtc + 'Z').toLocaleString() + ' UTC' : '-'}
+                                        </li>`).join("")}</ul>`
+                                    : `<div class="text-muted">Sin registros.</div>`
+                                }
+                            </div>
+                        </div>`;
+                }catch(err){
+                    console.error(err);
+                    Swal.fire("Error", "No se pudo completar la búsqueda.", "error");
+                }
+            }
+
+            document.getElementById('btnBuscar').addEventListener('click', buscar);
+        })();
+    </script>
+}

@@ -1,0 +1,203 @@
+﻿@{
+    ViewData["Title"] = "Asignar técnico";
+    Layout = "~/Views/Shared/_Admin.cshtml";
+    long solicitudId = (long)(ViewBag.SolicitudId ?? 0L);
+}
+
+<div class="container mt-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+        <h4 class="mb-0"><i class="bi bi-person-plus"></i> Asignar técnico</h4>
+        <a asp-controller="Solicitudes" asp-action="Details" asp-route-id="@solicitudId"
+           class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Volver a detalle
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            @Html.ValidationSummary(false, "", new { @class = "text-danger mb-2" })
+
+            <form asp-action="Asignar" method="post" id="frmAsignar">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="solicitudId" value="@solicitudId" />
+                <input type="hidden" name="notas" id="notasHidden" />
+
+                <!-- Selector (Select2) -->
+                <div class="mb-3">
+                    <label for="tecnicos" class="form-label fw-semibold">Selecciona técnico(s)</label>
+                    <select id="tecnicos" name="TecnicosIds" multiple class="form-select"></select>
+                    <div class="form-text">Puedes buscar por nombre.</div>
+                </div>
+
+                <!-- Fecha de visita (opcional, aplica a todos) -->
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="fechaVisita" class="form-label fw-semibold">Fecha y hora de visita (opcional)</label>
+                        <input type="datetime-local" id="fechaVisita" name="fechaVisita" class="form-control" />
+                        <div class="form-text">Se asignará esta fecha a todos los técnicos seleccionados (puedes dejarla vacía).</div>
+                    </div>
+                </div>
+
+                <!-- Notas -->
+                <div class="mb-3 mt-3">
+                    <label for="notasTextarea" class="form-label fw-semibold">Notas (opcional)</label>
+                    <textarea id="notasTextarea" class="form-control" rows="2" placeholder="Observaciones de la asignación..."></textarea>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a asp-controller="Solicitudes" asp-action="Details" asp-route-id="@solicitudId"
+                       class="btn btn-outline-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check2-circle"></i> Confirmar asignación
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <style>
+        /* CONTENEDOR */
+        .select2-container--bootstrap-5 .select2-selection--multiple,
+        .select2-container .select2-selection--multiple {
+            min-height: 42px !important;
+            border-radius: .8rem !important;
+            border: 1px solid #cfd6dc !important;
+            padding: .2rem !important;
+        }
+
+        .select2-container--bootstrap-5.select2-container--focus .select2-selection--multiple,
+        .select2-container.select2-container--focus .select2-selection--multiple {
+            border-color: #86b7fe !important;
+            box-shadow: 0 0 0 .2rem rgba(13,110,253,.15) !important;
+        }
+        /* CHIPS */
+        .select2-container--bootstrap-5 .select2-selection__choice,
+        .select2-container .select2-selection--multiple .select2-selection__choice {
+            background-color: #28B4EB !important;
+            border: 1px solid #b3cde0 !important;
+            border-radius: 999px !important;
+            color: #e6f4ff !important;
+            font-weight: 500 !important;
+            padding: .25rem .6rem !important;
+            margin-top: .25rem !important;
+            margin-right: .25rem !important;
+        }
+
+        .select2-container--bootstrap-5 .select2-selection__choice__remove,
+        .select2-container .select2-selection__choice__remove {
+            color: #0d6efd !important;
+            margin-right: .35rem !important;
+            font-weight: 700 !important;
+        }
+
+            .select2-container--bootstrap-5 .select2-selection__choice__remove:hover,
+            .select2-container .select2-selection__choice__remove:hover {
+                color: #084298 !important;
+            }
+
+        .select2-container--bootstrap-5 .select2-results__option--selected {
+            background-color: #e6f4ff !important;
+            color: #0d6efd !important;
+        }
+
+        .select2-container--bootstrap-5 .select2-results__option--highlighted.select2-results__option--selectable {
+            background-color: #eaf2ff !important;
+            color: #0b5ed7 !important;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        (function () {
+            const $sel = $("#tecnicos");
+            const $frm = $("#frmAsignar");
+            const $fecha = document.getElementById("fechaVisita");
+
+            // helper: YYYY-MM-DDTHH:mm local
+            function toLocalInputValue(dt) {
+                const pad = n => String(n).padStart(2, "0");
+                return `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+            }
+            (function setMin() {
+                const now = new Date();
+                now.setMinutes(now.getMinutes() + 30);
+                $fecha.min = toLocalInputValue(now);
+            })();
+
+            // Select2 AJAX
+            $sel.select2({
+                theme: "bootstrap-5",
+                placeholder: "Selecciona uno o varios técnicos",
+                allowClear: true,
+                width: "100%",
+                minimumInputLength: 0,
+                dropdownParent: $frm,
+                ajax: {
+                    url: "/api/grupos",
+                    dataType: "json",
+                    delay: 200,
+                    data: params => ({
+                        mine: true,
+                        q: params.term || ""
+                    }),
+                    processResults: (data) => {
+                        const items = Array.isArray(data) ? data : [];
+                        const results = items
+                            .map(g => {
+                                const idGrupo   = g.IdGrupo ?? g.idGrupo ?? "";
+                                const tecnicoId = g.TecnicoId ?? g.tecnicoId ?? "";
+                                const activo    = (g.Estado ?? g.estado) === true;
+                                if (!idGrupo || !tecnicoId || !activo) return null;
+                                const text = `${g.TecnicoNombre ?? g.tecnicoNombre ?? ''}`;
+                                return { id: `${idGrupo}|${tecnicoId}`, text };
+                            })
+                            .filter(Boolean);
+                        return { results };
+                    }
+                },
+                closeOnSelect: false
+            });
+
+            // Validación envío
+            $frm.on("submit", function (e) {
+            const vals = $sel.val();
+            if (!vals || vals.length === 0) {
+                e.preventDefault();
+                Swal.fire({
+                    title: "Atención",
+                    text: "Debes seleccionar al menos un técnico.",
+                    icon: "warning",
+                    confirmButtonText: "Entendido"
+                });
+                return;
+            }
+
+            // valida fecha opcional
+            if ($fecha.value) {
+                const min = new Date($fecha.min);
+                const val = new Date($fecha.value);
+                if (isFinite(min) && isFinite(val) && val < min) {
+                    e.preventDefault();
+                    Swal.fire({
+                        title: "Fecha inválida",
+                        text: "La fecha de visita no puede ser anterior al mínimo sugerido.",
+                        icon: "error",
+                        confirmButtonText: "Corregir"
+                    });
+                    return;
+                }
+            }
+            $("#notasHidden").val($("#notasTextarea").val() || "");
+        });
+
+        })();
+    </script>
+}
