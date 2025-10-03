@@ -50,3 +50,13 @@ ALTER LOGIN sa WITH PASSWORD = 'test2025';
 -- opcional: volver a políticas
 -- ALTER LOGIN sa WITH CHECK_POLICY = ON, CHECK_EXPIRATION = ON;
 
+
+
+RESTORE DATABASE SkyNet01
+FROM DISK = 'C:\Program Files\Microsoft SQL Server\MSSQL16.SQLEXPRESS01\MSSQL\Backup\ok2025.bak'
+WITH
+    MOVE 'SkyNet01'     TO 'C:\Program Files\Microsoft SQL Server\MSSQL16.SQLEXPRESS01\MSSQL\DATA\SkyNet01.mdf',
+    MOVE 'SkyNet01_log' TO 'C:\Program Files\Microsoft SQL Server\MSSQL16.SQLEXPRESS01\MSSQL\DATA\SkyNet01_log.ldf',
+    RECOVERY,
+    STATS = 10;
+
