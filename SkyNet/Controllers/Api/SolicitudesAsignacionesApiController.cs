@@ -19,16 +19,35 @@ public class SolicitudesAsignacionesApiController : ControllerBase
     }
 
 
-   [HttpGet("asignaciones")]
-public async Task<ActionResult<IEnumerable<SolicitudAsignacionListado>>> ListarAsignacionesTodas()
-{
-    var rows = await _db.SolicitudAsignacionListado
-        .FromSqlRaw("EXEC dbo.usp_SolicitudesAsignaciones_Todas")
-        .AsNoTracking()
-        .ToListAsync();
+    [HttpGet("asignaciones")]
+    public async Task<ActionResult<IEnumerable<SolicitudAsignacionListado>>> ListarAsignacionesTodas()
+    {
+        var rows = await _db.SolicitudAsignacionListado
+            .FromSqlRaw("EXEC dbo.usp_SolicitudesAsignaciones_Todas")
+            .AsNoTracking()
+            .ToListAsync();
 
-    return Ok(rows);
-}
+        return Ok(rows);
+    }
+
+
+    // GET /api/solicitudes/{id}/asignaciones
+    [HttpGet("{id:long}/asignaciones")]
+    public async Task<ActionResult<IEnumerable<SolicitudAsignacionListado>>> GetAsignacionesPorSolicitud(long id)
+    {
+        var asignaciones = await _db.SolicitudAsignacionListado
+            .FromSqlRaw("EXEC dbo.usp_SolicitudesAsignaciones_PorSolicitud @ID_SOLICITUD={0}", id)
+            .AsNoTracking()
+            .ToListAsync();
+
+        if (!asignaciones.Any())
+            return NotFound();
+
+        return Ok(asignaciones);
+    }
+
+
+
 
 
 
@@ -81,28 +100,53 @@ public async Task<ActionResult<IEnumerable<SolicitudAsignacionListado>>> ListarA
     }
 
 
-    // PATCH /api/solicitudes/asignaciones/{asigId}/estado
     [HttpPatch("asignaciones/{asigId:long}/estado")]
     public async Task<IActionResult> CambiarEstado(long asigId, [FromBody] SolicitudAsignacionEstadoDto body)
     {
+        if (body is null) return BadRequest("Body requerido.");
+        if (body.Estado != 0 && body.Estado != 2 && body.Estado != 5)
+            return BadRequest("Estado no permitido (0, 2 o 5).");
+
         var asign = await _db.SolicitudAsignaciones.FirstOrDefaultAsync(a => a.Id == asigId);
-        if (asign == null) return NotFound();
+        if (asign == null) return NotFound("Asignación no encontrada.");
 
-        // Solo se permite cambiar a Anulada(0) o Finalizada(2)
-        if (body.Estado != 0 && body.Estado != 2) return BadRequest("Estado no permitido");
-
-        asign.Estado = (SolicitudAsignacionEstado)body.Estado;
-
-        if (!string.IsNullOrWhiteSpace(body.Nota))
+        // Anular
+        if (body.Estado == 0)
         {
-            asign.Notas = string.IsNullOrWhiteSpace(asign.Notas)
-                ? body.Nota
-                : $"{asign.Notas} | {body.Nota}";
+            asign.Estado = SolicitudAsignacionEstado.Anulada; // 0
+            if (!string.IsNullOrWhiteSpace(body.Nota))
+                asign.Notas = string.IsNullOrWhiteSpace(asign.Notas) ? body.Nota : $"{asign.Notas} | {body.Nota}";
+        }
+        else
+        {
+            // Finalizar (acepta 2 o 5)
+            if (!body.Fecha_Fin.HasValue)
+                return BadRequest("Fecha_Fin es requerida al finalizar.");
+
+            asign.Estado = SolicitudAsignacionEstado.Finalizada; // 2
+            asign.Fecha_Fin = DateTime.SpecifyKind(body.Fecha_Fin.Value, DateTimeKind.Utc);
+
+            if (!string.IsNullOrWhiteSpace(body.Nota))
+                asign.Notas = string.IsNullOrWhiteSpace(asign.Notas) ? body.Nota : $"{asign.Notas} | {body.Nota}";
+
+            // Si viene 5, además cerrar la SOLICITUD en 5 (Finalizado)
+            if (body.Estado == 5)
+            {
+                var sol = await _db.Solicitudes.FirstOrDefaultAsync(s => s.Id == asign.FkSolicitud);
+                if (sol != null) sol.Estado = SolicitudEstado.Finalizado; // 5
+            }
         }
 
         await _db.SaveChangesAsync();
-        return Ok(new { ok = true, estado = (byte)asign.Estado });
+        return Ok(new
+        {
+            ok = true,
+            asignEstado = (byte)asign.Estado,
+            fechaFin = asign.Fecha_Fin
+        });
     }
+
+
 
     [HttpGet("{id:long}/asignacion-activa")]
     public async Task<IActionResult> GetActiva(long id)

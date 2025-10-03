@@ -6,7 +6,7 @@ namespace SkyNet.Models
     public enum SolicitudAsignacionEstado : byte
     {
         Activa = 1,     
-        Finalizada = 2, 
+        Finalizada = 5, 
         Anulada = 0,
         Asignada = 3,
         Proceso = 4

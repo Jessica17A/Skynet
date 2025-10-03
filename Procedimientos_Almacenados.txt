@@ -1,0 +1,105 @@
+CREATE OR ALTER PROCEDURE dbo.usp_SolicitudesAsignaciones_Todas
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        a.Id,
+        a.FKSOLICITUD      AS IdSolicitud,
+        a.IDGRUPO          AS IdGrupo,
+        a.FKTECNICO        AS FkTecnico,
+        a.FECHA_ASIGNACION_UTC AS FechaAsignacionUtc,
+        a.Fecha_Inicio,
+        a.Fecha_Fin,
+        a.NOTAS            AS Notas,
+        a.ESTADO           AS Estado,
+
+        -- enriquecidos
+        (tec.Nombres + ' ' + tec.Apellidos) AS TecnicoNombre,
+        (sup.Nombres + ' ' + sup.Apellidos) AS SupervisorNombre,
+        CONCAT('Grupo #', g.IDGRUPO)        AS GrupoEtiqueta
+    FROM dbo.Solicitudes_Asignaciones a
+    LEFT JOIN dbo.Empleados tec
+           ON tec.Id = a.FKTECNICO
+    LEFT JOIN dbo.Grupos_Supervisores_Tec g
+           ON g.IDGRUPO = a.IDGRUPO AND g.FKTECNICO = a.FKTECNICO
+    LEFT JOIN dbo.Empleados sup
+           ON sup.Id = g.FKSUPERVISOR
+    WHERE a.ESTADO = 1   -- 👈 solo asignaciones activas
+    ORDER BY a.FECHA_ASIGNACION_UTC DESC;
+END
+GO
+
+
+
+
+CREATE OR ALTER PROCEDURE dbo.usp_Solicitud_Resumen
+    @ID_SOLICITUD BIGINT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    ;WITH BASE AS (
+        SELECT
+            A.ID,
+            A.FKSOLICITUD          AS IDSOLICITUD,
+            A.IDGRUPO              AS IDGRUPO,
+            A.FKTECNICO            AS FKTECNICO,
+            A.FECHA_ASIGNACION_UTC AS FECHAASIGNACIONUTC,
+            A.FECHA_INICIO,
+            A.FECHA_FIN,
+            A.NOTAS,
+            A.ESTADO,
+            (TEC.NOMBRES + ' ' + TEC.APELLIDOS) AS TECNICONOMBRE,
+            (SUP.NOMBRES + ' ' + SUP.APELLIDOS) AS SUPERVISORNOMBRE,
+            CONCAT('GRUPO #', G.IDGRUPO)        AS GRUPOETIQUETA
+        FROM DBO.SOLICITUDES_ASIGNACIONES A
+        LEFT JOIN DBO.EMPLEADOS TEC
+               ON TEC.ID = A.FKTECNICO
+        LEFT JOIN DBO.GRUPOS_SUPERVISORES_TEC G
+               ON G.IDGRUPO = A.IDGRUPO AND G.FKTECNICO = A.FKTECNICO
+        LEFT JOIN DBO.EMPLEADOS SUP
+               ON SUP.ID = G.FKSUPERVISOR
+        WHERE A.FKSOLICITUD = @ID_SOLICITUD
+    )
+    SELECT
+        @ID_SOLICITUD AS IDSOLICITUD,
+        MIN(B.FECHA_INICIO) AS FECHAVISITA_MIN,
+        CASE 
+            WHEN EXISTS(SELECT 1 FROM BASE WHERE ESTADO = 4) THEN 4
+            WHEN EXISTS(SELECT 1 FROM BASE WHERE ESTADO = 3) THEN 3
+            WHEN EXISTS(SELECT 1 FROM BASE WHERE ESTADO = 1) THEN 1
+            WHEN EXISTS(SELECT 1 FROM BASE WHERE ESTADO = 2) THEN 2
+            WHEN EXISTS(SELECT 1 FROM BASE WHERE ESTADO = 0) THEN 0
+            ELSE 0
+        END AS ESTADO_AGREGADO,
+        (
+            SELECT STRING_AGG(SUPERVISORNOMBRE, ', ')
+            FROM (SELECT DISTINCT SUPERVISORNOMBRE FROM BASE WHERE SUPERVISORNOMBRE IS NOT NULL) S
+        ) AS SUPERVISORES,
+        (
+            SELECT STRING_AGG(TECNICONOMBRE, ', ')
+            FROM (SELECT DISTINCT TECNICONOMBRE FROM BASE WHERE TECNICONOMBRE IS NOT NULL) T
+        ) AS TECNICOS,
+        (
+            SELECT
+                B.ID,
+                B.IDGRUPO,
+                B.GRUPOETIQUETA,
+                B.FKTECNICO,
+                B.TECNICONOMBRE,
+                B.SUPERVISORNOMBRE,
+                B.FECHAASIGNACIONUTC,
+                B.FECHA_INICIO,
+                B.FECHA_FIN,
+                B.ESTADO,
+                B.NOTAS
+            FROM BASE B
+            FOR JSON PATH
+        ) AS ASIGNACIONES_JSON
+    FROM BASE B;
+END
+GO
+
+
+

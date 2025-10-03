@@ -23,10 +23,23 @@ namespace SkyNet.Data
 
         public DbSet<SolicitudAsignacionListado> SolicitudAsignacionListado { get; set; } = default!;
 
+        public DbSet<SolicitudResumenDto> SolicitudResumen { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder b)
         {           
             base.OnModelCreating(b);
+
+            b.Entity<SolicitudResumenDto>(e =>
+            {
+                e.HasNoKey();
+                e.ToView(null);
+                e.Property(p => p.IdSolicitud).HasColumnName("IDSOLICITUD");
+                e.Property(p => p.FechaVisita_Min).HasColumnName("FECHAVISITA_MIN");
+                e.Property(p => p.Estado_Agregado).HasColumnName("ESTADO_AGREGADO");
+                e.Property(p => p.Supervisores).HasColumnName("SUPERVISORES");
+                e.Property(p => p.Tecnicos).HasColumnName("TECNICOS");
+                e.Property(p => p.Asignaciones_Json).HasColumnName("ASIGNACIONES_JSON");
+            });
 
             b.Entity<SolicitudAsignacionListado>().HasNoKey().ToView(null);
 

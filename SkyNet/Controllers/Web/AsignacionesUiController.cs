@@ -41,28 +41,60 @@ public class AsignacionesUiController : Controller
 
 
 
-    [HttpGet("Detalle/{solicitudId:long}")]
-    public async Task<IActionResult> Detalle(long solicitudId)
+    public async Task<IActionResult> Detalle(long id)
     {
         var c = _http.CreateClient();
+        c.BaseAddress ??= new Uri($"{Request.Scheme}://{Request.Host}{Request.PathBase}/");
 
-      
-        if (c.BaseAddress is null)
+        SolicitudDto? sol = null;
+        List<SolicitudAsignacionListado> data;
+
+        // 1) Trae la solicitud para el encabezado/stepper
+        try
         {
-            var baseUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}/";
-            c.BaseAddress = new Uri(baseUrl); 
+            sol = await c.GetFromJsonAsync<SolicitudDto>(
+                $"api/solicitudes/{id}", HttpContext.RequestAborted);
+        }
+        catch
+        {
+            // ignora; validamos después
         }
 
-        // Usa ruta relativa (sin slash inicial)
-        var sol = await c.GetFromJsonAsync<SolicitudDto>($"api/solicitudes/{solicitudId}");
-        if (sol == null) return NotFound();
+        // 2) Trae las asignaciones
+        try
+        {
+            data = await c.GetFromJsonAsync<List<SolicitudAsignacionListado>>(
+                $"api/solicitudes/{id}/asignaciones", HttpContext.RequestAborted
+            ) ?? new();
+        }
+        catch
+        {
+            ModelState.AddModelError("", "No se pudo contactar el API.");
+            data = new();
+        }
+
+        if (sol == null)
+        {
+            TempData["Error"] = "No se pudo cargar el detalle de la solicitud.";
+            return RedirectToAction("Index", "Solicitudes");
+        }
+
+        // Si quieres mostrar una vista vacía cuando no hay asignaciones
+        if (!data.Any())
+        {
+            TempData["Info"] = "La solicitud no tiene asignaciones aún.";
+            return RedirectToAction("Details", "Solicitudes", new { id });
+        }
+
 
         ViewBag.Solicitud = sol;
-        return View(); 
+        return View(data); // El Model de la vista será la lista de asignaciones
     }
 
 
-   
+
+
+
 
     // GET: /AsignacionesUi/Asignar?solicitudId=123
     [HttpGet("Asignar")]

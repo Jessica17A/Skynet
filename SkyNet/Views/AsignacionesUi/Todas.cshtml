@@ -1,10 +1,26 @@
-﻿<div class="text-center mb-4 position-sticky top-0" style="z-index: 1030;">
-    <div class="p-3 rounded-0 bg-success text-white shadow-sm">
-        <h2 class="mb-0">Visitas programadas</h2>
-    </div>
+﻿<div class="p-3 rounded-0 bg-light shadow-sm mb-4 text-center">
+    <h2 class="mb-0 fw-bold text-dark">
+        <i class="bi bi-calendar2-week text-primary"></i> Visitas programadas
+    </h2>
 </div>
 
-<div id="cards" class="row g-4"></div>
+
+<!-- Filtro por estado -->
+<div class="d-flex justify-content-end align-items-center gap-2 mb-4">
+    <label for="f-estado" class="mb-0 fw-bold text-dark">Estado:</label>
+    <select id="f-estado"
+            class="form-select form-select-sm fw-bold text-dark"
+            style="max-width:220px;">
+        <option value="all" selected class="text-dark">Todas</option>
+        <option value="proceso" class="text-dark">En proceso</option>
+        <option value="aceptada" class="text-dark">Aceptadas</option>
+    </select>
+    <small id="count" class="text-muted ms-2"></small>
+</div>
+
+<!-- Cards con más espacio arriba -->
+<div id="cards" class="row g-4 mt-4"></div>
+
 
 <style>
     .chip {
@@ -13,94 +29,108 @@
         gap: .375rem;
         border: 1px solid rgba(0,0,0,.125);
         border-radius: 999px;
-        padding: .25rem .5rem;
-        background: #fff;
+        padding: .25rem .75rem;
+        background: #f8f9fa;
         margin: .25rem .375rem .25rem 0;
-        box-shadow: 0 1px 1.5px rgba(0,0,0,.06);
-        font-size: .95rem;
+        font-size: .9rem;
+        font-weight: 500;
+        color: #0d6efd;
+        transition: all .2s ease
     }
+
+        .chip:hover {
+            background: #e9f3ff;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 6px rgba(0,0,0,.08)
+        }
 
     .icon-sm {
         font-size: 1rem;
-        line-height: 1;
+        line-height: 1
     }
 
     .meta {
-        font-size: .925rem;
-        color: #6c757d;
+        font-size: .9rem;
+        color: #6c757d
+    }
+
+    .card-status-badge {
+        position: absolute;
+        right: .75rem;
+        top: .75rem
     }
 </style>
 
 <script>
-    (function () {
+    (() => {
       const base = `${window.location.origin}${document.body.getAttribute("data-pathbase") ?? ""}`;
+      const $cards = document.getElementById('cards');
+      const $fEstado = document.getElementById('f-estado');
+      const $count = document.getElementById('count');
 
-      function groupBySolicitud(rows) {
-        const map = new Map();
-        for (const a of rows) {
-          if (!map.has(a.idSolicitud)) map.set(a.idSolicitud, []);
-          map.get(a.idSolicitud).push(a);
-        }
-        return Array.from(map.entries()).sort((a,b) => a[0]-b[0]);
-      }
+      const groupBySolicitud = (rows) => {
+          const m = new Map();           
+          for (const a of rows) {
+            if (!m.has(a.idSolicitud)) m.set(a.idSolicitud, []);
+            m.get(a.idSolicitud).push(a);   
+          }
+          return Array.from(m.entries());    
+    };
 
-      function unique(arr) { return [...new Set(arr)]; }
+      const uniques = (arr) => [...new Set(arr)];
 
-      async function run() {
-        const host = document.getElementById('cards');
-        const res = await fetch(`${base}/api/solicitudes/asignaciones`);
-        if (!res.ok) {
-          host.innerHTML = `<div class="col-12">
-            <div class="alert alert-danger">No se pudo cargar el listado.</div></div>`;
+      function render(groups, filtro) {
+        
+        const filtered = groups.filter(([, asigs]) => {
+          const isProceso = asigs.some(a => a.estado === 4);
+          const isAcept   = asigs.some(a => a.estado === 3) && !isProceso; 
+          if (filtro === 'proceso')  return isProceso;
+          if (filtro === 'aceptada') return isAcept;
+          return true; 
+        });
+
+        $count.textContent = filtered.length ? `${filtered.length} solicitud(es)` : '';
+
+        if (!filtered.length) {
+          $cards.innerHTML = `<div class="col-12"><div class="alert alert-info m-0">Sin resultados.</div></div>`;
           return;
         }
-        const data = await res.json();
-        if (!Array.isArray(data) || data.length === 0) {
-          host.innerHTML = `<div class="col-12"><div class="alert alert-info m-0">No hay asignaciones.</div></div>`;
-          return;
-        }
 
-        const grouped = groupBySolicitud(data);
+        $cards.innerHTML = filtered.map(([, asigs]) => {
+          asigs.sort((x,y)=>(x.tecnicoNombre||'').localeCompare(y.tecnicoNombre||''));
 
-        host.innerHTML = grouped.map(([idSolicitud, asignaciones]) => {
-          asignaciones.sort((x, y) => (x.tecnicoNombre||'').localeCompare(y.tecnicoNombre||''));
-
-          const chipsTecnicos = asignaciones.map(a => `
+          const chipsTecnicos = asigs.map(a => `
             <span class="chip">
-              <i class="bi bi-person-badge-fill icon-sm text-primary"></i>
-              <span>${a.tecnicoNombre ?? a.fkTecnico}</span>
+              <i class="bi bi-person-badge-fill text-primary"></i>
+              ${a.tecnicoNombre ?? a.fkTecnico}
             </span>
           `).join('');
 
-          const supervisores = unique(asignaciones.map(a => a.supervisorNombre ?? '-')).join(', ');
-          const inicioMin = asignaciones.reduce((acc,a)=>{
+          const supervisores = uniques(asigs.map(a => a.supervisorNombre ?? '-')).join(', ');
+          const inicioMin = asigs.reduce((acc,a)=>{
             const dt = a.fecha_Inicio ? new Date(a.fecha_Inicio) : null;
-            if(!dt) return acc;
-            return (!acc || dt<acc) ? dt : acc;
+            return !dt ? acc : (!acc || dt<acc ? dt : acc);
           }, null);
 
-          // 👇 Ícono de estado
-          const has4 = asignaciones.some(a => a.estado === 4);
-          const has3 = asignaciones.some(a => a.estado === 3);
-          const estadoIcon = has4
-            ? `<span class="spinner-border spinner-border-sm text-warning me-2" role="status" aria-hidden="true"></span>
-               <i class="bi bi-bus-front-fill text-warning" title="En proceso"></i>`
-            : (has3 ? `<i class="bi bi-check-circle-fill text-success" title="Completado"></i>` : ``);
+          const isProceso = asigs.some(a => a.estado === 4);
+          const isAcept   = asigs.some(a => a.estado === 3) && !isProceso;
+          const badge = isProceso
+            ? `<span class="badge bg-warning text-dark card-status-badge">En proceso</span>`
+            : (isAcept ? `<span class="badge bg-success card-status-badge">Aceptada</span>` : ``);
 
           return `
             <div class="col-12 col-md-6 col-lg-3">
-              <div class="card h-100 shadow-sm border-0 rounded-3">
+              <div class="card h-100 border-0 shadow rounded-4 position-relative">
+                ${badge}
                 <div class="card-body d-flex flex-column">
-
-                  <div class="d-flex justify-content-between align-items-center mb-2">
-                          <a class="h5 mb-0 text-decoration-none" href="${base}/AsignacionesUi/Detalle/${asignaciones[0].idSolicitud}">
-                            <i class="bi bi-journal-text text-primary"></i>
-                            <span class="text-primary fw-bold">Solicitud #${asignaciones[0].idSolicitud}</span>
-                          </a>
-                          ${estadoIcon}
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <a class="h5 mb-0 text-decoration-none" href="${base}/AsignacionesUi/Detalle/${asigs[0].idSolicitud}">
+                      <i class="bi bi-journal-text text-primary"></i>
+                      <span class="fw-bold text-primary">Solicitud #${asigs[0].idSolicitud}</span>
+                    </a>
                   </div>
 
-                  <div class="meta mb-2">
+                  <div class="meta mb-3">
                     <div>
                       <i class="bi bi-person-workspace text-warning"></i>
                       <strong>Supervisor(es):</strong> ${supervisores}
@@ -111,19 +141,17 @@
                     </div>
                   </div>
 
-                  <div class="mb-2">
+                  <div class="mb-3">
                     <div class="mb-1">
-                      <i class="bi bi-person-lines-fill text-primary"></i>
+                      <i class="bi bi-people-fill text-primary"></i>
                       <strong>Técnicos:</strong>
                     </div>
-                    <div>
-                      ${chipsTecnicos}
-                    </div>
+                    <div>${chipsTecnicos}</div>
                   </div>
 
                   <div class="mt-auto">
-                    <a class="btn btn-primary w-100"
-                       href="${base}/AsignacionesUi/Detalle/${encodeURIComponent(idSolicitud)}">
+                    <a class="btn btn-outline-primary w-100 fw-bold"
+                       href="${base}/AsignacionesUi/Detalle/${encodeURIComponent(asigs[0].idSolicitud)}">
                        <i class="bi bi-eye"></i> Ver detalles
                     </a>
                   </div>
@@ -134,6 +162,22 @@
         }).join('');
       }
 
-      run();
+      async function init() {
+        const res = await fetch(`${base}/api/solicitudes/asignaciones`);
+        if (!res.ok) {
+          $cards.innerHTML = `<div class="col-12"><div class="alert alert-danger">No se pudo cargar el listado.</div></div>`;
+          return;
+        }
+        const data = await res.json();
+        const groups = groupBySolicitud(data);
+
+     
+        render(groups, $fEstado.value);
+
+       
+        $fEstado.addEventListener('change', () => render(groups, $fEstado.value));
+      }
+
+      init();
     })();
 </script>
