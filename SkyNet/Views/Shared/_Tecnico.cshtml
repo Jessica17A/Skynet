@@ -1,0 +1,288 @@
+﻿@{
+    Layout = null; // este layout no usa otro layout
+}
+
+@functions {
+    bool IsActive(string controller)
+    {
+        var rc = ViewContext.RouteData.Values["controller"]?.ToString();
+        return string.Equals(rc, controller, StringComparison.OrdinalIgnoreCase);
+    }
+}
+
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>@ViewData["Title"] - SkyNet</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+    <script src="https://cdn.lordicon.com/lordicon.js"></script>
+
+
+
+
+    <style>
+        /* Navbar mitad-azul (alineada al ancho del sidebar) y mitad-blanca */
+        .navbar.dualbar {
+            background: linear-gradient(180deg, var(--sidebar-bg), var(--sidebar-bg-2)) left / var(--sidebar-w) 100% no-repeat, #fff;
+        }
+
+            .navbar.dualbar .navbar-brand {
+                color: #e7edf7;
+            }
+
+                .navbar.dualbar .navbar-brand:hover {
+                    color: #fff;
+                    text-decoration: none;
+                }
+
+        /* Variables */
+        :root {
+            --topbar-h: 56px;
+            --sidebar-w: 260px;
+            --sidebar-bg: #0b2a46;
+            --sidebar-bg-2: #0a2440;
+            --sidebar-active: #0d6efd;
+        }
+
+        /* Navbar */
+        .navbar {
+            height: var(--topbar-h);
+            z-index: 1030;
+        }
+
+        /* Sidebar base (siempre fijo) */
+        .sidebar-navy {
+            background: linear-gradient(180deg, var(--sidebar-bg), var(--sidebar-bg-2));
+            color: #e7edf7;
+        }
+
+        .sidebar-fixed {
+            position: fixed;
+            top: var(--topbar-h);
+            left: 0;
+            bottom: 0;
+            width: var(--sidebar-w);
+            border-right: 0;
+            box-shadow: none;
+            z-index: 1029;
+        }
+
+        .sidebar-scroll {
+            height: calc(100vh - var(--topbar-h));
+            overflow-y: auto;
+            padding: .75rem .75rem 1rem;
+        }
+
+        /* Contenido alineado */
+        main#content {
+            margin-left: var(--sidebar-w);
+            padding-top: 1rem;
+        }
+
+        /* Estética de enlaces */
+        .sidebar-navy .nav-title {
+            font-size: .72rem;
+            letter-spacing: .06em;
+            opacity: .75;
+            padding: .75rem .75rem .25rem;
+            text-transform: uppercase;
+        }
+
+        .sidebar-navy .nav-link {
+            color: rgba(255,255,255,.90);
+            border-radius: .55rem;
+            padding: .55rem .75rem;
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+        }
+
+            .sidebar-navy .nav-link:hover {
+                color: #fff;
+                background: rgba(255,255,255,.08);
+            }
+
+            .sidebar-navy .nav-link.active {
+                color: #fff;
+                background: rgba(13,110,253,.20);
+                box-shadow: inset 3px 0 0 var(--sidebar-active);
+                border: 1px solid rgba(13,110,253,.35);
+            }
+
+        .sidebar-navy .collapse .nav-link {
+            margin-left: .75rem;
+        }
+
+        /* Caret opcional */
+        .nav-caret {
+            transition: transform .2s ease;
+        }
+
+        .rotate-180 {
+            transform: rotate(180deg);
+        }
+    </style>
+
+    @RenderSection("Styles", required: false)
+</head>
+<body class="bg-light">
+
+    <!-- TOPBAR -->
+    <nav class="navbar dualbar border-bottom sticky-top">
+        <div class="container-fluid">
+            <button class="btn btn-outline-secondary d-none"><i class="bi bi-list"></i></button>
+
+            <a class="navbar-brand fw-semibold" asp-controller="Home" asp-action="Index">SkyNet</a>
+
+            <div class="ms-auto d-flex align-items-center gap-2">
+                @if (SignInManager.IsSignedIn(User))
+                {
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle me-1"></i>
+                            <span class="d-none d-sm-inline">@User.Identity?.Name</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow">
+                            <li class="dropdown-item-text"><strong>@User.Identity?.Name</strong></li>
+                            <li><hr class="dropdown-divider" /></li>
+                            <li><a class="dropdown-item" asp-controller="Settings" asp-action="Index"><i class="bi bi-gear me-2"></i> Ajustes</a></li>
+                            <li><hr class="dropdown-divider" /></li>
+                            <li>
+                                <form method="post" asp-area="Identity" asp-page="/Account/Logout"
+                                      asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                                    <button type="submit" class="dropdown-item">
+                                        <i class="bi bi-box-arrow-right me-2"></i> Cerrar sesión
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                }
+                else
+                {
+                    <a class="btn btn-outline-primary btn-sm" asp-area="Identity" asp-page="/Account/Register">Registrarse</a>
+                    <a class="btn btn-primary btn-sm" asp-area="Identity" asp-page="/Account/Login">Iniciar sesión</a>
+                }
+            </div>
+        </div>
+    </nav>
+
+    <!-- SIDEBAR -->
+    <aside id="appSidebar" class="sidebar-navy sidebar-fixed">
+        <div class="sidebar-scroll">
+            <div class="nav-title">Administración</div>
+
+            <!-- Usa un nav con id para acordeón -->
+            <nav id="sidebarMenu" class="nav flex-column">
+                <a class="nav-link @(IsActive("Home") ? "active" : "")"
+                   asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                    <span class="badge bg-secondary ms-auto">NEW</span>
+                </a>
+
+
+                @*  GRUPOS TECNICOS *@
+
+                <div class="nav-title mt-3">Operación</div>
+
+                <!-- Toggler cerrado por defecto -->
+                <a class="nav-link collapsed"
+                   data-bs-toggle="collapse"
+                   href="#grpGrupos"
+                   role="button"
+                   aria-expanded="false"
+                   aria-controls="grpGrupos">
+                    <i class="bi bi-diagram-3"></i> Gestión de grupos
+                    <i class="bi bi-chevron-down ms-auto nav-caret"></i>
+                </a>
+@* 
+                <!-- Submenú SIN 'show' (cerrado) + acordeón -->
+                <div class="collapse" id="grpGrupos" data-bs-parent="#sidebarMenu">
+                    <a class="nav-link @(IsActive("GruposUi") ? "active" : "")"
+                       asp-controller="GruposUi" asp-action="Index">
+                        <i class="bi bi-people"></i> Grupos
+                    </a>
+                    <a class="nav-link @(IsActive("GruposUi") ? "active" : "")"
+                       asp-controller="GruposUi" asp-action="MisTecnicos">
+                        <i class="bi bi-person-badge"></i> Mis Técnicos
+                    </a>
+                </div> *@
+
+
+                @*  SOLICITUDES *@
+                <div class="nav-title mt-3">Operación</div>
+
+                <!-- Toggler cerrado por defecto -->
+                <a class="nav-link collapsed"
+                   data-bs-toggle="collapse"
+                   href="#grpSolicitudes"
+                   role="button"
+                   aria-expanded="false"
+                   aria-controls="grpSolicitudes">
+                    <i class="bi bi-clipboard-check"></i> Solicitudes
+                    <i class="bi bi-chevron-down ms-auto nav-caret"></i>
+                </a>
+
+                <!-- Submenú con ID único -->
+                <div class="collapse" id="grpSolicitudes" data-bs-parent="#sidebarMenu">
+                    <a class="nav-link @(IsActive("Solicitudes") ? "active" : "")"
+                       asp-controller="Solicitudes" asp-action="Index">
+                        <i class="bi bi-people"></i> Listado Solicitudes
+                    </a>
+
+                    <a class="nav-link @(IsActive("AsignacionesUi") ? "active" : "")"
+                       asp-controller="AsignacionesUi" asp-action="Tecnicos">
+                        <i class="bi bi-people"></i> Asignaciones
+                    </a>
+
+                </div>
+
+
+
+
+
+            </nav>
+        </div>
+    </aside>
+
+    <!-- CONTENIDO -->
+    <main id="content">
+        <div class="container-xxl">
+            @RenderBody()
+        </div>
+    </main>
+
+    @* Footer opcional
+    <footer class="border-top py-3 bg-white mt-auto">
+        <div class="container-xxl text-muted small">
+            SkyNet © @DateTime.UtcNow.Year
+        </div>
+    </footer>
+    *@
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Rotación del caret en submenús
+        document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(t => {
+          const target = document.querySelector(t.getAttribute('href'));
+          const caret  = t.querySelector('.nav-caret,.bi-chevron-down');
+          if (!target || !caret) return;
+          target.addEventListener('show.bs.collapse', () => caret.classList.add('rotate-180'));
+          target.addEventListener('hide.bs.collapse', () => caret.classList.remove('rotate-180'));
+        });
+    </script>
+
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

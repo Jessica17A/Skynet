@@ -36,6 +36,7 @@ namespace SkyNet.Models.DTOs
         public byte Estado { get; set; }  
         public string? Nota { get; set; }
         public DateTime? Fecha_Fin { get; set; }
+        public string? Motivo { get; set; }
     }
 
 
@@ -81,5 +82,7 @@ public class AsignacionItem
     public byte Estado { get; set; }
     public string? Notas { get; set; }
 }
+
+
 
 }

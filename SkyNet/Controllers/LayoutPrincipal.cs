@@ -10,11 +10,22 @@ namespace SkyNet.Controllers
         {
             if (User?.Identity?.IsAuthenticated == true)
             {
-                return RedirectToAction("Index",
-                    User.IsInRole("Administrador") ? "Home" : "LayoutPrincipal" /*o "Vendedor"*/);
+                if (User.IsInRole("Administrador"))
+                    return RedirectToAction("Index", "Home");
+
+                if (User.IsInRole("Supervisor"))
+                    return RedirectToAction("Index", "Supervisores");
+
+                if (User.IsInRole("Tecnico"))
+                    return RedirectToAction("Index", "Home");
+
+                // fallback
+                return RedirectToAction("Index", "LayoutPrincipal");
             }
-            return View(); 
+
+            return View(); // si no está autenticado
         }
+
 
         public IActionResult Nosotros()
         {

@@ -1,0 +1,68 @@
+﻿@{
+    ViewData["Title"] = "Mi asignación";
+    Layout = "~/Views/Shared/_Tecnico.cshtml";
+    var solicitudId = ViewBag.SolicitudId ?? 0;
+}
+
+<div class="p-3 rounded-0 bg-light shadow-sm mb-4 text-center">
+    <h2 class="mb-0 fw-bold text-dark">
+        <i class="bi bi-person-badge text-primary"></i> Detalle de mi asignación
+    </h2>
+</div>
+
+<div id="card-detalle" class="row g-4"></div>
+
+<script>
+    (() => {
+      const base = `${window.location.origin}${document.body.getAttribute("data-pathbase") ?? ""}`;
+      // inyecta el valor NUMÉRICO desde Razor
+      const solicitudId = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(solicitudId));
+      const $card = document.getElementById("card-detalle");
+
+      async function loadDetalle() {
+        // Usa el endpoint que ya existe (lista) y toma el primero
+        const url = `${base}/api/solicitudes/${encodeURIComponent(solicitudId)}/asignaciones/tecnico`;
+        const res = await fetch(url);
+        if (!res.ok) {
+          $card.innerHTML = `<div class="alert alert-danger">No se pudo cargar la asignación.</div>`;
+          return;
+        }
+        const list = await res.json();
+        const a = Array.isArray(list) ? list[0] : null;
+
+        if (!a) {
+          $card.innerHTML = `<div class="alert alert-info">No tienes asignación en esta solicitud.</div>`;
+          return;
+        }
+
+        // Ajusta estos nombres a tu JSON real (camelCase vs snake/Pascal)
+        const fechaInicio = a.fechaInicio ?? a.fecha_Inicio ?? a.Fecha_Inicio;
+        const fechaFin    = a.fechaFin    ?? a.fecha_Fin    ?? a.Fecha_Fin;
+
+        const badge =
+          a.estado === 4 ? `<span class="badge bg-warning text-dark position-absolute top-0 end-0 m-2">En proceso</span>` :
+          a.estado === 3 ? `<span class="badge bg-success position-absolute top-0 end-0 m-2">Aceptada</span>` :
+          a.estado === 5 ? `<span class="badge bg-secondary position-absolute top-0 end-0 m-2">Finalizada</span>` : ``;
+
+        $card.innerHTML = `
+          <div class="col-12">
+            <div class="card border-0 shadow rounded-4 position-relative">
+              ${badge}
+              <div class="card-body">
+                <h5 class="fw-bold text-primary mb-3">
+                  <i class="bi bi-journal-text"></i> Solicitud #${a.idSolicitud ?? a.IdSolicitud}
+                </h5>
+                <p><i class="bi bi-person-badge-fill text-primary"></i> <strong>Técnico:</strong> ${a.tecnicoNombre ?? a.TecnicoNombre ?? "-"}</p>
+                <p><i class="bi bi-person-workspace text-warning"></i> <strong>Supervisor:</strong> ${a.supervisorNombre ?? a.SupervisorNombre ?? "-"}</p>
+                <p><i class="bi bi-calendar2-week text-success"></i> <strong>Inicio:</strong> ${fechaInicio ? new Date(fechaInicio).toLocaleDateString() : "-"}</p>
+                <p><i class="bi bi-calendar-check text-success"></i> <strong>Fin:</strong> ${fechaFin ? new Date(fechaFin).toLocaleDateString() : "-"}</p>
+                <p><i class="bi bi-diagram-3 text-info"></i> <strong>Grupo:</strong> ${a.grupoEtiqueta ?? a.GrupoEtiqueta ?? "-"}</p>
+                <p><i class="bi bi-sticky text-secondary"></i> <strong>Notas:</strong> ${a.notas ?? a.Notas ?? "-"}</p>
+              </div>
+            </div>
+          </div>`;
+      }
+
+      loadDetalle();
+    })();
+</script>

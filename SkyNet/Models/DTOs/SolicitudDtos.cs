@@ -58,8 +58,8 @@ namespace SkyNet.Models.DTOs
 
     public class CambiarEstadoDto
     {
-        public int Estado { get; set; }        
-       
+        public int Estado { get; set; }
+      
     }
 
     public class ArchivoDto

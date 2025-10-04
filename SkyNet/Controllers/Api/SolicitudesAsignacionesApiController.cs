@@ -1,5 +1,8 @@
 ﻿// Controllers/Api/SolicitudesAsignacionesApiController.cs
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using SkyNet.Data;
 using SkyNet.Models;
@@ -11,11 +14,17 @@ using System.Linq;
 public class SolicitudesAsignacionesApiController : ControllerBase
 {
     private readonly ApplicationDbContext _db;
+    private readonly UserManager<IdentityUser> _userManager;
     private readonly ILogger<SolicitudesAsignacionesApiController> _log;
 
-    public SolicitudesAsignacionesApiController(ApplicationDbContext db, ILogger<SolicitudesAsignacionesApiController> log)
+    public SolicitudesAsignacionesApiController(
+        ApplicationDbContext db,
+        UserManager<IdentityUser> userManager,
+        ILogger<SolicitudesAsignacionesApiController> log)
     {
-        _db = db; _log = log;
+        _db = db;
+        _userManager = userManager;
+        _log = log;
     }
 
 
@@ -46,7 +55,20 @@ public class SolicitudesAsignacionesApiController : ControllerBase
         return Ok(asignaciones);
     }
 
+    [HttpGet("{id:long}/asignaciones/tecnico")]
+    public async Task<ActionResult<IEnumerable<SolicitudAsignacionDto>>> ListarAsignacionesPorSolicitudTecnico(long id)
+    {
+        // Obtener el UserId del Identity actual
+        var userId = _userManager.GetUserId(User);
 
+        // Ejecutar el SP pasando la solicitud y el usuario logueado
+        var rows = await _db.SolicitudAsignacionListado
+        .FromSqlRaw("EXEC dbo.usp_SolicitudesAsignaciones_PorSolicitud @ID_SOLICITUD = {0}, @AspNetUserId = {1}", id, userId)
+        .AsNoTracking()
+        .ToListAsync();
+
+        return Ok(rows);
+    }
 
 
 
@@ -100,49 +122,27 @@ public class SolicitudesAsignacionesApiController : ControllerBase
     }
 
 
-    [HttpPatch("asignaciones/{asigId:long}/estado")]
-    public async Task<IActionResult> CambiarEstado(long asigId, [FromBody] SolicitudAsignacionEstadoDto body)
-    {
-        if (body is null) return BadRequest("Body requerido.");
+    //// PATCH: /api/solicitudes/{id}/estado
+    //[HttpPatch("{id:long}/estado")]
+    //public async Task<ActionResult<SolicitudDto>> CambiarEstado(
+    //    long id, [FromBody] CambiarEstadoDto dto, CancellationToken ct)
+    //{
+    //    if (dto is null || dto.Estado < 0 || dto.Estado > 5)
+    //        return BadRequest(new { error = "Estado inválido. Debe ser 0..5" });
 
-        var asign = await _db.SolicitudAsignaciones.FirstOrDefaultAsync(a => a.Id == asigId);
-        if (asign == null) return NotFound("Asignación no encontrada.");
+    //    var p1 = new SqlParameter("@SolicitudId", id);
+    //    var p2 = new SqlParameter("@NuevoEstado", dto.Estado);
 
-        // Anular
-        if (body.Estado == 0)
-        {
-            asign.Estado = SolicitudAsignacionEstado.Anulada; 
-            if (!string.IsNullOrWhiteSpace(body.Nota))
-                asign.Notas = string.IsNullOrWhiteSpace(asign.Notas) ? body.Nota : $"{asign.Notas} | {body.Nota}";
-        }
-        else
-        {
-          
-            if (!body.Fecha_Fin.HasValue)
-                return BadRequest("Fecha_Fin es requerida al finalizar.");
+    //    await _db.Database.ExecuteSqlRawAsync(
+    //        "EXEC dbo.sp_Solicitudes_CambiarEstado @SolicitudId, @NuevoEstado",
+    //        new[] { p1, p2 }, ct);
 
-            asign.Estado = SolicitudAsignacionEstado.Finalizada;
-            asign.Fecha_Fin = DateTime.SpecifyKind(body.Fecha_Fin.Value, DateTimeKind.Utc);
+    //    var s = await _db.Solicitudes.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
+    //    if (s is null) return NotFound();
 
-            if (!string.IsNullOrWhiteSpace(body.Nota))
-                asign.Notas = string.IsNullOrWhiteSpace(asign.Notas) ? body.Nota : $"{asign.Notas} | {body.Nota}";
+    //    return Ok(Map(s));
+    //}
 
-          
-            if (body.Estado == 5)
-            {
-                var sol = await _db.Solicitudes.FirstOrDefaultAsync(s => s.Id == asign.FkSolicitud);
-                if (sol != null) sol.Estado = SolicitudEstado.Finalizado; 
-            }
-        }
-
-        await _db.SaveChangesAsync();
-        return Ok(new
-        {
-            ok = true,
-            asignEstado = (byte)asign.Estado,
-            fechaFin = asign.Fecha_Fin
-        });
-    }
 
 
 
@@ -168,4 +168,56 @@ public class SolicitudesAsignacionesApiController : ControllerBase
         if (a == null) return NotFound();
         return Ok(a);
     }
+
+
+  
+    [HttpGet("asignaciones/supervisor")]
+    public async Task<ActionResult<IEnumerable<SolicitudAsignacionListado>>> ListarAsignacionesSupervisor()
+    {
+        var userId = _userManager.GetUserId(User); // AspNetUsers.Id
+
+        var rows = await _db.SolicitudAsignacionListado
+            .FromSqlRaw("EXEC dbo.usp_SolicitudesAsignaciones_Supervisor @AspNetUserId = {0}", userId)
+            .AsNoTracking()
+            .ToListAsync();
+
+        return Ok(rows);
+    }
+
+    [HttpGet("asignaciones/tecnico")]
+    public async Task<ActionResult<IEnumerable<SolicitudAsignacionListado>>> ListarAsignacionesTecnico()
+    {
+        var userId = _userManager.GetUserId(User);
+
+        var rows = await _db.SolicitudAsignacionListado
+            .FromSqlRaw("EXEC dbo.usp_SolicitudesAsignaciones_Tecnico @AspNetUserId = {0}", userId)
+            .AsNoTracking()
+            .ToListAsync();
+
+        return Ok(rows);
+    }
+
+
+    
+    [HttpGet("solicitudes/{id:long}/asignaciones/tecnico/detalle")]
+    public async Task<ActionResult<SolicitudAsignacionListado>> DetalleAsignacionTecnico(long id)
+    {
+        var userId = _userManager.GetUserId(User);
+
+        var rows = await _db.SolicitudAsignacionListado
+            .FromSqlRaw("EXEC dbo.usp_SolicitudDetalle_Tecnico @ID_SOLICITUD = {0}, @AspNetUserId = {1}", id, userId)
+            .AsNoTracking()
+            .ToListAsync();
+
+        var item = rows.FirstOrDefault();
+        if (item is null) return NotFound();  // el técnico no tiene asignación en esa solicitud
+
+        return Ok(item);
+    }
+
+
+
+
+
+
 }
