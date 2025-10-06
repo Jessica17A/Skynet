@@ -65,10 +65,10 @@ namespace SkyNet.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Solicitudes",
+                name: "Solicitud",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    Id_Solicitud = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Nombre = table.Column<string>(type: "nvarchar(120)", maxLength: 120, nullable: false),
                     Email = table.Column<string>(type: "nvarchar(160)", maxLength: 160, nullable: false),
@@ -85,27 +85,27 @@ namespace SkyNet.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Solicitudes", x => x.Id);
+                    table.PrimaryKey("Id_Solicitud", x => x.Id_Solicitud);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Solicitudes_Asignaciones",
+                name: "Solicitud_Asignacion",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    Id_Solicitud_Asignacion = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    FKSOLICITUD = table.Column<long>(type: "bigint", nullable: false),
-                    IDGRUPO = table.Column<int>(type: "int", nullable: false),
-                    FKTECNICO = table.Column<long>(type: "bigint", nullable: false),
-                    FECHA_ASIGNACION_UTC = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Fecha_Inicio = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    Fecha_Fin = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    NOTAS = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
-                    ESTADO = table.Column<byte>(type: "tinyint", nullable: false)
+                    FkSolicitud = table.Column<long>(type: "bigint", nullable: false),
+                    IdGrupo = table.Column<int>(type: "int", nullable: false),
+                    FkTecnico = table.Column<long>(type: "bigint", nullable: false),
+                    FechaAsignacionUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    FechaInicio = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    FechaFin = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Notas = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Estado = table.Column<byte>(type: "tinyint", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Solicitudes_Asignaciones", x => x.Id);
+                    table.PrimaryKey("Id_Solicitud_Asignacion", x => x.Id_Solicitud_Asignacion);
                 });
 
             migrationBuilder.CreateTable(
@@ -215,10 +215,10 @@ namespace SkyNet.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Empleados",
+                name: "Empleado",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    Id_Empleado = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Nombres = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Apellidos = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -233,9 +233,9 @@ namespace SkyNet.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Empleados", x => x.Id);
+                    table.PrimaryKey("Id_Empleado", x => x.Id_Empleado);
                     table.ForeignKey(
-                        name: "FK_Empleados_AspNetUsers_UserId",
+                        name: "FK_Empleado_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
@@ -257,37 +257,37 @@ namespace SkyNet.Migrations
                 {
                     table.PrimaryKey("PK_ArchivosSolicitudes", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ArchivosSolicitudes_Solicitudes_Fk_Solicitud",
+                        name: "FK_ArchivosSolicitudes_Solicitud_Fk_Solicitud",
                         column: x => x.Fk_Solicitud,
-                        principalTable: "Solicitudes",
-                        principalColumn: "Id",
+                        principalTable: "Solicitud",
+                        principalColumn: "Id_Solicitud",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Grupos_Supervisores_Tec",
+                name: "Grupo_Supervisor_Tec",
                 columns: table => new
                 {
-                    IDGRUPO = table.Column<int>(type: "int", nullable: false)
+                    IdGrupo = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    FKSUPERVISOR = table.Column<long>(type: "bigint", nullable: false),
-                    FKTECNICO = table.Column<long>(type: "bigint", nullable: false),
-                    FECHA_CREACION_UTC = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ESTADO = table.Column<bool>(type: "bit", nullable: false)
+                    FkSupervisor = table.Column<long>(type: "bigint", nullable: false),
+                    FkTecnico = table.Column<long>(type: "bigint", nullable: false),
+                    FechaCreacionUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Estado = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Grupos_Supervisores_Tec", x => x.IDGRUPO);
+                    table.PrimaryKey("Id_Grupo_Supervisor_Tec", x => x.IdGrupo);
                     table.ForeignKey(
-                        name: "FK_GRUPO_SUPERVISOR",
-                        column: x => x.FKSUPERVISOR,
-                        principalTable: "Empleados",
-                        principalColumn: "Id");
+                        name: "FK_GrupoSupervisor_Supervisor",
+                        column: x => x.FkSupervisor,
+                        principalTable: "Empleado",
+                        principalColumn: "Id_Empleado");
                     table.ForeignKey(
-                        name: "FK_GRUPO_TECNICO",
-                        column: x => x.FKTECNICO,
-                        principalTable: "Empleados",
-                        principalColumn: "Id");
+                        name: "FK_GrupoSupervisor_Tecnico",
+                        column: x => x.FkTecnico,
+                        principalTable: "Empleado",
+                        principalColumn: "Id_Empleado");
                 });
 
             migrationBuilder.CreateIndex(
@@ -335,26 +335,26 @@ namespace SkyNet.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Empleados_UserId",
-                table: "Empleados",
+                name: "IX_Empleado_UserId_Unico",
+                table: "Empleado",
                 column: "UserId",
                 unique: true,
                 filter: "[UserId] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Grupos_Supervisores_Tec_FKSUPERVISOR",
-                table: "Grupos_Supervisores_Tec",
-                column: "FKSUPERVISOR");
+                name: "IX_Grupo_Supervisor_Tec_FkSupervisor",
+                table: "Grupo_Supervisor_Tec",
+                column: "FkSupervisor");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Grupos_Supervisores_Tec_FKTECNICO",
-                table: "Grupos_Supervisores_Tec",
-                column: "FKTECNICO");
+                name: "IX_Grupo_Supervisor_Tec_FkTecnico",
+                table: "Grupo_Supervisor_Tec",
+                column: "FkTecnico");
 
             migrationBuilder.CreateIndex(
-                name: "UX_Sol_Asig_ActivaPorTec",
-                table: "Solicitudes_Asignaciones",
-                columns: new[] { "FKSOLICITUD", "FKTECNICO", "ESTADO" },
+                name: "UX_Solicitud_Asignacion_ActivaPorTec",
+                table: "Solicitud_Asignacion",
+                columns: new[] { "FkSolicitud", "FkTecnico", "Estado" },
                 unique: true,
                 filter: "[Estado] = 1");
         }
@@ -384,19 +384,19 @@ namespace SkyNet.Migrations
                 name: "Clientes");
 
             migrationBuilder.DropTable(
-                name: "Grupos_Supervisores_Tec");
+                name: "Grupo_Supervisor_Tec");
 
             migrationBuilder.DropTable(
-                name: "Solicitudes_Asignaciones");
+                name: "Solicitud_Asignacion");
 
             migrationBuilder.DropTable(
-                name: "Solicitudes");
+                name: "Solicitud");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
-                name: "Empleados");
+                name: "Empleado");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");

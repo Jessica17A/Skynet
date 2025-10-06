@@ -272,11 +272,186 @@ namespace SkyNet.Migrations
                     b.ToTable("Clientes");
                 });
 
+            modelBuilder.Entity("SkyNet.Models.DTOs.SolicitudAsignacionDetalleDto", b =>
+                {
+                    b.Property<DateTime?>("AsignacionCreadaUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("AsignacionFechaFin")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("AsignacionFechaInicio")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("AsignacionId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("AsignacionNotas")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Descripcion")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Direccion")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Estado")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EstadoAsignacion")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EstadoSolicitud")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("Fecha_Fin")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("Fecha_Inicio")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("FkTecnico")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("GrupoEtiqueta")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("IdGrupo")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("IdSolicitud")
+                        .HasColumnType("bigint");
+
+                    b.Property<double?>("Latitud")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("Longitud")
+                        .HasColumnType("float");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Notas")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Prioridad")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SupervisorNombre")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TecnicoNombre")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Telefono")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Ticket")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.ToTable((string)null);
+
+                    b.ToView(null, (string)null);
+                });
+
+            modelBuilder.Entity("SkyNet.Models.DTOs.SolicitudAsignacionListado", b =>
+                {
+                    b.Property<byte>("Estado")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTime>("FechaAsignacionUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("Fecha_Fin")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("Fecha_Inicio")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("FkTecnico")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("GrupoEtiqueta")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("IdGrupo")
+                        .HasColumnType("int");
+
+                    b.Property<long>("IdSolicitud")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Notas")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SupervisorNombre")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TecnicoNombre")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.ToTable((string)null);
+
+                    b.ToView(null, (string)null);
+                });
+
+            modelBuilder.Entity("SkyNet.Models.DTOs.SolicitudResumenDto", b =>
+                {
+                    b.Property<string>("Asignaciones_Json")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("ASIGNACIONES_JSON");
+
+                    b.Property<byte>("Estado_Agregado")
+                        .HasColumnType("tinyint")
+                        .HasColumnName("ESTADO_AGREGADO");
+
+                    b.Property<DateTime?>("FechaVisita_Min")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("FECHAVISITA_MIN");
+
+                    b.Property<long>("IdSolicitud")
+                        .HasColumnType("bigint")
+                        .HasColumnName("IDSOLICITUD");
+
+                    b.Property<string>("Supervisores")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("SUPERVISORES");
+
+                    b.Property<string>("Tecnicos")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("TECNICOS");
+
+                    b.ToTable((string)null);
+
+                    b.ToView(null, (string)null);
+                });
+
             modelBuilder.Entity("SkyNet.Models.Empleado", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnName("Id_Empleado");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
@@ -312,15 +487,18 @@ namespace SkyNet.Migrations
 
                     b.Property<string>("UserId")
                         .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("UserId");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("Id_Empleado");
 
                     b.HasIndex("UserId")
                         .IsUnique()
+                        .HasDatabaseName("IX_Empleado_UserId_Unico")
                         .HasFilter("[UserId] IS NOT NULL");
 
-                    b.ToTable("Empleados");
+                    b.ToTable("Empleado", (string)null);
                 });
 
             modelBuilder.Entity("SkyNet.Models.GrupoSupervisorTec", b =>
@@ -328,40 +506,42 @@ namespace SkyNet.Migrations
                     b.Property<int>("IdGrupo")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasColumnName("IDGRUPO");
+                        .HasColumnName("IdGrupo");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdGrupo"));
 
                     b.Property<bool>("Estado")
                         .HasColumnType("bit")
-                        .HasColumnName("ESTADO");
+                        .HasColumnName("Estado");
 
                     b.Property<DateTime>("FechaCreacionUtc")
                         .HasColumnType("datetime2")
-                        .HasColumnName("FECHA_CREACION_UTC");
+                        .HasColumnName("FechaCreacionUtc");
 
                     b.Property<long>("FkSupervisor")
                         .HasColumnType("bigint")
-                        .HasColumnName("FKSUPERVISOR");
+                        .HasColumnName("FkSupervisor");
 
                     b.Property<long>("FkTecnico")
                         .HasColumnType("bigint")
-                        .HasColumnName("FKTECNICO");
+                        .HasColumnName("FkTecnico");
 
-                    b.HasKey("IdGrupo");
+                    b.HasKey("IdGrupo")
+                        .HasName("Id_Grupo_Supervisor_Tec");
 
                     b.HasIndex("FkSupervisor");
 
                     b.HasIndex("FkTecnico");
 
-                    b.ToTable("Grupos_Supervisores_Tec", (string)null);
+                    b.ToTable("Grupo_Supervisor_Tec", (string)null);
                 });
 
             modelBuilder.Entity("SkyNet.Models.Solicitud", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnName("Id_Solicitud");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
@@ -415,60 +595,63 @@ namespace SkyNet.Migrations
                         .HasMaxLength(60)
                         .HasColumnType("nvarchar(60)");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("Id_Solicitud");
 
-                    b.ToTable("Solicitudes", (string)null);
+                    b.ToTable("Solicitud", (string)null);
                 });
 
             modelBuilder.Entity("SkyNet.Models.SolicitudAsignacion", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnName("Id_Solicitud_Asignacion");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<byte>("Estado")
                         .HasColumnType("tinyint")
-                        .HasColumnName("ESTADO");
+                        .HasColumnName("Estado");
 
                     b.Property<DateTime>("FechaAsignacionUtc")
                         .HasColumnType("datetime2")
-                        .HasColumnName("FECHA_ASIGNACION_UTC");
+                        .HasColumnName("FechaAsignacionUtc");
 
                     b.Property<DateTime?>("Fecha_Fin")
                         .HasColumnType("datetime2")
-                        .HasColumnName("Fecha_Fin");
+                        .HasColumnName("FechaFin");
 
                     b.Property<DateTime?>("Fecha_Inicio")
                         .HasColumnType("datetime2")
-                        .HasColumnName("Fecha_Inicio");
+                        .HasColumnName("FechaInicio");
 
                     b.Property<long>("FkSolicitud")
                         .HasColumnType("bigint")
-                        .HasColumnName("FKSOLICITUD");
+                        .HasColumnName("FkSolicitud");
 
                     b.Property<long>("FkTecnico")
                         .HasColumnType("bigint")
-                        .HasColumnName("FKTECNICO");
+                        .HasColumnName("FkTecnico");
 
                     b.Property<int>("IdGrupo")
                         .HasColumnType("int")
-                        .HasColumnName("IDGRUPO");
+                        .HasColumnName("IdGrupo");
 
                     b.Property<string>("Notas")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)")
-                        .HasColumnName("NOTAS");
+                        .HasColumnName("Notas");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("Id_Solicitud_Asignacion");
 
                     b.HasIndex("FkSolicitud", "FkTecnico", "Estado")
                         .IsUnique()
-                        .HasDatabaseName("UX_Sol_Asig_ActivaPorTec")
+                        .HasDatabaseName("UX_Solicitud_Asignacion_ActivaPorTec")
                         .HasFilter("[Estado] = 1");
 
-                    b.ToTable("Solicitudes_Asignaciones", (string)null);
+                    b.ToTable("Solicitud_Asignacion", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -538,7 +721,8 @@ namespace SkyNet.Migrations
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("FK_Empleado_AspNetUsers_UserId");
 
                     b.Navigation("User");
                 });
@@ -550,14 +734,14 @@ namespace SkyNet.Migrations
                         .HasForeignKey("FkSupervisor")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired()
-                        .HasConstraintName("FK_GRUPO_SUPERVISOR");
+                        .HasConstraintName("FK_GrupoSupervisor_Supervisor");
 
                     b.HasOne("SkyNet.Models.Empleado", "Tecnico")
                         .WithMany()
                         .HasForeignKey("FkTecnico")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired()
-                        .HasConstraintName("FK_GRUPO_TECNICO");
+                        .HasConstraintName("FK_GrupoSupervisor_Tecnico");
 
                     b.Navigation("Supervisor");
 

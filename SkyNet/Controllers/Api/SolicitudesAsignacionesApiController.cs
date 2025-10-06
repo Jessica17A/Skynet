@@ -27,6 +27,51 @@ public class SolicitudesAsignacionesApiController : ControllerBase
         _log = log;
     }
 
+    [HttpPatch("asignaciones/{id:long}/estado")]
+    public async Task<IActionResult> PatchEstado(
+            long id,
+            [FromBody] SolicitudFinalizarDto dto,
+            CancellationToken ct)
+    {
+        if (dto is null) return BadRequest("Body requerido.");
+
+        // Cast explícito de byte -> enum (evita CS0266)
+        var estadoNuevo = (SolicitudAsignacionEstado)dto.Estado;
+        if (!Enum.IsDefined(typeof(SolicitudAsignacionEstado), estadoNuevo))
+            return BadRequest("Estado inválido (0..5).");
+
+        var asig = await _db.SolicitudAsignaciones
+                            .FirstOrDefaultAsync(x => x.Id == id, ct);
+        if (asig is null) return NotFound();
+
+        // Aplicar cambios
+        asig.Estado = estadoNuevo; // enum mapeado a byte en OnModelCreating
+        if (!string.IsNullOrWhiteSpace(dto.Nota))
+            asig.Notas = dto.Nota;
+
+        if (dto.Fecha_Fin.HasValue)
+            asig.Fecha_Fin = dto.Fecha_Fin;
+
+        // Si finaliza (5) y no vino fecha, sellar automáticamente
+        if (estadoNuevo == SolicitudAsignacionEstado.Finalizada && asig.Fecha_Fin is null)
+            asig.Fecha_Fin = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync(ct);
+
+     
+         if (estadoNuevo == SolicitudAsignacionEstado.Finalizada)
+        {
+            var p1 = new SqlParameter("@SolicitudId", asig.FkSolicitud);
+            var p2 = new SqlParameter("@NuevoEstado", 5);
+            await _db.Database.ExecuteSqlRawAsync(
+                "EXEC dbo.sp_Solicitudes_CambiarEstado @SolicitudId, @NuevoEstado", new[] { p1, p2 }, ct);
+        }
+
+        return NoContent();
+    }
+
+
+
 
     [HttpGet("asignaciones")]
     public async Task<ActionResult<IEnumerable<SolicitudAsignacionListado>>> ListarAsignacionesTodas()
@@ -198,24 +243,38 @@ public class SolicitudesAsignacionesApiController : ControllerBase
     }
 
 
-    
-    [HttpGet("solicitudes/{id:long}/asignaciones/tecnico/detalle")]
-    public async Task<ActionResult<SolicitudAsignacionListado>> DetalleAsignacionTecnico(long id)
+
+    //[HttpGet("solicitudes/{id:long}/asignaciones/tecnico/detalle")]
+    //public async Task<ActionResult<SolicitudAsignacionListado>> DetalleAsignacionTecnico(long id)
+    //{
+    //    var userId = _userManager.GetUserId(User);
+
+    //    var rows = await _db.SolicitudAsignacionListado
+    //        .FromSqlRaw("EXEC dbo.usp_SolicitudDetalle_Tecnico @ID_SOLICITUD = {0}, @AspNetUserId = {1}", id, userId)
+    //        .AsNoTracking()
+    //        .ToListAsync();
+
+    //    var item = rows.FirstOrDefault();
+    //    if (item is null) return NotFound();  // el técnico no tiene asignación en esa solicitud
+
+    //    return Ok(item);
+    //}
+
+    [HttpGet("{id:long}/asignaciones/tecnico/detalle")]
+    public async Task<ActionResult<SolicitudAsignacionDetalleDto>> DetalleAsignacionTecnico(long id)
     {
         var userId = _userManager.GetUserId(User);
+        if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
-        var rows = await _db.SolicitudAsignacionListado
+        var rows = await _db.SolicitudAsignacionDetalle
             .FromSqlRaw("EXEC dbo.usp_SolicitudDetalle_Tecnico @ID_SOLICITUD = {0}, @AspNetUserId = {1}", id, userId)
             .AsNoTracking()
             .ToListAsync();
 
         var item = rows.FirstOrDefault();
-        if (item is null) return NotFound();  // el técnico no tiene asignación en esa solicitud
-
+        if (item is null) return NotFound();
         return Ok(item);
     }
-
-
 
 
 

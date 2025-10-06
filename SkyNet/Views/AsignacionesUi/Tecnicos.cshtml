@@ -76,19 +76,25 @@
 
       const uniques = (arr) => [...new Set(arr)];
 
+      function parseInicio(a) {
+        // Soporta tanto fechaInicio (camel normal) como fecha_Inicio (prop con guion bajo)
+        const raw = a.fechaInicio ?? a.fecha_Inicio ?? null;
+        return raw ? new Date(raw) : null;
+      }
+
       function render(groups, filtro) {
         const filtered = groups.filter(([, asigs]) => {
-          const isProceso = asigs.some(a => a.estado === 4);
-          const isAcept   = asigs.some(a => a.estado === 3) && !isProceso;
-          const isFin     = asigs.some(a => a.estado === 5);
+          const hasFin   = asigs.some(a => a.estado === 5);
+          const hasProc  = asigs.some(a => a.estado === 4);
+          const hasAcept = asigs.some(a => a.estado === 3);
 
-          if (filtro === 'proceso')    return isProceso;
-          if (filtro === 'aceptada')   return isAcept;
-          if (filtro === 'finalizada') return isFin;
+          if (filtro === 'finalizada') return hasFin;
+          if (filtro === 'proceso')    return hasProc;
+          if (filtro === 'aceptada')   return hasAcept && !hasProc && !hasFin;
           return true;
         });
 
-        $count.textContent = filtered.length ? `${filtered.length} solicitud(es)` : '';
+        $count.textContent = `${filtered.length} solicitud(es)`;
 
         if (!filtered.length) {
           $cards.innerHTML = `<div class="col-12"><div class="alert alert-info m-0">Sin resultados.</div></div>`;
@@ -96,7 +102,7 @@
         }
 
         $cards.innerHTML = filtered.map(([, asigs]) => {
-          // orden por técnico
+          // Orden por nombre del técnico
           asigs.sort((x,y)=>(x.tecnicoNombre||'').localeCompare(y.tecnicoNombre||''));
 
           const chipsTecnicos = asigs.map(a => `
@@ -110,24 +116,25 @@
 
           // fecha mínima de inicio
           const inicioMin = asigs.reduce((acc,a)=>{
-            const dt = a.fechaInicio ? new Date(a.fechaInicio)
-                     : a.fecha_Inicio ? new Date(a.fecha_Inicio) : null;
+            const dt = parseInicio(a);
             return !dt ? acc : (!acc || dt < acc ? dt : acc);
           }, null);
 
-          const isProceso = asigs.some(a => a.estado === 4);
-          const isAcept   = asigs.some(a => a.estado === 3) && !isProceso;
-          const isFin     = asigs.some(a => a.estado === 5);
+          const hasFin   = asigs.some(a => a.estado === 5);
+          const hasProc  = asigs.some(a => a.estado === 4);
+          const hasAcept = asigs.some(a => a.estado === 3);
 
-          const badge = isProceso
-            ? `<span class="badge bg-warning text-dark card-status-badge">En proceso</span>`
-            : isAcept
-              ? `<span class="badge bg-success card-status-badge">Aceptada</span>`
-              : isFin
-                ? `<span class="badge bg-secondary card-status-badge">Finalizada</span>`
+          // Prioridad: Finalizada > En proceso > Aceptada
+          const badge = hasFin
+            ? `<span class="badge bg-secondary card-status-badge">Finalizada</span>`
+            : hasProc
+              ? `<span class="badge bg-warning text-dark card-status-badge">En proceso</span>`
+              : hasAcept
+                ? `<span class="badge bg-success card-status-badge">Aceptada</span>`
                 : ``;
 
           const idSol = encodeURIComponent(asigs[0].idSolicitud);
+          const fechaVisitaTxt = inicioMin ? inicioMin.toLocaleDateString('es') : '-';
 
           return `
             <div class="col-12 col-md-6 col-lg-3">
@@ -148,7 +155,7 @@
                     </div>
                     <div class="mt-1">
                       <i class="bi bi-calendar2-week text-success"></i>
-                      <strong>Fecha de Visita:</strong> ${inicioMin ? inicioMin.toLocaleDateString() : '-'}
+                      <strong>Fecha de Visita:</strong> ${fechaVisitaTxt}
                     </div>
                   </div>
 
@@ -174,18 +181,20 @@
       }
 
       async function init() {
-        const res = await fetch(`${base}/api/solicitudes/asignaciones/tecnico`);
-        if (!res.ok) {
+        try {
+          const res = await fetch(`${base}/api/solicitudes/asignaciones/tecnico`);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          const groups = groupBySolicitud(data);
+          render(groups, $fEstado.value);
+          $fEstado.addEventListener('change', () => render(groups, $fEstado.value));
+        } catch (e) {
           $cards.innerHTML = `<div class="col-12"><div class="alert alert-danger">No se pudo cargar el listado.</div></div>`;
-          return;
+          $count.textContent = '';
         }
-        const data = await res.json();
-        const groups = groupBySolicitud(data);
-
-        render(groups, $fEstado.value);
-        $fEstado.addEventListener('change', () => render(groups, $fEstado.value));
       }
 
       init();
     })();
 </script>
+

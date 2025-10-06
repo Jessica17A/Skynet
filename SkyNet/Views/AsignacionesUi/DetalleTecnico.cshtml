@@ -1,7 +1,22 @@
-﻿@{
-    ViewData["Title"] = "Mi asignación";
+﻿@model SkyNet.Models.DTOs.SolicitudAsignacionDetalleDto
+@{
+    ViewData["Title"] = "Detalle de asignación";
     Layout = "~/Views/Shared/_Tecnico.cshtml";
-    var solicitudId = ViewBag.SolicitudId ?? 0;
+
+    string EstadoSolicitudTexto(int s) => s switch
+    {
+        1 => "Pendiente",
+        2 => "Revisada",
+        3 => "Aceptada",
+        4 => "En proceso",
+        5 => "Finalizada",
+        _ => s.ToString()
+    };
+}
+
+@if (ViewBag.Mensaje != null)
+{
+    <div class="alert alert-warning text-center">@ViewBag.Mensaje</div>
 }
 
 <div class="p-3 rounded-0 bg-light shadow-sm mb-4 text-center">
@@ -10,59 +25,224 @@
     </h2>
 </div>
 
-<div id="card-detalle" class="row g-4"></div>
+@if (Model == null)
+{
+    if (ViewBag.Mensaje == null)
+    {
+        <div class="alert alert-warning text-center mt-4">
+            <i class="bi bi-exclamation-triangle"></i> No se encontraron datos para esta asignación.
+        </div>
+    }
+}
+else
+{
+    <div class="container mb-5" data-asignacion-id="@Model.AsignacionId">
+        <!-- ENCABEZADO GENERAL -->
+        <div class="card border-0 shadow rounded-4 mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                    <div>
+                        <h5 class="fw-bold text-primary mb-0">
+                            <i class="bi bi-ticket-detailed"></i> Ticket @Model.Ticket
+                        </h5>
+                        <small class="text-muted">Creado el @Model.CreatedAtUtc.ToString("dd/MM/yyyy HH:mm")</small>
+                    </div>
 
-<script>
-    (() => {
-      const base = `${window.location.origin}${document.body.getAttribute("data-pathbase") ?? ""}`;
-      // inyecta el valor NUMÉRICO desde Razor
-      const solicitudId = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(solicitudId));
-      const $card = document.getElementById("card-detalle");
-
-      async function loadDetalle() {
-        // Usa el endpoint que ya existe (lista) y toma el primero
-        const url = `${base}/api/solicitudes/${encodeURIComponent(solicitudId)}/asignaciones/tecnico`;
-        const res = await fetch(url);
-        if (!res.ok) {
-          $card.innerHTML = `<div class="alert alert-danger">No se pudo cargar la asignación.</div>`;
-          return;
-        }
-        const list = await res.json();
-        const a = Array.isArray(list) ? list[0] : null;
-
-        if (!a) {
-          $card.innerHTML = `<div class="alert alert-info">No tienes asignación en esta solicitud.</div>`;
-          return;
-        }
-
-        // Ajusta estos nombres a tu JSON real (camelCase vs snake/Pascal)
-        const fechaInicio = a.fechaInicio ?? a.fecha_Inicio ?? a.Fecha_Inicio;
-        const fechaFin    = a.fechaFin    ?? a.fecha_Fin    ?? a.Fecha_Fin;
-
-        const badge =
-          a.estado === 4 ? `<span class="badge bg-warning text-dark position-absolute top-0 end-0 m-2">En proceso</span>` :
-          a.estado === 3 ? `<span class="badge bg-success position-absolute top-0 end-0 m-2">Aceptada</span>` :
-          a.estado === 5 ? `<span class="badge bg-secondary position-absolute top-0 end-0 m-2">Finalizada</span>` : ``;
-
-        $card.innerHTML = `
-          <div class="col-12">
-            <div class="card border-0 shadow rounded-4 position-relative">
-              ${badge}
-              <div class="card-body">
-                <h5 class="fw-bold text-primary mb-3">
-                  <i class="bi bi-journal-text"></i> Solicitud #${a.idSolicitud ?? a.IdSolicitud}
-                </h5>
-                <p><i class="bi bi-person-badge-fill text-primary"></i> <strong>Técnico:</strong> ${a.tecnicoNombre ?? a.TecnicoNombre ?? "-"}</p>
-                <p><i class="bi bi-person-workspace text-warning"></i> <strong>Supervisor:</strong> ${a.supervisorNombre ?? a.SupervisorNombre ?? "-"}</p>
-                <p><i class="bi bi-calendar2-week text-success"></i> <strong>Inicio:</strong> ${fechaInicio ? new Date(fechaInicio).toLocaleDateString() : "-"}</p>
-                <p><i class="bi bi-calendar-check text-success"></i> <strong>Fin:</strong> ${fechaFin ? new Date(fechaFin).toLocaleDateString() : "-"}</p>
-                <p><i class="bi bi-diagram-3 text-info"></i> <strong>Grupo:</strong> ${a.grupoEtiqueta ?? a.GrupoEtiqueta ?? "-"}</p>
-                <p><i class="bi bi-sticky text-secondary"></i> <strong>Notas:</strong> ${a.notas ?? a.Notas ?? "-"}</p>
-              </div>
+                    <span class="badge rounded-pill px-3 py-2 fs-6
+                              @(Model.EstadoAsignacion == 3 ? "bg-success" :
+                                Model.EstadoAsignacion == 4 ? "bg-warning text-dark" :
+                                Model.EstadoAsignacion == 5 ? "bg-secondary" : "bg-light text-dark")">
+                        @(Model.EstadoAsignacion == 3 ? "Aceptada" :
+                          Model.EstadoAsignacion == 4 ? "En proceso" :
+                          Model.EstadoAsignacion == 5 ? "Finalizada" : "Desconocido")
+                    </span>
+                </div>
             </div>
-          </div>`;
-      }
+        </div>
 
-      loadDetalle();
-    })();
-</script>
+        <!-- INFORMACIÓN DE LA SOLICITUD -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-primary bg-opacity-10 fw-bold text-primary">
+                <i class="bi bi-info-circle"></i> Información de la solicitud
+            </div>
+            <div class="card-body row g-3">
+                <div class="col-md-6">
+                    <p><strong>Nombre:</strong> @Model.Nombre</p>
+                    <p><strong>Email:</strong> @Model.Email</p>
+                    <p><strong>Teléfono:</strong> @(Model.Telefono ?? "-")</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Tipo:</strong> @Model.Tipo</p>
+                    <p><strong>Prioridad:</strong> @Model.Prioridad</p>
+                    <p><strong>Estado de la solicitud:</strong> @EstadoSolicitudTexto(Model.EstadoSolicitud)</p>
+                </div>
+                <div class="col-12">
+                    <p><strong>Descripción:</strong></p>
+                    <p class="border p-2 bg-light rounded">@Model.Descripcion</p>
+                </div>
+                <div class="col-12">
+                    <p><strong>Dirección:</strong> @Model.Direccion</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- INFORMACIÓN DE ASIGNACIÓN -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-success bg-opacity-10 fw-bold text-success">
+                <i class="bi bi-person-gear"></i> Información de la asignación
+            </div>
+            <div class="card-body row g-3">
+                <div class="col-md-6">
+                    <p><strong>Grupo:</strong> @Model.GrupoEtiqueta</p>
+                    <p><strong>Técnico asignado:</strong> @Model.TecnicoNombre</p>
+                    <p><strong>Supervisor:</strong> @Model.SupervisorNombre</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Fecha de asignación:</strong> @Model.AsignacionCreadaUtc?.ToString("dd/MM/yyyy HH:mm")</p>
+                    <p><strong>Fecha de inicio:</strong> @Model.AsignacionFechaInicio?.ToString("dd/MM/yyyy HH:mm")</p>
+                    <p><strong>Fecha de finalización:</strong> @Model.AsignacionFechaFin?.ToString("dd/MM/yyyy HH:mm")</p>
+                </div>
+                <div class="col-12">
+                    <p><strong>Notas:</strong></p>
+                    <p class="border p-2 bg-light rounded">@(!string.IsNullOrWhiteSpace(Model.AsignacionNotas) ? Model.AsignacionNotas : "Sin notas registradas")</p>
+                </div>
+            </div>
+
+            <!-- CTA Finalizar -->
+            <div class="card-footer d-flex justify-content-between align-items-center">
+                <a asp-action="Tecnicos" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Volver a visitas programadas
+                </a>
+
+                @if (Model.EstadoAsignacion != 5)  
+                {
+                    <button id="btn-finalizar" class="btn btn-primary">
+                        <i class="bi bi-check2-circle"></i> Finalizar asignación
+                    </button>
+                }
+            </div>
+        </div>
+
+        <!-- MAPA OPCIONAL -->
+        @if (Model.Latitud.HasValue && Model.Longitud.HasValue)
+        {
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-info bg-opacity-10 fw-bold text-info">
+                    <i class="bi bi-geo-alt"></i> Ubicación aproximada
+                </div>
+                <div class="card-body text-center">
+                    <iframe width="100%" height="300"
+                            style="border:0; border-radius: .5rem;"
+                            loading="lazy" allowfullscreen
+                            referrerpolicy="no-referrer-when-downgrade"
+                            src="https://www.google.com/maps?q=@Model.Latitud,@Model.Longitud&hl=es&z=16&output=embed">
+                    </iframe>
+                </div>
+            </div>
+        }
+    </div>
+
+    @section Scripts {
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+            (() => {
+                // ⬇️ Asegura que este path coincida con tu controlador:
+                // Opción habitual (tuviste esta): [Route("api/solicitudes/asignaciones")]
+                const apiRoot = '/api/solicitudes/asignaciones';
+                // Si usaste la alternativa: [Route("api/solicitudes-asignaciones")]
+                // const apiRoot = '/api/solicitudes-asignaciones';
+
+                const base = `${window.location.origin}${document.body.getAttribute('data-pathbase') ?? ''}`;
+                const cont = document.querySelector('.container[data-asignacion-id]');
+                const asigId = cont?.getAttribute('data-asignacion-id');
+
+                function ensureSwal() {
+                    if (!window.Swal) {
+                        console.error('SweetAlert2 no está cargado');
+                        alert('No se pudo cargar el componente de diálogo (SweetAlert2).');
+                        return false;
+                    }
+                    return true;
+                }
+
+                async function patchEstado(asignacionId, estado, notaOpt, fechaFinIso = null) {
+                    const body = { Estado: estado, Nota: (notaOpt || ""), Fecha_Fin: fechaFinIso };
+                    const url = `${base}${apiRoot}/${encodeURIComponent(asignacionId)}/estado`;
+
+                    const r = await fetch(url, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(body)
+                    });
+
+                    if (!r.ok) {
+                        const txt = await r.text().catch(() => '');
+                        // Mensajes útiles
+                        if (r.status === 401) throw new Error('No autorizado. Vuelve a iniciar sesión.');
+                        if (r.status === 404) throw new Error('No se encontró la asignación o la ruta del API no coincide. Revisa apiRoot en el script.');
+                        throw new Error(`HTTP ${r.status} — ${txt}`);
+                    }
+                    return true;
+                }
+
+                const pad = n => String(n).padStart(2, '0');
+                const nowLocalInputValue = () => {
+                    const d = new Date();
+                    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                };
+
+                document.getElementById('btn-finalizar')?.addEventListener('click', async (ev) => {
+                    if (!ensureSwal()) return;
+                    if (!asigId) {
+                        console.error('No hay data-asignacion-id en el contenedor');
+                        return;
+                    }
+
+                    const res = await Swal.fire({
+                        title: 'Finalizar asignación',
+                        html: `
+                            <div class="text-start">
+                                <label class="form-label">Fecha y hora de finalización</label>
+                                <input id="dtFin" type="datetime-local" class="form-control" value="${nowLocalInputValue()}">
+                                <label class="form-label mt-2">Nota (opcional)</label>
+                                <input id="notaFin" type="text" class="form-control" placeholder="Comentarios...">
+                            </div>`,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Finalizar',
+                        cancelButtonText: 'Cancelar',
+                        focusConfirm: false,
+                        preConfirm: () => {
+                            const dt = document.getElementById('dtFin').value;
+                            if (!dt) { Swal.showValidationMessage('Ingresa la fecha y hora de finalización'); return false; }
+                            const nota = document.getElementById('notaFin').value || '';
+                            return { dt, nota };
+                        }
+                    });
+
+                    if (!res.isConfirmed) return;
+
+                    const btn = ev.currentTarget;
+                    try {
+                        btn?.setAttribute('disabled', 'disabled');
+                        const fechaFinIso = new Date(res.value.dt).toISOString();
+                        await patchEstado(asigId, 5, res.value.nota, fechaFinIso);
+                        await Swal.fire('Hecho', 'Asignación finalizada correctamente.', 'success');
+                        location.reload();
+                    } catch (err) {
+                        Swal.fire('Error', String(err.message || err), 'error');
+                        console.error(err);
+                    } finally {
+                        btn?.removeAttribute('disabled');
+                    }
+                });
+
+                // Log útil para depurar rápidamente
+                console.debug('DetalleTecnico listo', { asigId, apiRoot, base });
+            })();
+        </script>
+    }
+
+
+    }
+}

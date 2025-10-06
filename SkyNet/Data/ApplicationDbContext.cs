@@ -25,9 +25,18 @@ namespace SkyNet.Data
 
         public DbSet<SolicitudResumenDto> SolicitudResumen { get; set; } = null!;
 
+        public DbSet<SolicitudAsignacionDetalleDto> SolicitudAsignacionDetalle => Set<SolicitudAsignacionDetalleDto>();
+
+
         protected override void OnModelCreating(ModelBuilder b)
         {           
             base.OnModelCreating(b);
+
+            b.Entity<SolicitudAsignacionDetalleDto>(e =>
+            {
+                e.HasNoKey();
+                e.ToView(null); // muy importante para FromSqlRaw sobre SP
+            });
 
             b.Entity<SolicitudResumenDto>(e =>
             {
@@ -46,26 +55,37 @@ namespace SkyNet.Data
             // ===== Empleado =====
             b.Entity<Empleado>(e =>
             {
-                // AspNetUsers.Id suele ser nvarchar(450)
-                e.Property(x => x.UserId).HasMaxLength(450);
+                e.ToTable("Empleado");
 
-                // FK opcional Empleado.UserId -> AspNetUsers.Id
+                // PK con nombre explícito (opcional, pero recomendado)
+                e.HasKey(x => x.Id).HasName("Id_Empleado");
+
+                // Columnas (solo si quieres fijar explícitamente los nombres)
+                e.Property(x => x.Id).HasColumnName("Id_Empleado");
+                e.Property(x => x.UserId).HasColumnName("UserId").HasMaxLength(450);
+
+                // FK a AspNetUsers con nombre de constraint explícito
                 e.HasOne(x => x.User)
-                 .WithMany()
+                 .WithMany() // no hay colección inversa en IdentityUser
                  .HasForeignKey(x => x.UserId)
+                 .HasConstraintName("FK_Empleado_AspNetUsers_UserId")
                  .OnDelete(DeleteBehavior.SetNull);
 
-                // Un Empleado apunta a lo sumo a 1 usuario; permite muchos NULL
+                // Índice único para asegurar 1 Empleado por usuario (si UserId no es null)
                 e.HasIndex(x => x.UserId)
                  .IsUnique()
-                 .HasFilter("[UserId] IS NOT NULL");
+                 .HasFilter("[UserId] IS NOT NULL")
+                 .HasDatabaseName("IX_Empleado_UserId_Unico");
             });
+
+
 
             // ===== Solicitud =====
             b.Entity<Solicitud>(e =>
             {
-                e.ToTable("Solicitudes");
-                e.HasKey(x => x.Id);
+                e.ToTable("Solicitud"); // singular
+                e.HasKey(x => x.Id).HasName("Id_Solicitud");
+                e.Property(x => x.Id).HasColumnName("Id_Solicitud");
 
                 e.HasMany(x => x.Archivos)
                  .WithOne(a => a.Solicitud)
@@ -73,74 +93,57 @@ namespace SkyNet.Data
                  .OnDelete(DeleteBehavior.Cascade);
             });
 
-           
+
 
             // ===== GrupoSupervisorTec =====
             b.Entity<GrupoSupervisorTec>(e =>
             {
-                e.ToTable("Grupos_Supervisores_Tec");
-                e.HasKey(x => x.IdGrupo);
+                e.ToTable("Grupo_Supervisor_Tec");                // 👈 singular
+                e.HasKey(x => x.IdGrupo).HasName("Id_Grupo_Supervisor_Tec");
 
-                e.Property(x => x.IdGrupo).HasColumnName("IDGRUPO");
-                e.Property(x => x.FkSupervisor).HasColumnName("FKSUPERVISOR");
-                e.Property(x => x.FkTecnico).HasColumnName("FKTECNICO");
-                e.Property(x => x.FechaCreacionUtc).HasColumnName("FECHA_CREACION_UTC");
+                e.Property(x => x.IdGrupo).HasColumnName("IdGrupo");
+                e.Property(x => x.FkSupervisor).HasColumnName("FkSupervisor");
+                e.Property(x => x.FkTecnico).HasColumnName("FkTecnico");
+                e.Property(x => x.FechaCreacionUtc).HasColumnName("FechaCreacionUtc");
                 e.Property(x => x.Estado)
                  .HasColumnType("bit")
-                 .HasColumnName("ESTADO")
+                 .HasColumnName("Estado")
                  .ValueGeneratedNever();
 
                 e.HasOne(x => x.Supervisor)
                  .WithMany()
                  .HasForeignKey(x => x.FkSupervisor)
-                 .HasConstraintName("FK_GRUPO_SUPERVISOR")
-                 .OnDelete(DeleteBehavior.NoAction);   // 👈 sin cascada
+                 .HasConstraintName("FK_GrupoSupervisor_Supervisor")
+                 .OnDelete(DeleteBehavior.NoAction);
 
                 e.HasOne(x => x.Tecnico)
                  .WithMany()
                  .HasForeignKey(x => x.FkTecnico)
-                 .HasConstraintName("FK_GRUPO_TECNICO")
-                 .OnDelete(DeleteBehavior.NoAction);   // 👈 sin cascada
+                 .HasConstraintName("FK_GrupoSupervisor_Tecnico")
+                 .OnDelete(DeleteBehavior.NoAction);
             });
+
 
 
             b.Entity<SolicitudAsignacion>(e =>
             {
-                e.ToTable("Solicitudes_Asignaciones");
+                e.ToTable("Solicitud_Asignacion"); // singular
+                e.HasKey(x => x.Id).HasName("Id_Solicitud_Asignacion");
+                e.Property(x => x.Id).HasColumnName("Id_Solicitud_Asignacion");
 
-                e.HasKey(x => x.Id);
-
-                e.Property(x => x.FkSolicitud)
-                 .IsRequired()
-                 .HasColumnName("FKSOLICITUD");
-
-                e.Property(x => x.IdGrupo)
-                 .IsRequired()
-                 .HasColumnName("IDGRUPO");
-
-                e.Property(x => x.FkTecnico)
-                 .IsRequired()
-                 .HasColumnName("FKTECNICO");
-
-                e.Property(x => x.FechaAsignacionUtc)
-                 .HasColumnName("FECHA_ASIGNACION_UTC");
-                e.Property(x => x.Fecha_Inicio).HasColumnName("Fecha_Inicio").HasColumnType("datetime2").IsRequired(false);
-                e.Property(x => x.Fecha_Fin).HasColumnName("Fecha_Fin").HasColumnType("datetime2").IsRequired(false);
-
-                e.Property(x => x.Notas)
-                 .HasMaxLength(500)
-                 .HasColumnName("NOTAS");
-
-                e.Property(x => x.Estado)
-                 .HasConversion<byte>()
-                 .HasColumnName("ESTADO");
+                e.Property(x => x.FkSolicitud).HasColumnName("FkSolicitud");
+                e.Property(x => x.IdGrupo).HasColumnName("IdGrupo");
+                e.Property(x => x.FkTecnico).HasColumnName("FkTecnico");
+                e.Property(x => x.FechaAsignacionUtc).HasColumnName("FechaAsignacionUtc");
+                e.Property(x => x.Fecha_Inicio).HasColumnName("FechaInicio").HasColumnType("datetime2").IsRequired(false);
+                e.Property(x => x.Fecha_Fin).HasColumnName("FechaFin").HasColumnType("datetime2").IsRequired(false);
+                e.Property(x => x.Notas).HasColumnName("Notas").HasMaxLength(500);
+                e.Property(x => x.Estado).HasConversion<byte>().HasColumnName("Estado");
 
                 e.HasIndex(x => new { x.FkSolicitud, x.FkTecnico, x.Estado })
-                 .HasDatabaseName("UX_Sol_Asig_ActivaPorTec")
+                 .HasDatabaseName("UX_Solicitud_Asignacion_ActivaPorTec")
                  .HasFilter("[Estado] = 1")
                  .IsUnique();
-
-
             });
 
         }

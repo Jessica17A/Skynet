@@ -1,101 +1,81 @@
-INSERT INTO Empleados (Nombres, Apellidos, DPI, Direccion, Telefono, Email, Cargo, CreatedAtUtc, Estado, UserId)
+INSERT INTO dbo.Empleado
+    (Nombres, Apellidos, DPI, Direccion, Telefono, Email, Cargo, CreatedAtUtc, Estado, UserId)
 VALUES
 -- Supervisores (5)
-('Luis Fernando', 'Martínez Ramírez', '1000000000001', 'Zona 1, Ciudad', '5555-1001', 'luis.martinez@mail.com', 'Supervisor', SYSUTCDATETIME(), 1, NULL),
-('María José', 'López Castillo', '1000000000002', 'Zona 2, Ciudad', '5555-1002', 'maria.lopez@mail.com', 'Supervisor', SYSUTCDATETIME(), 1, NULL),
-('Carlos Alberto', 'Ramírez Gómez', '1000000000003', 'Zona 3, Ciudad', '5555-1003', 'carlos.ramirez@mail.com', 'Supervisor', SYSUTCDATETIME(), 1, NULL),
-('Ana Sofía', 'González Torres', '1000000000004', 'Zona 4, Ciudad', '5555-1004', 'ana.gonzalez@mail.com', 'Supervisor', SYSUTCDATETIME(), 1, NULL),
-('Jorge Enrique', 'Pérez López', '1000000000005', 'Zona 5, Ciudad', '5555-1005', 'jorge.perez@mail.com', 'Supervisor', SYSUTCDATETIME(), 1, NULL),
+('Luis Fernando', 'Martínez Ramírez', '1000000000001', 'Zona 1, Ciudad',  '5555-1001', 'luis.martinez@mail.com',  'Supervisor', SYSUTCDATETIME(), 1, NULL),
+('María José',    'López Castillo',   '1000000000002', 'Zona 2, Ciudad',  '5555-1002', 'maria.lopez@mail.com',    'Supervisor', SYSUTCDATETIME(), 1, NULL),
+('Carlos Alberto','Ramírez Gómez',    '1000000000003', 'Zona 3, Ciudad',  '5555-1003', 'carlos.ramirez@mail.com', 'Supervisor', SYSUTCDATETIME(), 1, NULL),
+('Ana Sofía',     'González Torres',  '1000000000004', 'Zona 4, Ciudad',  '5555-1004', 'ana.gonzalez@mail.com',   'Supervisor', SYSUTCDATETIME(), 1, NULL),
+('Jorge Enrique', 'Pérez López',      '1000000000005', 'Zona 5, Ciudad',  '5555-1005', 'jorge.perez@mail.com',    'Supervisor', SYSUTCDATETIME(), 1, NULL),
 
 -- Técnicos (15)
-('Carlos Andrés', 'Gómez López', '2000000000001', 'Zona 6, Ciudad', '5555-2001', 'carlos.gomez@mail.com', 'Técnico', SYSUTCDATETIME(), 1, NULL),
-('Ricardo Daniel', 'Hernández Díaz', '2000000000002', 'Zona 7, Ciudad', '5555-2002', 'ricardo.hernandez@mail.com', 'Técnico', SYSUTCDATETIME(), 1, NULL),
-('Fernando José', 'López García', '2000000000003', 'Zona 8, Ciudad', '5555-2003', 'fernando.lopez@mail.com', 'Técnico', SYSUTCDATETIME(), 1, NULL),
-('Andrés Felipe', 'Martínez Cruz', '2000000000004', 'Zona 9, Ciudad', '5555-2004', 'andres.martinez@mail.com', 'Técnico', SYSUTCDATETIME(), 1, NULL),
-('Juan Esteban', 'Morales Soto', '2000000000005', 'Zona 10, Ciudad', '5555-2005', 'juan.morales@mail.com', 'Técnico', SYSUTCDATETIME(), 1, NULL),
-('David Alejandro', 'Cruz Castillo', '2000000000006', 'Zona 11, Ciudad', '5555-2006', 'david.cruz@mail.com', 'Técnico', SYSUTCDATETIME(), 1, NULL),
-('Sergio Eduardo', 'Torres Herrera', '2000000000007', 'Zona 12, Ciudad', '5555-2007', 'sergio.torres@mail.com', 'Técnico', SYSUTCDATETIME(), 1, NULL),
-('José Manuel', 'Flores Chávez', '2000000000008', 'Zona 13, Ciudad', '5555-2008', 'jose.flores@mail.com', 'Técnico', SYSUTCDATETIME(), 1, NULL),
-('Pablo Andrés', 'Castillo Reyes', '2000000000009', 'Zona 14, Ciudad', '5555-2009', 'pablo.castillo@mail.com', 'Técnico', SYSUTCDATETIME(), 1, NULL),
-('Roberto Carlos', 'Ortega Méndez', '2000000000010', 'Zona 15, Ciudad', '5555-2010', 'roberto.ortega@mail.com', 'Técnico', SYSUTCDATETIME(), 1, NULL),
-('Miguel Ángel', 'Santos Delgado', '2000000000011', 'Zona 16, Ciudad', '5555-2011', 'miguel.santos@mail.com', 'Técnico', SYSUTCDATETIME(), 1, NULL),
-('Francisco Javier', 'Reyes Ramírez', '2000000000012', 'Zona 17, Ciudad', '5555-2012', 'francisco.reyes@mail.com', 'Técnico', SYSUTCDATETIME(), 1, NULL),
-('Héctor Daniel', 'Vásquez Morales', '2000000000013', 'Zona 18, Ciudad', '5555-2013', 'hector.vasquez@mail.com', 'Técnico', SYSUTCDATETIME(), 1, NULL),
-('Óscar Iván', 'Mejía Castillo', '2000000000014', 'Zona 19, Ciudad', '5555-2014', 'oscar.mejia@mail.com', 'Técnico', SYSUTCDATETIME(), 1, NULL),
-('Diego Armando', 'Chacón López', '2000000000015', 'Zona 20, Ciudad', '5555-2015', 'diego.chacon@mail.com', 'Técnico', SYSUTCDATETIME(), 1, NULL);
+('Carlos Andrés',    'Gómez López',     '2000000000001', 'Zona 6, Ciudad',  '5555-2001', 'carlos.gomez@mail.com',    'Técnico', SYSUTCDATETIME(), 1, NULL),
+('Ricardo Daniel',   'Hernández Díaz',  '2000000000002', 'Zona 7, Ciudad',  '5555-2002', 'ricardo.hernandez@mail.com','Técnico', SYSUTCDATETIME(), 1, NULL),
+('Fernando José',    'López García',    '2000000000003', 'Zona 8, Ciudad',  '5555-2003', 'fernando.lopez@mail.com',   'Técnico', SYSUTCDATETIME(), 1, NULL),
+('Andrés Felipe',    'Martínez Cruz',   '2000000000004', 'Zona 9, Ciudad',  '5555-2004', 'andres.martinez@mail.com',  'Técnico', SYSUTCDATETIME(), 1, NULL),
+('Juan Esteban',     'Morales Soto',    '2000000000005', 'Zona 10, Ciudad', '5555-2005', 'juan.morales@mail.com',     'Técnico', SYSUTCDATETIME(), 1, NULL),
+('David Alejandro',  'Cruz Castillo',   '2000000000006', 'Zona 11, Ciudad', '5555-2006', 'david.cruz@mail.com',       'Técnico', SYSUTCDATETIME(), 1, NULL),
+('Sergio Eduardo',   'Torres Herrera',  '2000000000007', 'Zona 12, Ciudad', '5555-2007', 'sergio.torres@mail.com',     'Técnico', SYSUTCDATETIME(), 1, NULL),
+('José Manuel',      'Flores Chávez',   '2000000000008', 'Zona 13, Ciudad', '5555-2008', 'jose.flores@mail.com',       'Técnico', SYSUTCDATETIME(), 1, NULL),
+('Pablo Andrés',     'Castillo Reyes',  '2000000000009', 'Zona 14, Ciudad', '5555-2009', 'pablo.castillo@mail.com',    'Técnico', SYSUTCDATETIME(), 1, NULL),
+('Roberto Carlos',   'Ortega Méndez',   '2000000000010', 'Zona 15, Ciudad', '5555-2010', 'roberto.ortega@mail.com',    'Técnico', SYSUTCDATETIME(), 1, NULL),
+('Miguel Ángel',     'Santos Delgado',  '2000000000011', 'Zona 16, Ciudad', '5555-2011', 'miguel.santos@mail.com',     'Técnico', SYSUTCDATETIME(), 1, NULL),
+('Francisco Javier', 'Reyes Ramírez',   '2000000000012', 'Zona 17, Ciudad', '5555-2012', 'francisco.reyes@mail.com',   'Técnico', SYSUTCDATETIME(), 1, NULL),
+('Héctor Daniel',    'Vásquez Morales', '2000000000013', 'Zona 18, Ciudad', '5555-2013', 'hector.vasquez@mail.com',    'Técnico', SYSUTCDATETIME(), 1, NULL),
+('Óscar Iván',       'Mejía Castillo',  '2000000000014', 'Zona 19, Ciudad', '5555-2014', 'oscar.mejia@mail.com',       'Técnico', SYSUTCDATETIME(), 1, NULL),
+('Diego Armando',    'Chacón López',    '2000000000015', 'Zona 20, Ciudad', '5555-2015', 'diego.chacon@mail.com',      'Técnico', SYSUTCDATETIME(), 1, NULL);
+-- IDs quedarán 1..5 = supervisores, 6..20 = técnicos (por orden de inserción)
 
-
-
-
-
-INSERT INTO Grupos_Supervisores_Tec (FKSUPERVISOR, FKTECNICO, FECHA_CREACION_UTC, ESTADO)
+------------------------------------------------------------
+-- 2) Grupo_Supervisor_Tec  (tabla: dbo.Grupo_Supervisor_Tec)
+--    PK: IdGrupo (IDENTITY) → no se especifica
+--    Columnas nuevas: FkSupervisor, FkTecnico, FechaCreacionUtc, Estado
+------------------------------------------------------------
+INSERT INTO dbo.Grupo_Supervisor_Tec
+    (FkSupervisor, FkTecnico, FechaCreacionUtc, Estado)
 VALUES
 -- Supervisor 1 con 3 técnicos
-(1, 6,  SYSUTCDATETIME(), 1),
-(1, 7,  SYSUTCDATETIME(), 1),
-(1, 8,  SYSUTCDATETIME(), 1),
+(1,  6,  SYSUTCDATETIME(), 1),
+(1,  7,  SYSUTCDATETIME(), 1),
+(1,  8,  SYSUTCDATETIME(), 1),
 
 -- Supervisor 2 con 3 técnicos
-(2, 9,  SYSUTCDATETIME(), 1),
-(2, 10, SYSUTCDATETIME(), 1),
-(2, 11, SYSUTCDATETIME(), 1),
+(2,  9,  SYSUTCDATETIME(), 1),
+(2, 10,  SYSUTCDATETIME(), 1),
+(2, 11,  SYSUTCDATETIME(), 1),
 
 -- Supervisor 3 con 3 técnicos
-(3, 12, SYSUTCDATETIME(), 1),
-(3, 13, SYSUTCDATETIME(), 1),
-(3, 14, SYSUTCDATETIME(), 1),
+(3, 12,  SYSUTCDATETIME(), 1),
+(3, 13,  SYSUTCDATETIME(), 1),
+(3, 14,  SYSUTCDATETIME(), 1),
 
 -- Supervisor 4 con 3 técnicos
-(4, 15, SYSUTCDATETIME(), 1),
-(4, 16, SYSUTCDATETIME(), 1),
-(4, 17, SYSUTCDATETIME(), 1),
+(4, 15,  SYSUTCDATETIME(), 1),
+(4, 16,  SYSUTCDATETIME(), 1),
+(4, 17,  SYSUTCDATETIME(), 1),
 
 -- Supervisor 5 con 3 técnicos
-(5, 18, SYSUTCDATETIME(), 1),
-(5, 19, SYSUTCDATETIME(), 1),
-(5, 20, SYSUTCDATETIME(), 1);
-INSERT INTO Grupos_Supervisores_Tec (FKSUPERVISOR, FKTECNICO, FECHA_CREACION_UTC, ESTADO)
+(5, 18,  SYSUTCDATETIME(), 1),
+(5, 19,  SYSUTCDATETIME(), 1),
+(5, 20,  SYSUTCDATETIME(), 1);
+
+------------------------------------------------------------
+-- 3) Solicitud  (tabla: dbo.Solicitud)
+--    PK: Id_Solicitud (IDENTITY) → no se especifica
+------------------------------------------------------------
+INSERT INTO dbo.Solicitud
+    (Nombre, Email, Telefono, Tipo, Prioridad, Descripcion, Ticket, CreatedAtUtc, Estado, Direccion, Latitud, Longitud)
 VALUES
--- Supervisor 1 con 3 técnicos
-(1, 6,  SYSUTCDATETIME(), 1),
-(1, 7,  SYSUTCDATETIME(), 1),
-(1, 8,  SYSUTCDATETIME(), 1),
+('José Ramírez',  'jose.ramirez@mail.com',  '5555-1001', 'Soporte',      'Alta',  'Problema con impresora láser',         'TCK-0001', SYSUTCDATETIME(), 1, 'Zona 1, Ciudad',  14.6349, -90.5069),
+('Lucía Torres',  'lucia.torres@mail.com',  '5555-1002', 'Instalación',  'Media', 'Solicitud de instalación de software',  'TCK-0002', SYSUTCDATETIME(), 1, 'Zona 2, Ciudad',  14.6350, -90.5068),
+('Pedro López',   'pedro.lopez@mail.com',   '5555-1003', 'Mantenimiento','Alta',  'Revisión de cableado estructurado',     'TCK-0003', SYSUTCDATETIME(), 1, 'Zona 3, Ciudad',  14.6351, -90.5067),
+('María Gómez',   'maria.gomez@mail.com',   '5555-1004', 'Soporte',      'Baja',  'Consulta sobre acceso a internet',      'TCK-0004', SYSUTCDATETIME(), 1, 'Zona 4, Ciudad',  14.6352, -90.5066),
+('Carlos Pérez',  'carlos.perez@mail.com',  '5555-1005', 'Instalación',  'Alta',  'Instalación de punto de red',           'TCK-0005', SYSUTCDATETIME(), 1, 'Zona 5, Ciudad',  14.6353, -90.5065),
+('Ana Morales',   'ana.morales@mail.com',   '5555-1006', 'Mantenimiento','Media', 'Cambio de UPS en oficina principal',    'TCK-0006', SYSUTCDATETIME(), 1, 'Zona 6, Ciudad',  14.6354, -90.5064),
+('Jorge Castillo','jorge.castillo@mail.com','5555-1007', 'Soporte',      'Alta',  'PC no enciende tras apagón',            'TCK-0007', SYSUTCDATETIME(), 1, 'Zona 7, Ciudad',  14.6355, -90.5063),
+('Sofía Méndez',  'sofia.mendez@mail.com',  '5555-1008', 'Instalación',  'Baja',  'Configurar correo electrónico',         'TCK-0008', SYSUTCDATETIME(), 1, 'Zona 8, Ciudad',  14.6356, -90.5062),
+('Raúl Herrera',  'raul.herrera@mail.com',  '5555-1009', 'Mantenimiento','Media', 'Revisión de cámaras de seguridad',      'TCK-0009', SYSUTCDATETIME(), 1, 'Zona 9, Ciudad',  14.6357, -90.5061),
+('Elena Vásquez', 'elena.vasquez@mail.com', '5555-1010', 'Soporte',      'Alta',  'Problemas de acceso a VPN',             'TCK-0010', SYSUTCDATETIME(), 1, 'Zona 10, Ciudad', 14.6358, -90.5060);
 
--- Supervisor 2 con 3 técnicos
-(2, 9,  SYSUTCDATETIME(), 1),
-(2, 10, SYSUTCDATETIME(), 1),
-(2, 11, SYSUTCDATETIME(), 1),
-
--- Supervisor 3 con 3 técnicos
-(3, 12, SYSUTCDATETIME(), 1),
-(3, 13, SYSUTCDATETIME(), 1),
-(3, 14, SYSUTCDATETIME(), 1),
-
--- Supervisor 4 con 3 técnicos
-(4, 15, SYSUTCDATETIME(), 1),
-(4, 16, SYSUTCDATETIME(), 1),
-(4, 17, SYSUTCDATETIME(), 1),
-
--- Supervisor 5 con 3 técnicos
-(5, 18, SYSUTCDATETIME(), 1),
-(5, 19, SYSUTCDATETIME(), 1),
-(5, 20, SYSUTCDATETIME(), 1);
-
-
-
-
-
-
-INSERT INTO Solicitudes (Nombre, Email, Telefono, Tipo, Prioridad, Descripcion, Ticket, CreatedAtUtc, Estado, Direccion, Latitud, Longitud)
-VALUES
-('José Ramírez',  'jose.ramirez@mail.com',  '5555-1001', 'Soporte',     'Alta',   'Problema con impresora láser',        'TCK-0001', SYSUTCDATETIME(), 1, 'Zona 1, Ciudad', 14.6349, -90.5069),
-('Lucía Torres',  'lucia.torres@mail.com',  '5555-1002', 'Instalación', 'Media',  'Solicitud de instalación de software','TCK-0002', SYSUTCDATETIME(), 1, 'Zona 2, Ciudad', 14.6350, -90.5068),
-('Pedro López',   'pedro.lopez@mail.com',   '5555-1003', 'Mantenimiento','Alta',  'Revisión de cableado estructurado',  'TCK-0003', SYSUTCDATETIME(), 1, 'Zona 3, Ciudad', 14.6351, -90.5067),
-('María Gómez',   'maria.gomez@mail.com',   '5555-1004', 'Soporte',     'Baja',   'Consulta sobre acceso a internet',   'TCK-0004', SYSUTCDATETIME(), 1, 'Zona 4, Ciudad', 14.6352, -90.5066),
-('Carlos Pérez',  'carlos.perez@mail.com',  '5555-1005', 'Instalación', 'Alta',   'Instalación de punto de red',        'TCK-0005', SYSUTCDATETIME(), 1, 'Zona 5, Ciudad', 14.6353, -90.5065),
-('Ana Morales',   'ana.morales@mail.com',   '5555-1006', 'Mantenimiento','Media', 'Cambio de UPS en oficina principal', 'TCK-0006', SYSUTCDATETIME(), 1, 'Zona 6, Ciudad', 14.6354, -90.5064),
-('Jorge Castillo','jorge.castillo@mail.com','5555-1007', 'Soporte',     'Alta',   'PC no enciende tras apagón',         'TCK-0007', SYSUTCDATETIME(), 1, 'Zona 7, Ciudad', 14.6355, -90.5063),
-('Sofía Méndez',  'sofia.mendez@mail.com',  '5555-1008', 'Instalación', 'Baja',   'Configurar correo electrónico',      'TCK-0008', SYSUTCDATETIME(), 1, 'Zona 8, Ciudad', 14.6356, -90.5062),
-('Raúl Herrera',  'raul.herrera@mail.com',  '5555-1009', 'Mantenimiento','Media', 'Revisión de cámaras de seguridad',  'TCK-0009', SYSUTCDATETIME(), 1, 'Zona 9, Ciudad', 14.6357, -90.5061),
-('Elena Vásquez', 'elena.vasquez@mail.com', '5555-1010', 'Soporte',     'Alta',   'Problemas de acceso a VPN',         'TCK-0010', SYSUTCDATETIME(), 1, 'Zona 10, Ciudad',14.6358, -90.5060);
-
+COMMIT;
+GO

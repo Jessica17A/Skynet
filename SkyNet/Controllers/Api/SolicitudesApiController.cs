@@ -97,32 +97,31 @@ namespace SkyNet.Controllers.Api
             return CreatedAtAction(nameof(GetById), new { id = entidad.Id }, Map(entidad));
         }
 
-        // PATCH: /api/solicitudes/{id}/estado
-        [HttpPatch("{id:long}/estado")]
-        public async Task<ActionResult<SolicitudDto>> CambiarEstado(
-            long id, [FromBody] CambiarEstadoDto dto, CancellationToken ct)
-        {
-            if (dto is null || dto.Estado < 0 || dto.Estado > 5)
-                return BadRequest(new { error = "Estado inválido. Debe ser 0..5" });
+        //// PATCH: /api/solicitudes/{id}/estado
+        //[HttpPatch("{id:long}/estado")]
+        //public async Task<ActionResult<SolicitudDto>> CambiarEstado(
+        //    long id, [FromBody] CambiarEstadoDto dto, CancellationToken ct)
+        //{
+        //    if (dto is null || dto.Estado < 0 || dto.Estado > 5)
+        //        return BadRequest(new { error = "Estado inválido. Debe ser 0..5" });
 
-            // Llamada al procedimiento almacenado
-            var p1 = new SqlParameter("@SolicitudId", id);
-            var p2 = new SqlParameter("@NuevoEstado", dto.Estado);
+        //    // Llamada al procedimiento almacenado
+        //    var p1 = new SqlParameter("@SolicitudId", id);
+        //    var p2 = new SqlParameter("@NuevoEstado", dto.Estado);
 
-            await _db.Database.ExecuteSqlRawAsync(
-                "EXEC dbo.sp_Solicitudes_CambiarEstado @SolicitudId, @NuevoEstado",
-                new[] { p1, p2 }, ct);
+        //    await _db.Database.ExecuteSqlRawAsync(
+        //        "EXEC dbo.sp_Solicitudes_CambiarEstado @SolicitudId, @NuevoEstado",
+        //        new[] { p1, p2 }, ct);
 
-            // Recargar con EF la solicitud ya actualizada
-            var s = await _db.Solicitudes.AsNoTracking()
-                         .FirstOrDefaultAsync(x => x.Id == id, ct);
-            if (s is null) return NotFound();
+        //    // Recargar con EF la solicitud ya actualizada
+        //    var s = await _db.Solicitudes.AsNoTracking()
+        //                 .FirstOrDefaultAsync(x => x.Id == id, ct);
+        //    if (s is null) return NotFound();
 
-            return Ok(Map(s)); // Map convierte entidad → SolicitudDto
-        }
+        //    return Ok(Map(s)); // Map convierte entidad → SolicitudDto
+        //}
 
 
-        // Helpers
         private static string GenerateTicket()
         {
             var date = DateTime.UtcNow.ToString("yyyyMMdd");

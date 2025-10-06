@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System.Net.Http.Json;
 using SkyNet.Models.DTOs;
+using System.Net;
+using System.Net.Http.Json;
+using System.Text.Json;
 
 
 public class AsignacionesUiController : Controller
@@ -83,7 +85,7 @@ public class AsignacionesUiController : Controller
         if (!data.Any())
         {
             TempData["Info"] = "La solicitud no tiene asignaciones aún.";
-            return RedirectToAction("Detalle", "AsignacionesUi", new { id });
+            return RedirectToAction(nameof(Todas));
         }
 
 
@@ -204,52 +206,111 @@ public class AsignacionesUiController : Controller
     }
 
 
+    //public async Task<IActionResult> DetalleTecnico(long id)
+    //{
+    //    var c = _http.CreateClient();
+    //    c.BaseAddress ??= new Uri($"{Request.Scheme}://{Request.Host}{Request.PathBase}/");
+
+    //    // 1) Traer la solicitud (igual que en Detalle general)
+    //    SolicitudDto? sol = null;
+    //    try
+    //    {
+    //        sol = await c.GetFromJsonAsync<SolicitudDto>(
+    //            $"api/solicitudes/{id}", HttpContext.RequestAborted);
+    //    }
+    //    catch { }
+
+    //    if (sol == null)
+    //    {
+    //        TempData["Error"] = "No se pudo cargar el detalle de la solicitud.";
+    //        return RedirectToAction("Index", "Solicitudes");
+    //    }
+
+    //    // 2) Traer SOLO la asignación del técnico logueado
+    //    List<SolicitudAsignacionListado> data;
+    //    try
+    //    {
+    //        // si prefieres 1 solo registro, cambia el endpoint a .../tecnico/detalle y ajusta la vista
+    //        data = await c.GetFromJsonAsync<List<SolicitudAsignacionListado>>(
+    //            $"api/solicitudes/{id}/asignaciones/tecnico", HttpContext.RequestAborted
+    //        ) ?? new();
+    //    }
+    //    catch
+    //    {
+    //        ModelState.AddModelError("", "No se pudo contactar el API.");
+    //        data = new();
+    //    }
+
+    //    if (!data.Any())
+    //    {
+    //        TempData["Info"] = "No tienes asignación en esta solicitud.";
+    //        return RedirectToAction(nameof(Tecnicos)); // vuelve al listado del técnico
+    //    }
+
+    //    ViewBag.Solicitud = sol;
+    //    ViewBag.SolicitudId = id;
+    //    return View();              // si tu vista consume con JS
+    //                                // return View("DetalleTecnico", data); // si tu vista espera el Model en servidor
+    //}
+
+
     public async Task<IActionResult> DetalleTecnico(long id)
     {
-        var c = _http.CreateClient();
-        c.BaseAddress ??= new Uri($"{Request.Scheme}://{Request.Host}{Request.PathBase}/");
+        var baseUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}/"; // ← barra final
 
-        // 1) Traer la solicitud (igual que en Detalle general)
-        SolicitudDto? sol = null;
+        var handler = new HttpClientHandler
+        {
+            UseCookies = true,
+            CookieContainer = new CookieContainer()
+        };
+
+        // Copiar cookies actuales al mismo host/path
+        var baseUri = new Uri(baseUrl);
+        foreach (var kv in Request.Cookies)
+            handler.CookieContainer.Add(baseUri, new Cookie(kv.Key, kv.Value));
+
+        using var c = new HttpClient(handler) { BaseAddress = baseUri };
+        c.DefaultRequestHeaders.Accept.ParseAdd("application/json");
+
+        HttpResponseMessage resp;
         try
         {
-            sol = await c.GetFromJsonAsync<SolicitudDto>(
-                $"api/solicitudes/{id}", HttpContext.RequestAborted);
+            // ruta relativa OK porque BaseAddress tiene barra final
+            resp = await c.GetAsync($"api/solicitudes/{id}/asignaciones/tecnico/detalle", HttpContext.RequestAborted);
         }
-        catch { }
-
-        if (sol == null)
+        catch (Exception ex)
         {
-            TempData["Error"] = "No se pudo cargar el detalle de la solicitud.";
-            return RedirectToAction("Index", "Solicitudes");
+            ViewBag.Mensaje = $"No se pudo contactar el API: {ex.Message}";
+            return View(model: null);
         }
 
-        // 2) Traer SOLO la asignación del técnico logueado
-        List<SolicitudAsignacionListado> data;
-        try
+        if (resp.StatusCode == HttpStatusCode.Unauthorized) return Challenge();
+        if (resp.StatusCode == HttpStatusCode.NotFound)
         {
-            // si prefieres 1 solo registro, cambia el endpoint a .../tecnico/detalle y ajusta la vista
-            data = await c.GetFromJsonAsync<List<SolicitudAsignacionListado>>(
-                $"api/solicitudes/{id}/asignaciones/tecnico", HttpContext.RequestAborted
-            ) ?? new();
+            ViewBag.Mensaje = "No tienes asignación en esta solicitud.";
+            return View(model: null);
         }
-        catch
+        if (!resp.IsSuccessStatusCode)
         {
-            ModelState.AddModelError("", "No se pudo contactar el API.");
-            data = new();
+            var body = await resp.Content.ReadAsStringAsync();
+            ViewBag.Mensaje = $"No se pudo cargar el detalle. HTTP {(int)resp.StatusCode} — {body}";
+            return View(model: null);
         }
 
-        if (!data.Any())
+        var jsonOpts = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        var detalle = await resp.Content.ReadFromJsonAsync<SolicitudAsignacionDetalleDto>(jsonOpts, HttpContext.RequestAborted);
+
+        if (detalle == null)
         {
-            TempData["Info"] = "No tienes asignación en esta solicitud.";
-            return RedirectToAction(nameof(Tecnicos)); // vuelve al listado del técnico
+            ViewBag.Mensaje = "No se encontró información de detalle.";
+            return View(model: null);
         }
 
-        ViewBag.Solicitud = sol;
-        ViewBag.SolicitudId = id;
-        return View();              // si tu vista consume con JS
-                                    // return View("DetalleTecnico", data); // si tu vista espera el Model en servidor
+        return View(detalle);
     }
+
+
+
 
 
 }

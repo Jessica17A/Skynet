@@ -1,105 +1,376 @@
-CREATE OR ALTER PROCEDURE dbo.usp_SolicitudesAsignaciones_Todas
+-- =====================================================================
+-- SP: Cambiar estado de Solicitud + propagar a Solicitud_Asignacion
+-- =====================================================================
+CREATE OR ALTER PROCEDURE [dbo].[sp_Solicitudes_CambiarEstado]
+  @SolicitudId  BIGINT,
+  @NuevoEstado  INT   -- 0..5
 AS
 BEGIN
-    SET NOCOUNT ON;
+  SET NOCOUNT ON;
+  SET XACT_ABORT ON;
 
-    SELECT
-        a.Id,
-        a.FKSOLICITUD      AS IdSolicitud,
-        a.IDGRUPO          AS IdGrupo,
-        a.FKTECNICO        AS FkTecnico,
-        a.FECHA_ASIGNACION_UTC AS FechaAsignacionUtc,
-        a.Fecha_Inicio,
-        a.Fecha_Fin,
-        a.NOTAS            AS Notas,
-        a.ESTADO           AS Estado,
+  BEGIN TRY
+    BEGIN TRAN;
 
-        -- enriquecidos
-        (tec.Nombres + ' ' + tec.Apellidos) AS TecnicoNombre,
-        (sup.Nombres + ' ' + sup.Apellidos) AS SupervisorNombre,
-        CONCAT('Grupo #', g.IDGRUPO)        AS GrupoEtiqueta
-    FROM dbo.Solicitudes_Asignaciones a
-    LEFT JOIN dbo.Empleados tec
-           ON tec.Id = a.FKTECNICO
-    LEFT JOIN dbo.Grupos_Supervisores_Tec g
-           ON g.IDGRUPO = a.IDGRUPO AND g.FKTECNICO = a.FKTECNICO
-    LEFT JOIN dbo.Empleados sup
-           ON sup.Id = g.FKSUPERVISOR
-    WHERE a.ESTADO = 1   -- 👈 solo asignaciones activas
-    ORDER BY a.FECHA_ASIGNACION_UTC DESC;
-END
-GO
-
-
-
-
-CREATE OR ALTER PROCEDURE dbo.usp_Solicitud_Resumen
-    @ID_SOLICITUD BIGINT
-AS
-BEGIN
-    SET NOCOUNT ON;
-
-    ;WITH BASE AS (
-        SELECT
-            A.ID,
-            A.FKSOLICITUD          AS IDSOLICITUD,
-            A.IDGRUPO              AS IDGRUPO,
-            A.FKTECNICO            AS FKTECNICO,
-            A.FECHA_ASIGNACION_UTC AS FECHAASIGNACIONUTC,
-            A.FECHA_INICIO,
-            A.FECHA_FIN,
-            A.NOTAS,
-            A.ESTADO,
-            (TEC.NOMBRES + ' ' + TEC.APELLIDOS) AS TECNICONOMBRE,
-            (SUP.NOMBRES + ' ' + SUP.APELLIDOS) AS SUPERVISORNOMBRE,
-            CONCAT('GRUPO #', G.IDGRUPO)        AS GRUPOETIQUETA
-        FROM DBO.SOLICITUDES_ASIGNACIONES A
-        LEFT JOIN DBO.EMPLEADOS TEC
-               ON TEC.ID = A.FKTECNICO
-        LEFT JOIN DBO.GRUPOS_SUPERVISORES_TEC G
-               ON G.IDGRUPO = A.IDGRUPO AND G.FKTECNICO = A.FKTECNICO
-        LEFT JOIN DBO.EMPLEADOS SUP
-               ON SUP.ID = G.FKSUPERVISOR
-        WHERE A.FKSOLICITUD = @ID_SOLICITUD
+    -- Verifica existencia de la solicitud
+    IF NOT EXISTS (
+      SELECT 1
+      FROM dbo.Solicitud WITH (UPDLOCK, HOLDLOCK)
+      WHERE Id_Solicitud = @SolicitudId
     )
-    SELECT
-        @ID_SOLICITUD AS IDSOLICITUD,
-        MIN(B.FECHA_INICIO) AS FECHAVISITA_MIN,
-        CASE 
-            WHEN EXISTS(SELECT 1 FROM BASE WHERE ESTADO = 4) THEN 4
-            WHEN EXISTS(SELECT 1 FROM BASE WHERE ESTADO = 3) THEN 3
-            WHEN EXISTS(SELECT 1 FROM BASE WHERE ESTADO = 1) THEN 1
-            WHEN EXISTS(SELECT 1 FROM BASE WHERE ESTADO = 2) THEN 2
-            WHEN EXISTS(SELECT 1 FROM BASE WHERE ESTADO = 0) THEN 0
-            ELSE 0
-        END AS ESTADO_AGREGADO,
-        (
-            SELECT STRING_AGG(SUPERVISORNOMBRE, ', ')
-            FROM (SELECT DISTINCT SUPERVISORNOMBRE FROM BASE WHERE SUPERVISORNOMBRE IS NOT NULL) S
-        ) AS SUPERVISORES,
-        (
-            SELECT STRING_AGG(TECNICONOMBRE, ', ')
-            FROM (SELECT DISTINCT TECNICONOMBRE FROM BASE WHERE TECNICONOMBRE IS NOT NULL) T
-        ) AS TECNICOS,
-        (
-            SELECT
-                B.ID,
-                B.IDGRUPO,
-                B.GRUPOETIQUETA,
-                B.FKTECNICO,
-                B.TECNICONOMBRE,
-                B.SUPERVISORNOMBRE,
-                B.FECHAASIGNACIONUTC,
-                B.FECHA_INICIO,
-                B.FECHA_FIN,
-                B.ESTADO,
-                B.NOTAS
-            FROM BASE B
-            FOR JSON PATH
-        ) AS ASIGNACIONES_JSON
-    FROM BASE B;
+    BEGIN
+      THROW 50001, 'La solicitud no existe.', 1;
+    END
+
+    -- Actualiza Solicitud
+    UPDATE dbo.Solicitud
+      SET Estado = @NuevoEstado
+    WHERE Id_Solicitud = @SolicitudId;
+
+    -- Actualiza asignaciones relacionadas (si existen)
+    UPDATE sa
+       SET sa.Estado   = @NuevoEstado,
+           sa.FechaFin = CASE
+                           WHEN @NuevoEstado IN (0,5) AND sa.FechaFin IS NULL
+                             THEN SYSUTCDATETIME()
+                           ELSE sa.FechaFin
+                         END
+    FROM dbo.Solicitud_Asignacion AS sa
+    WHERE sa.FkSolicitud = @SolicitudId;
+
+    COMMIT;
+
+    -- Devuelve estado final (opcional)
+    SELECT Id_Solicitud AS Id, Estado
+    FROM dbo.Solicitud
+    WHERE Id_Solicitud = @SolicitudId;
+  END TRY
+  BEGIN CATCH
+    IF @@TRANCOUNT > 0 ROLLBACK;
+    DECLARE @msg NVARCHAR(4000) = ERROR_MESSAGE();
+    THROW 50002, @msg, 1;
+  END CATCH
 END
 GO
 
 
+-- =====================================================================
+-- SP: Resumen de una solicitud (con agregados + JSON de asignaciones)
+-- Mantiene ALIAS en MAYÚSCULAS para mapear DTOs existentes
+-- =====================================================================
+CREATE OR ALTER PROCEDURE [dbo].[usp_Solicitud_Resumen]
+  @ID_SOLICITUD BIGINT
+AS
+BEGIN
+  SET NOCOUNT ON;
 
+  ;WITH BASE AS (
+    SELECT
+      A.Id_Solicitud_Asignacion                AS ID,
+      A.FkSolicitud                            AS IDSOLICITUD,
+      A.IdGrupo                                AS IDGRUPO,
+      A.FkTecnico                              AS FKTECNICO,
+      A.FechaAsignacionUtc                     AS FECHAASIGNACIONUTC,
+      A.FechaInicio                            AS FECHA_INICIO,
+      A.FechaFin                               AS FECHA_FIN,
+      A.Notas                                   AS NOTAS,
+      A.Estado                                  AS ESTADO,
+      (TEC.Nombres + ' ' + TEC.Apellidos)       AS TECNICONOMBRE,
+      (SUP.Nombres + ' ' + SUP.Apellidos)       AS SUPERVISORNOMBRE,
+      CONCAT('GRUPO #', G.IdGrupo)              AS GRUPOETIQUETA
+    FROM dbo.Solicitud_Asignacion       A
+    LEFT JOIN dbo.Empleado              TEC ON TEC.Id_Empleado = A.FkTecnico
+    LEFT JOIN dbo.Grupo_Supervisor_Tec  G   ON G.IdGrupo = A.IdGrupo AND G.FkTecnico = A.FkTecnico
+    LEFT JOIN dbo.Empleado              SUP ON SUP.Id_Empleado = G.FkSupervisor
+    WHERE A.FkSolicitud = @ID_SOLICITUD
+  )
+  SELECT
+    @ID_SOLICITUD                   AS IDSOLICITUD,
+    MIN(B.FECHA_INICIO)             AS FECHAVISITA_MIN,
+    CASE 
+      WHEN EXISTS(SELECT 1 FROM BASE WHERE ESTADO = 4) THEN 4
+      WHEN EXISTS(SELECT 1 FROM BASE WHERE ESTADO = 3) THEN 3
+      WHEN EXISTS(SELECT 1 FROM BASE WHERE ESTADO = 1) THEN 1
+      WHEN EXISTS(SELECT 1 FROM BASE WHERE ESTADO = 2) THEN 2
+      WHEN EXISTS(SELECT 1 FROM BASE WHERE ESTADO = 0) THEN 0
+      ELSE 0
+    END                             AS ESTADO_AGREGADO,
+    (
+      SELECT STRING_AGG(SUPERVISORNOMBRE, ', ')
+      FROM (SELECT DISTINCT SUPERVISORNOMBRE FROM BASE WHERE SUPERVISORNOMBRE IS NOT NULL) S
+    )                               AS SUPERVISORES,
+    (
+      SELECT STRING_AGG(TECNICONOMBRE, ', ')
+      FROM (SELECT DISTINCT TECNICONOMBRE FROM BASE WHERE TECNICONOMBRE IS NOT NULL) T
+    )                               AS TECNICOS,
+    (
+      SELECT
+        B.ID,
+        B.IDGRUPO,
+        B.GRUPOETIQUETA,
+        B.FKTECNICO,
+        B.TECNICONOMBRE,
+        B.SUPERVISORNOMBRE,
+        B.FECHAASIGNACIONUTC,
+        B.FECHA_INICIO,
+        B.FECHA_FIN,
+        B.ESTADO,
+        B.NOTAS
+      FROM BASE B
+      FOR JSON PATH
+    )                               AS ASIGNACIONES_JSON
+  FROM BASE B;
+END
+GO
+
+
+-- =====================================================================
+-- SP: Detalle de solicitud para el TÉCNICO (por AspNetUserId)
+-- Mantiene alias esperados por el front (Fecha_Inicio, Fecha_Fin, etc.)
+-- =====================================================================
+CREATE OR ALTER PROCEDURE [dbo].[usp_SolicitudDetalle_Tecnico]
+  @ID_SOLICITUD BIGINT,
+  @AspNetUserId NVARCHAR(450)
+AS
+BEGIN
+  SET NOCOUNT ON;
+
+  DECLARE @IdTecnico BIGINT;
+
+  SELECT TOP (1) @IdTecnico = E.Id_Empleado
+  FROM dbo.Empleado E
+  WHERE E.UserId = @AspNetUserId;
+
+  IF @IdTecnico IS NULL
+  BEGIN
+    SELECT CAST(NULL AS BIGINT) AS Id WHERE 1=0;
+    RETURN;
+  END
+
+  ;WITH Asig AS (
+    SELECT TOP (1)
+      A.Id_Solicitud_Asignacion     AS AsignacionId,
+      A.FkSolicitud                 AS FkSolicitud,
+      A.IdGrupo                     AS IdGrupo,
+      A.FkTecnico                   AS FkTecnico,
+      A.FechaAsignacionUtc          AS AsignacionCreadaUtc,
+      A.FechaInicio                 AS AsignacionFechaInicio,
+      A.FechaFin                    AS AsignacionFechaFin,
+      A.Notas                       AS AsignacionNotas,
+      A.Estado                      AS EstadoAsignacion   -- tinyint
+    FROM dbo.Solicitud_Asignacion A
+    WHERE A.FkSolicitud = @ID_SOLICITUD
+      AND A.FkTecnico   = @IdTecnico
+      AND A.Estado IN (3,4,5)
+    ORDER BY A.FechaInicio DESC
+  )
+  SELECT
+    -- Solicitud
+    S.Id_Solicitud                    AS Id,
+    S.Id_Solicitud                    AS IdSolicitud,
+    S.Nombre,
+    S.Email,
+    S.Telefono,
+    S.Tipo,
+    S.Prioridad,
+    S.Descripcion,
+    S.Ticket,
+    S.CreatedAtUtc,
+    S.Estado                          AS EstadoSolicitud,  -- int
+    S.Direccion,
+    S.Latitud,
+    S.Longitud,
+
+    -- Asignación (casteos para evitar InvalidCast)
+    A.AsignacionId,
+    CAST(A.EstadoAsignacion AS INT)   AS EstadoAsignacion,
+    A.AsignacionCreadaUtc,
+    A.AsignacionFechaInicio,
+    A.AsignacionFechaFin,
+    A.AsignacionNotas,
+    CAST(A.IdGrupo AS BIGINT)         AS IdGrupo,          -- si tu DTO usa long
+    A.FkTecnico,
+
+    -- Aliases que espera el front/DTO
+    A.AsignacionFechaInicio           AS Fecha_Inicio,
+    A.AsignacionFechaFin              AS Fecha_Fin,
+    A.AsignacionNotas                 AS Notas,
+    CAST(A.EstadoAsignacion AS INT)   AS Estado,
+
+    CONCAT('Grupo #', G.IdGrupo)      AS GrupoEtiqueta,
+    (TEC.Nombres + ' ' + TEC.Apellidos) AS TecnicoNombre,
+    (SUP.Nombres + ' ' + SUP.Apellidos) AS SupervisorNombre
+  FROM Asig A
+  INNER JOIN dbo.Solicitud S
+      ON S.Id_Solicitud = A.FkSolicitud
+  LEFT JOIN dbo.Empleado TEC
+      ON TEC.Id_Empleado = A.FkTecnico
+  LEFT JOIN dbo.Grupo_Supervisor_Tec G
+      ON G.IdGrupo = A.IdGrupo AND G.FkTecnico = A.FkTecnico
+  LEFT JOIN dbo.Empleado SUP
+      ON SUP.Id_Empleado = G.FkSupervisor;
+END
+GO
+
+
+-- =====================================================================
+-- SP: Listar asignaciones por Solicitud (con filtro opcional por técnico)
+-- =====================================================================
+CREATE OR ALTER PROCEDURE [dbo].[usp_SolicitudesAsignaciones_PorSolicitud]
+  @ID_SOLICITUD BIGINT,
+  @AspNetUserId NVARCHAR(450) = NULL
+AS
+BEGIN
+  SET NOCOUNT ON;
+
+  DECLARE @IdTecnico BIGINT = NULL;
+
+  IF @AspNetUserId IS NOT NULL
+  BEGIN
+    SELECT TOP (1) @IdTecnico = E.Id_Empleado
+    FROM dbo.Empleado E
+    WHERE E.UserId = @AspNetUserId;
+  END
+
+  SELECT
+    A.Id_Solicitud_Asignacion        AS ID,
+    A.FkSolicitud                     AS IDSOLICITUD,
+    A.IdGrupo                         AS IDGRUPO,
+    A.FkTecnico                       AS FKTECNICO,
+    A.FechaAsignacionUtc              AS FECHAASIGNACIONUTC,
+    A.FechaInicio                     AS FECHA_INICIO,
+    A.FechaFin                        AS FECHA_FIN,
+    A.Notas                           AS NOTAS,
+    A.Estado                          AS ESTADO,
+    (TEC.Nombres + ' ' + TEC.Apellidos) AS TECNICONOMBRE,
+    (SUP.Nombres + ' ' + SUP.Apellidos) AS SUPERVISORNOMBRE,
+    CONCAT('GRUPO #', G.IdGrupo)        AS GRUPOETIQUETA
+  FROM dbo.Solicitud_Asignacion A
+  LEFT JOIN dbo.Empleado TEC
+         ON TEC.Id_Empleado = A.FkTecnico
+  LEFT JOIN dbo.Grupo_Supervisor_Tec G
+         ON G.IdGrupo = A.IdGrupo AND G.FkTecnico = A.FkTecnico
+  LEFT JOIN dbo.Empleado SUP
+         ON SUP.Id_Empleado = G.FkSupervisor
+  WHERE A.FkSolicitud = @ID_SOLICITUD
+    AND A.Estado IN (3,4,5)
+    AND (@IdTecnico IS NULL OR A.FkTecnico = @IdTecnico)
+  ORDER BY A.FechaInicio ASC;
+END
+GO
+
+
+-- =====================================================================
+-- SP: Listar asignaciones por SUPERVISOR (Id supervisor)
+-- =====================================================================
+CREATE OR ALTER PROCEDURE [dbo].[usp_SolicitudesAsignaciones_PorSupervisor]
+  @IdSupervisor BIGINT
+AS
+BEGIN
+  SET NOCOUNT ON;
+
+  SELECT
+    A.Id_Solicitud_Asignacion        AS Id,
+    A.FkSolicitud                     AS IdSolicitud,
+    A.IdGrupo                         AS IdGrupo,
+    A.FkTecnico                       AS FkTecnico,
+    A.FechaAsignacionUtc              AS FechaAsignacionUtc,
+    A.FechaInicio                     AS Fecha_Inicio,
+    A.FechaFin                        AS Fecha_Fin,
+    A.Notas                           AS Notas,
+    A.Estado                          AS Estado,
+    (TEC.Nombres + ' ' + TEC.Apellidos) AS TecnicoNombre,
+    (SUP.Nombres + ' ' + SUP.Apellidos) AS SupervisorNombre,
+    CONCAT('Grupo #', G.IdGrupo)        AS GrupoEtiqueta
+  FROM dbo.Solicitud_Asignacion A
+  LEFT JOIN dbo.Empleado TEC
+         ON TEC.Id_Empleado = A.FkTecnico
+  LEFT JOIN dbo.Grupo_Supervisor_Tec G
+         ON G.IdGrupo = A.IdGrupo AND G.FkTecnico = A.FkTecnico
+  LEFT JOIN dbo.Empleado SUP
+         ON SUP.Id_Empleado = G.FkSupervisor
+  WHERE A.Estado IN (3,4)
+    AND G.FkSupervisor = @IdSupervisor
+  ORDER BY A.FechaInicio ASC;
+END
+GO
+
+
+-- =====================================================================
+-- SP: Listar asignaciones por SUPERVISOR (a partir del AspNetUserId)
+-- =====================================================================
+CREATE OR ALTER PROCEDURE [dbo].[usp_SolicitudesAsignaciones_Supervisor]
+  @AspNetUserId NVARCHAR(450)
+AS
+BEGIN
+  SET NOCOUNT ON;
+
+  DECLARE @IdSupervisor BIGINT;
+
+  SELECT TOP (1) @IdSupervisor = E.Id_Empleado
+  FROM dbo.Empleado E
+  WHERE E.UserId = @AspNetUserId;
+
+  IF @IdSupervisor IS NULL
+  BEGIN
+    SELECT CAST(NULL AS BIGINT) AS Id WHERE 1=0;
+    RETURN;
+  END
+
+  SELECT
+    A.Id_Solicitud_Asignacion        AS Id,
+    A.FkSolicitud                     AS IdSolicitud,
+    A.IdGrupo                         AS IdGrupo,
+    A.FkTecnico                       AS FkTecnico,
+    A.FechaAsignacionUtc              AS FechaAsignacionUtc,
+    A.FechaInicio                     AS Fecha_Inicio,
+    A.FechaFin                        AS Fecha_Fin,
+    A.Notas                           AS Notas,
+    A.Estado                          AS Estado,
+    (TEC.Nombres + ' ' + TEC.Apellidos) AS TecnicoNombre,
+    (SUP.Nombres + ' ' + SUP.Apellidos) AS SupervisorNombre,
+    CONCAT('Grupo #', G.IdGrupo)        AS GrupoEtiqueta
+  FROM dbo.Solicitud_Asignacion A
+  LEFT JOIN dbo.Empleado TEC ON TEC.Id_Empleado = A.FkTecnico
+  LEFT JOIN dbo.Grupo_Supervisor_Tec G 
+         ON G.IdGrupo = A.IdGrupo AND G.FkTecnico = A.FkTecnico
+  LEFT JOIN dbo.Empleado SUP ON SUP.Id_Empleado = G.FkSupervisor
+  WHERE A.Estado IN (3,4,5)
+    AND G.FkSupervisor = @IdSupervisor
+  ORDER BY A.FechaInicio ASC;
+END
+GO
+
+
+-- =====================================================================
+-- SP: Listar TODAS las asignaciones (para dashboards)
+-- =====================================================================
+CREATE OR ALTER PROCEDURE [dbo].[usp_SolicitudesAsignaciones_Todas]
+AS
+BEGIN
+  SET NOCOUNT ON;
+
+  SELECT
+    A.Id_Solicitud_Asignacion        AS Id,
+    A.FkSolicitud                     AS IdSolicitud,
+    A.IdGrupo                         AS IdGrupo,
+    A.FkTecnico                       AS FkTecnico,
+    A.FechaAsignacionUtc              AS FechaAsignacionUtc,
+    A.FechaInicio                     AS Fecha_Inicio,
+    A.FechaFin                        AS Fecha_Fin,
+    A.Notas                           AS Notas,
+    A.Estado                          AS Estado,
+    (TEC.Nombres + ' ' + TEC.Apellidos) AS TecnicoNombre,
+    (SUP.Nombres + ' ' + SUP.Apellidos) AS SupervisorNombre,
+    CONCAT('Grupo #', G.IdGrupo)        AS GrupoEtiqueta
+  FROM dbo.Solicitud_Asignacion A
+  LEFT JOIN dbo.Empleado TEC
+         ON TEC.Id_Empleado = A.FkTecnico
+  LEFT JOIN dbo.Grupo_Supervisor_Tec G
+         ON G.IdGrupo = A.IdGrupo AND G.FkTecnico = A.FkTecnico
+  LEFT JOIN dbo.Empleado SUP
+         ON SUP.Id_Empleado = G.FkSupervisor
+  WHERE A.Estado IN (3,4,5)
+  ORDER BY A.FechaInicio ASC;
+END
+GO
