@@ -181,7 +181,6 @@
         </div>
     </div>
 </div>
-
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
@@ -241,7 +240,7 @@
               zone.appendChild(bNext);
             }
 
-            // SIEMPRE mostrar Rechazar en pasos 1..4
+         
             if (curr >= 1 && curr <= 4) {
               const bRej = document.createElement('button');
               bRej.className = btnClassForState(0);
@@ -251,23 +250,29 @@
             }
           }
 
-          // --- fetch helper ---
-          function ajaxCambiarEstado(id, nuevo) {
-            return fetch(`/api/solicitudes/${id}/estado`, {
+        
+          async function ajaxCambiarEstado(id, nuevo) {
+            const resp = await fetch(`/api/solicitudes/${id}/estado`, {
               method: "PATCH",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ estado: nuevo })
-            }).then(async (resp) => {
-              if (!resp.ok) {
-                let msg = "No se pudo actualizar el estado.";
-                try {
-                  const j = await resp.json();
-                  if (j && j.error) msg = j.error;
-                } catch {}
-                throw new Error(msg);
-              }
-              return resp.json();
             });
+            if (!resp.ok) {
+              let msg = "No se pudo actualizar el estado.";
+              try {
+                const ct = resp.headers.get('Content-Type') || '';
+                if (ct.includes('application/json')) {
+                  const j = await resp.json();
+                  if (j && (j.error || j.message)) msg = j.error || j.message;
+                } else {
+                  const t = await resp.text();
+                  if (t) msg = t;
+                }
+              } catch {}
+              throw new Error(msg);
+            }
+           
+            return true;
           }
 
           async function onCambiarEstado(id, nuevo) {
@@ -275,7 +280,7 @@
             zone.querySelectorAll('button').forEach(b => b.disabled = true);
 
             try {
-              // paso a ACEPTADA (3) -> redirigir a asignación
+             
               if (nuevo === 3) {
                 const r = await Swal.fire({
                   title: "Asignar técnico",
@@ -287,11 +292,13 @@
                 });
                 if (r.isConfirmed) {
                   window.location.href = `/AsignacionesUi/Asignar?solicitudId=${id}`;
+                } else {
+                  zone.querySelectorAll('button').forEach(b => b.disabled = false);
                 }
                 return;
               }
 
-              // confirmar rechazo (0)
+           
               if (nuevo === 0) {
                 const rj = await Swal.fire({
                   title: "¿Rechazar solicitud?",
@@ -299,52 +306,28 @@
                   icon: "warning",
                   showCancelButton: true,
                   confirmButtonText: "Sí, rechazar",
-                  cancelButtonText: "Cancelar",
-                  reverseButtons: false
+                  cancelButtonText: "Cancelar"
                 });
-                if (!rj.isConfirmed) return;
-
-                const data = await ajaxCambiarEstado(id, 0);
-                refrescarUI(data);
-                toastOk("Solicitud rechazada.");
-                return;
+                if (!rj.isConfirmed) {
+                  zone.querySelectorAll('button').forEach(b => b.disabled = false);
+                  return;
+                }
               }
 
-              // otros estados (2,4,5)
-              const data = await ajaxCambiarEstado(id, nuevo);
-              refrescarUI(data);
-              toastOk("Estado actualizado.");
+              await ajaxCambiarEstado(id, nuevo);
+           
+              location.reload();
 
             } catch (e) {
               console.error(e);
-              toastErr(e.message || "No se pudo actualizar el estado.");
-            } finally {
+              Swal.fire({ title: "Error", text: e.message || "No se pudo actualizar el estado.", icon: "error" });
               zone.querySelectorAll('button').forEach(b => b.disabled = false);
             }
-          }
-
-          function refrescarUI(data) {
-            const estadoValue = (data && (data.estado ?? data.Estado));
-            if (estadoValue == null) return;
-
-            const badge = document.getElementById('estadoBadge');
-            badge.className = estados[estadoValue].cls;
-            badge.textContent = estados[estadoValue].text;
-
-            const cont = document.getElementById('solicitud');
-            cont.dataset.estado = estadoValue;
-
-            renderBotones();
-          }
-
-          function toastOk(text) {
-            Swal.fire({ title: "¡Listo!", text, icon: "success", timer: 1400, showConfirmButton: false });
-          }
-          function toastErr(text) {
-            Swal.fire({ title: "Error", text, icon: "error" });
           }
 
           document.addEventListener('DOMContentLoaded', renderBotones);
         })();
     </script>
 }
+
+

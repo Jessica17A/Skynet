@@ -14,7 +14,7 @@ namespace SkyNet.Controllers
                     return RedirectToAction("Index", "Home");
 
                 if (User.IsInRole("Supervisor"))
-                    return RedirectToAction("Index", "Supervisores");
+                    return RedirectToAction("Index", "Home");
 
                 if (User.IsInRole("Tecnico"))
                     return RedirectToAction("Index", "Home");
@@ -25,6 +25,9 @@ namespace SkyNet.Controllers
 
             return View(); // si no está autenticado
         }
+
+
+
 
 
         public IActionResult Nosotros()

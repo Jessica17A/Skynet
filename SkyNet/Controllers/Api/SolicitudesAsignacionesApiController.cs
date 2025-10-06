@@ -29,13 +29,12 @@ public class SolicitudesAsignacionesApiController : ControllerBase
 
     [HttpPatch("asignaciones/{id:long}/estado")]
     public async Task<IActionResult> PatchEstado(
-            long id,
-            [FromBody] SolicitudFinalizarDto dto,
-            CancellationToken ct)
+           long id,
+           [FromBody] SolicitudFinalizarDto dto,
+           CancellationToken ct)
     {
         if (dto is null) return BadRequest("Body requerido.");
 
-        // Cast explícito de byte -> enum (evita CS0266)
         var estadoNuevo = (SolicitudAsignacionEstado)dto.Estado;
         if (!Enum.IsDefined(typeof(SolicitudAsignacionEstado), estadoNuevo))
             return BadRequest("Estado inválido (0..5).");
@@ -44,31 +43,37 @@ public class SolicitudesAsignacionesApiController : ControllerBase
                             .FirstOrDefaultAsync(x => x.Id == id, ct);
         if (asig is null) return NotFound();
 
-        // Aplicar cambios
+        // Transacción para asegurar consistencia entre asignación y solicitud
+        await using var tx = await _db.Database.BeginTransactionAsync(ct);
+
+        // --- Actualiza ASIGNACIÓN ---
         asig.Estado = estadoNuevo; // enum mapeado a byte en OnModelCreating
         if (!string.IsNullOrWhiteSpace(dto.Nota))
             asig.Notas = dto.Nota;
 
-        if (dto.Fecha_Fin.HasValue)
-            asig.Fecha_Fin = dto.Fecha_Fin;
-
-        // Si finaliza (5) y no vino fecha, sellar automáticamente
-        if (estadoNuevo == SolicitudAsignacionEstado.Finalizada && asig.Fecha_Fin is null)
-            asig.Fecha_Fin = DateTime.UtcNow;
+        // Solo sellar Fecha_Fin cuando FINALIZA (5)
+        if (estadoNuevo == SolicitudAsignacionEstado.Finalizada)
+        {
+            asig.Fecha_Fin = dto.Fecha_Fin ?? DateTime.UtcNow;
+        }
 
         await _db.SaveChangesAsync(ct);
 
-     
-         if (estadoNuevo == SolicitudAsignacionEstado.Finalizada)
+        // --- Actualiza SOLICITUD SIEMPRE cuando sea 4 o 5 ---
+        if (estadoNuevo == SolicitudAsignacionEstado.Proceso
+            || estadoNuevo == SolicitudAsignacionEstado.Finalizada)
         {
             var p1 = new SqlParameter("@SolicitudId", asig.FkSolicitud);
-            var p2 = new SqlParameter("@NuevoEstado", 5);
+            var p2 = new SqlParameter("@NuevoEstado", (int)estadoNuevo);
             await _db.Database.ExecuteSqlRawAsync(
-                "EXEC dbo.sp_Solicitudes_CambiarEstado @SolicitudId, @NuevoEstado", new[] { p1, p2 }, ct);
+                "EXEC dbo.sp_Solicitudes_CambiarEstado @SolicitudId, @NuevoEstado",
+                new[] { p1, p2 }, ct);
         }
 
+        await tx.CommitAsync(ct);
         return NoContent();
     }
+
 
 
 

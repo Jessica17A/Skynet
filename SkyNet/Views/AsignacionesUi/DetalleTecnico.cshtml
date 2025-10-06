@@ -3,6 +3,11 @@
     ViewData["Title"] = "Detalle de asignación";
     Layout = "~/Views/Shared/_Tecnico.cshtml";
 
+    // Estados de asignación
+    const int EST_ACEPTADA = 3;
+    const int EST_PROCESO = 4;
+    const int EST_FIN = 5;
+
     string EstadoSolicitudTexto(int s) => s switch
     {
         1 => "Pendiente",
@@ -12,6 +17,12 @@
         5 => "Finalizada",
         _ => s.ToString()
     };
+
+    string BadgeCss(int s) =>
+        s == EST_ACEPTADA ? "bg-success"
+      : s == EST_PROCESO ? "bg-warning text-dark"
+      : s == EST_FIN ? "bg-secondary"
+      : "bg-light text-dark";
 }
 
 @if (ViewBag.Mensaje != null)
@@ -37,10 +48,10 @@
 else
 {
     <div class="container mb-5" data-asignacion-id="@Model.AsignacionId">
-        <!-- ENCABEZADO GENERAL -->
+        <!-- ENCABEZADO -->
         <div class="card border-0 shadow rounded-4 mb-4">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <div>
                         <h5 class="fw-bold text-primary mb-0">
                             <i class="bi bi-ticket-detailed"></i> Ticket @Model.Ticket
@@ -48,14 +59,21 @@ else
                         <small class="text-muted">Creado el @Model.CreatedAtUtc.ToString("dd/MM/yyyy HH:mm")</small>
                     </div>
 
-                    <span class="badge rounded-pill px-3 py-2 fs-6
-                              @(Model.EstadoAsignacion == 3 ? "bg-success" :
-                                Model.EstadoAsignacion == 4 ? "bg-warning text-dark" :
-                                Model.EstadoAsignacion == 5 ? "bg-secondary" : "bg-light text-dark")">
-                        @(Model.EstadoAsignacion == 3 ? "Aceptada" :
-                          Model.EstadoAsignacion == 4 ? "En proceso" :
-                          Model.EstadoAsignacion == 5 ? "Finalizada" : "Desconocido")
-                    </span>
+                    <div class="d-flex align-items-center gap-2">
+                        @* Mostrar "Cómo llegar" solo si hay geo y no está finalizada *@
+                        @if (Model.Latitud.HasValue && Model.Longitud.HasValue && Model.EstadoAsignacion != EST_FIN)
+                        {
+                            <a class="btn btn-sm btn-outline-success"
+                               rel="noopener"
+                               target="_blank"
+                               href="https://www.google.com/maps/dir/?api=1&destination=@Model.Latitud,@Model.Longitud">
+                                <i class="bi bi-geo-alt"></i> Cómo llegar
+                            </a>
+                        }
+                        <span class="badge rounded-pill px-3 py-2 fs-6 @BadgeCss(Model.EstadoAsignacion)">
+                            @EstadoSolicitudTexto(Model.EstadoAsignacion)
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -108,23 +126,33 @@ else
                 </div>
             </div>
 
-            <!-- CTA Finalizar -->
+            <!-- ACCIONES (Footer) -->
             <div class="card-footer d-flex justify-content-between align-items-center">
                 <a asp-action="Tecnicos" class="btn btn-outline-secondary">
                     <i class="bi bi-arrow-left"></i> Volver a visitas programadas
                 </a>
 
-                @if (Model.EstadoAsignacion != 5)  
-                {
-                    <button id="btn-finalizar" class="btn btn-primary">
-                        <i class="bi bi-check2-circle"></i> Finalizar asignación
-                    </button>
-                }
+                <div class="d-flex gap-2">
+                    @* Si está ACEPTADA (3) => botón Check-in (pasa a 4) *@
+                    @if (Model.EstadoAsignacion == EST_ACEPTADA)
+                    {
+                        <button id="btn-checkin" class="btn btn-primary">
+                            <i class="bi bi-play-circle"></i> Check-in
+                        </button>
+                    }
+                    @* Si está EN PROCESO (4) => botón Finalizar (pasa a 5) *@
+                    @if (Model.EstadoAsignacion == EST_PROCESO)
+                    {
+                        <button id="btn-checkout" class="btn btn-dark">
+                            <i class="bi bi-stop-circle"></i> Finalizar
+                        </button>
+                    }
+                </div>
             </div>
         </div>
 
-        <!-- MAPA OPCIONAL -->
-        @if (Model.Latitud.HasValue && Model.Longitud.HasValue)
+        @* MAPA (solo si NO está finalizada) *@
+        @if (Model.Latitud.HasValue && Model.Longitud.HasValue && Model.EstadoAsignacion != EST_FIN)
         {
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-info bg-opacity-10 fw-bold text-info">
@@ -132,7 +160,7 @@ else
                 </div>
                 <div class="card-body text-center">
                     <iframe width="100%" height="300"
-                            style="border:0; border-radius: .5rem;"
+                            style="border:0; border-radius:.5rem;"
                             loading="lazy" allowfullscreen
                             referrerpolicy="no-referrer-when-downgrade"
                             src="https://www.google.com/maps?q=@Model.Latitud,@Model.Longitud&hl=es&z=16&output=embed">
@@ -143,106 +171,93 @@ else
     </div>
 
     @section Scripts {
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        <script>
-            (() => {
-                // ⬇️ Asegura que este path coincida con tu controlador:
-                // Opción habitual (tuviste esta): [Route("api/solicitudes/asignaciones")]
-                const apiRoot = '/api/solicitudes/asignaciones';
-                // Si usaste la alternativa: [Route("api/solicitudes-asignaciones")]
-                // const apiRoot = '/api/solicitudes-asignaciones';
+    
+     
+  <!-- SweetAlert2 (opcional, para mejor UX). Si no carga, hay fallback a prompt() -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+  (() => {
+    // Ruta base del API (ajústala si usas otra):
+    // Controlador típico: [Route("api/solicitudes/asignaciones")], [HttpPatch("{id:long}/estado")]
+    const apiRoot = '/api/solicitudes/asignaciones';
 
-                const base = `${window.location.origin}${document.body.getAttribute('data-pathbase') ?? ''}`;
-                const cont = document.querySelector('.container[data-asignacion-id]');
-                const asigId = cont?.getAttribute('data-asignacion-id');
+    const base   = `${window.location.origin}${document.body.getAttribute('data-pathbase') ?? ''}`;
+    const cont   = document.querySelector('.container[data-asignacion-id]');
+    const asigId = cont?.getAttribute('data-asignacion-id');
 
-                function ensureSwal() {
-                    if (!window.Swal) {
-                        console.error('SweetAlert2 no está cargado');
-                        alert('No se pudo cargar el componente de diálogo (SweetAlert2).');
-                        return false;
-                    }
-                    return true;
-                }
+    async function patchEstado({ estado, nota = null, fechaFinIso = null }) {
+      const url = `${base}${apiRoot}/${encodeURIComponent(asigId)}/estado`;
+      const body = { Estado: estado };
+      if (nota !== null && nota !== undefined) body.Nota = nota;
+      if (fechaFinIso) body.Fecha_Fin = fechaFinIso;
 
-                async function patchEstado(asignacionId, estado, notaOpt, fechaFinIso = null) {
-                    const body = { Estado: estado, Nota: (notaOpt || ""), Fecha_Fin: fechaFinIso };
-                    const url = `${base}${apiRoot}/${encodeURIComponent(asignacionId)}/estado`;
-
-                    const r = await fetch(url, {
-                        method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(body)
-                    });
-
-                    if (!r.ok) {
-                        const txt = await r.text().catch(() => '');
-                        // Mensajes útiles
-                        if (r.status === 401) throw new Error('No autorizado. Vuelve a iniciar sesión.');
-                        if (r.status === 404) throw new Error('No se encontró la asignación o la ruta del API no coincide. Revisa apiRoot en el script.');
-                        throw new Error(`HTTP ${r.status} — ${txt}`);
-                    }
-                    return true;
-                }
-
-                const pad = n => String(n).padStart(2, '0');
-                const nowLocalInputValue = () => {
-                    const d = new Date();
-                    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-                };
-
-                document.getElementById('btn-finalizar')?.addEventListener('click', async (ev) => {
-                    if (!ensureSwal()) return;
-                    if (!asigId) {
-                        console.error('No hay data-asignacion-id en el contenedor');
-                        return;
-                    }
-
-                    const res = await Swal.fire({
-                        title: 'Finalizar asignación',
-                        html: `
-                            <div class="text-start">
-                                <label class="form-label">Fecha y hora de finalización</label>
-                                <input id="dtFin" type="datetime-local" class="form-control" value="${nowLocalInputValue()}">
-                                <label class="form-label mt-2">Nota (opcional)</label>
-                                <input id="notaFin" type="text" class="form-control" placeholder="Comentarios...">
-                            </div>`,
-                        icon: 'question',
-                        showCancelButton: true,
-                        confirmButtonText: 'Finalizar',
-                        cancelButtonText: 'Cancelar',
-                        focusConfirm: false,
-                        preConfirm: () => {
-                            const dt = document.getElementById('dtFin').value;
-                            if (!dt) { Swal.showValidationMessage('Ingresa la fecha y hora de finalización'); return false; }
-                            const nota = document.getElementById('notaFin').value || '';
-                            return { dt, nota };
-                        }
-                    });
-
-                    if (!res.isConfirmed) return;
-
-                    const btn = ev.currentTarget;
-                    try {
-                        btn?.setAttribute('disabled', 'disabled');
-                        const fechaFinIso = new Date(res.value.dt).toISOString();
-                        await patchEstado(asigId, 5, res.value.nota, fechaFinIso);
-                        await Swal.fire('Hecho', 'Asignación finalizada correctamente.', 'success');
-                        location.reload();
-                    } catch (err) {
-                        Swal.fire('Error', String(err.message || err), 'error');
-                        console.error(err);
-                    } finally {
-                        btn?.removeAttribute('disabled');
-                    }
-                });
-
-                // Log útil para depurar rápidamente
-                console.debug('DetalleTecnico listo', { asigId, apiRoot, base });
-            })();
-        </script>
+      const r = await fetch(url, {
+        method: 'PATCH',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (!r.ok) {
+        const t = await r.text().catch(()=> '');
+        throw new Error(`HTTP ${r.status} ${t}`);
+      }
     }
 
+    // Estado 3 -> 4 (En proceso)
+    document.getElementById('btn-checkin')?.addEventListener('click', async (e) => {
+      const btn = e.currentTarget; btn.disabled = true;
+      try {
+        await patchEstado({ estado: 4 });
+        location.reload();
+      } catch (err) {
+        alert('Error cambiando a "En proceso": ' + (err?.message || err));
+      } finally { btn.disabled = false; }
+    });
 
-    }
+    // Estado 4 -> 5 (Finalizada) con Nota y Fecha_Fin = now (ISO)
+    document.getElementById('btn-checkout')?.addEventListener('click', async (e) => {
+      const btn = e.currentTarget; btn.disabled = true;
+      try {
+        const nowIso = new Date().toISOString();
+
+        // Si SweetAlert2 está disponible: usar modal con textarea (nota opcional)
+        if (window.Swal) {
+          const res = await Swal.fire({
+            title: 'Finalizar asignación',
+            html: `
+              <div class="text-start">
+                <label class="form-label">Nota (opcional)</label>
+                <textarea id="notaFin" class="form-control" rows="3" placeholder="Comentarios..."></textarea>
+                <small class="text-muted d-block mt-2">
+                  La fecha/hora se registrará automáticamente: <code>${nowIso}</code>
+                </small>
+              </div>`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Finalizar',
+            cancelButtonText: 'Cancelar',
+            focusConfirm: false
+          });
+          if (!res.isConfirmed) return;
+          const nota = (document.getElementById('notaFin')?.value || '').trim();
+          await patchEstado({ estado: 5, nota, fechaFinIso: nowIso });
+        } else {
+          // Fallback simple sin SweetAlert2
+          const nota = prompt('Nota (opcional) para finalizar:') || '';
+          await patchEstado({ estado: 5, nota: nota.trim(), fechaFinIso: nowIso });
+        }
+
+        // hecho
+        if (window.Swal) await Swal.fire('Hecho', 'Asignación finalizada.', 'success');
+        location.reload();
+      } catch (err) {
+        if (window.Swal) Swal.fire('Error', String(err?.message || err), 'error');
+        else alert('Error finalizando: ' + (err?.message || err));
+      } finally { btn.disabled = false; }
+    });
+
+    console.debug('DetalleTecnico listo', { asigId, apiRoot, base });
+  })();
+  </script>
+}
+
 }
