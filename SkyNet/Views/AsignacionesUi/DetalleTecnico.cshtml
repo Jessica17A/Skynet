@@ -89,11 +89,7 @@ else
                     <p><strong>Email:</strong> @Model.Email</p>
                     <p><strong>Teléfono:</strong> @(Model.Telefono ?? "-")</p>
                 </div>
-                <div class="col-md-6">
-                    <p><strong>Tipo:</strong> @Model.Tipo</p>
-                    <p><strong>Prioridad:</strong> @Model.Prioridad</p>
-                    <p><strong>Estado de la solicitud:</strong> @EstadoSolicitudTexto(Model.EstadoSolicitud)</p>
-                </div>
+               
                 <div class="col-12">
                     <p><strong>Descripción:</strong></p>
                     <p class="border p-2 bg-light rounded">@Model.Descripcion</p>
@@ -111,7 +107,7 @@ else
             </div>
             <div class="card-body row g-3">
                 <div class="col-md-6">
-                    <p><strong>Grupo:</strong> @Model.GrupoEtiqueta</p>
+                  
                     <p><strong>Técnico asignado:</strong> @Model.TecnicoNombre</p>
                     <p><strong>Supervisor:</strong> @Model.SupervisorNombre</p>
                 </div>
@@ -147,6 +143,17 @@ else
                             <i class="bi bi-stop-circle"></i> Finalizar
                         </button>
                     }
+
+                    @if (Model.EstadoAsignacion == 5 && Model.IdSolicitud > 0)
+                    {
+                        <a class="btn btn-outline-primary"
+                           asp-controller="Solicitudes"
+                           asp-action="Historial"
+                           asp-route-id="@Model.IdSolicitud">
+                            <i class="bi bi-clock-history"></i> Ver tracking
+                        </a>
+                    }
+
                 </div>
             </div>
         </div>

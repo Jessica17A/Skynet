@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using SkyNet.Data;
 using SkyNet.Models;
 using SkyNet.Models.DTOs;
+using System.Security.Claims;
 
 namespace SkyNet.Controllers.Api
 {
@@ -100,27 +101,29 @@ namespace SkyNet.Controllers.Api
         // PATCH: /api/solicitudes/{id}/estado
         [HttpPatch("{id:long}/estado")]
         public async Task<ActionResult<SolicitudDto>> CambiarEstado(
-            long id, [FromBody] CambiarEstadoDto dto, CancellationToken ct)
+        long id, [FromBody] CambiarEstadoDto dto, CancellationToken ct)
         {
             if (dto is null || dto.Estado < 0 || dto.Estado > 5)
                 return BadRequest(new { error = "Estado inválido. Debe ser 0..5" });
 
-            // Llamada al procedimiento almacenado
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+                return Forbid(); // o usa un fallback si lo prefieres
+
             var p1 = new SqlParameter("@SolicitudId", id);
             var p2 = new SqlParameter("@NuevoEstado", dto.Estado);
+            var p3 = new SqlParameter("@UserId", userId);
 
             await _db.Database.ExecuteSqlRawAsync(
-                "EXEC dbo.sp_Solicitudes_CambiarEstado @SolicitudId, @NuevoEstado",
-                new[] { p1, p2 }, ct);
+                "EXEC dbo.sp_Solicitudes_CambiarEstado @SolicitudId, @NuevoEstado, @UserId",
+                new[] { p1, p2, p3 }, ct);
 
-            // Recargar con EF la solicitud ya actualizada
             var s = await _db.Solicitudes.AsNoTracking()
                          .FirstOrDefaultAsync(x => x.Id == id, ct);
             if (s is null) return NotFound();
 
-            return Ok(Map(s)); // Map convierte entidad → SolicitudDto
+            return Ok(Map(s));
         }
-
 
         private static string GenerateTicket()
         {
@@ -147,6 +150,19 @@ namespace SkyNet.Controllers.Api
             Latitud = s.Latitud,
             Longitud = s.Longitud
         };
+    
+
+
+    [HttpGet("{id:long}/tracking")]
+        public async Task<ActionResult<IEnumerable<SolicitudTrackingTimelineRow>>> Tracking(long id, CancellationToken ct)
+        {
+            var rows = await _db.SolicitudTrackingTimeline
+                .FromSqlRaw("EXEC dbo.sp_Solicitud_Tracking_Timeline @SolicitudId = {0}", id)
+                .AsNoTracking()
+                .ToListAsync(ct);
+
+            return Ok(rows);
+        }
     }
 
 }

@@ -127,6 +127,19 @@ public class AsignacionItem
 
 
 
+    [Keyless]
+    public class SolicitudTrackingTimelineRow
+    {
+        public long SolicitudId { get; set; }
+        public DateTime FechaUtc { get; set; }
+        public string Usuario { get; set; } = "";
+        public string Texto { get; set; } = "";
+        public byte Estado { get; set; }
+        public string EstadoTexto { get; set; } = "";
+    }
+
+
+
 
 
 }

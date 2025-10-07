@@ -374,3 +374,154 @@ BEGIN
   ORDER BY A.FechaInicio ASC;
 END
 GO
+
+
+
+
+
+
+ALTER PROCEDURE [dbo].[sp_Solicitudes_CambiarEstado]
+    @SolicitudId  BIGINT,
+    @NuevoEstado  INT,               -- 0..5 (coincide con dbo.Solicitud.Estado)
+    @UserId       NVARCHAR(450)      -- Id de AspNetUsers que hace la acción
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    BEGIN TRY
+        BEGIN TRAN;
+
+        -- Bloquea y verifica existencia + estado actual
+        DECLARE @EstadoActual INT;
+        SELECT @EstadoActual = s.Estado
+        FROM dbo.Solicitud AS s WITH (UPDLOCK, HOLDLOCK)
+        WHERE s.Id_Solicitud = @SolicitudId;
+
+        IF @EstadoActual IS NULL
+        BEGIN
+            THROW 50001, 'La solicitud no existe.', 1;
+        END
+
+        -- Si no cambia el estado, no hacer nada (opcional: podrías aún registrar tracking)
+        IF (@EstadoActual = @NuevoEstado)
+        BEGIN
+            COMMIT;
+
+            -- Devuelve estado actual
+            SELECT Id_Solicitud AS Id, Estado
+            FROM dbo.Solicitud
+            WHERE Id_Solicitud = @SolicitudId;
+            RETURN;
+        END
+
+        -- Actualiza Solicitud
+        UPDATE dbo.Solicitud
+           SET Estado = @NuevoEstado
+        WHERE Id_Solicitud = @SolicitudId;
+
+        -- Actualiza asignaciones relacionadas (si existen)
+        UPDATE sa
+           SET sa.Estado   = CONVERT(TINYINT, @NuevoEstado),
+               sa.FechaFin = CASE
+                               WHEN @NuevoEstado IN (0,5) AND sa.FechaFin IS NULL
+                                 THEN SYSUTCDATETIME()
+                               ELSE sa.FechaFin
+                             END
+        FROM dbo.Solicitud_Asignacion AS sa
+        WHERE sa.FkSolicitud = @SolicitudId;
+
+        -- ===== Tracking =====
+        INSERT INTO dbo.Solicitud_Tracking (FkSolicitud, UserId, Estado)
+        VALUES (@SolicitudId, @UserId, CONVERT(TINYINT, @NuevoEstado));
+        -- Nota: FechaUtc se llena con el DEFAULT (SYSUTCDATETIME)
+
+        COMMIT;
+
+        -- Devuelve estado final
+        SELECT Id_Solicitud AS Id, Estado
+        FROM dbo.Solicitud
+        WHERE Id_Solicitud = @SolicitudId;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK;
+        DECLARE @msg NVARCHAR(4000) = ERROR_MESSAGE();
+        THROW 50002, @msg, 1;
+    END CATCH
+END
+GO
+
+
+
+
+
+
+
+
+
+CREATE OR ALTER PROCEDURE dbo.sp_Solicitud_Tracking_Timeline
+  @SolicitudId BIGINT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    ;WITH Timeline AS
+    (
+        -- 1) Evento de CREACIÓN (usa CreatedAtUtc de Solicitud)
+        SELECT
+            s.Id_Solicitud                                  AS SolicitudId,
+            s.CreatedAtUtc                                  AS FechaUtc,       -- << fecha de creación
+            CAST(1 AS TINYINT)                              AS Estado,
+            CAST(N'Creada' AS NVARCHAR(30))                 AS EstadoTexto,
+            CAST(s.Nombre AS NVARCHAR(200))                 AS Usuario,        -- nombre en la solicitud
+            CAST(N'Creación de solicitud' AS NVARCHAR(300)) AS Texto
+        FROM dbo.Solicitud s
+        WHERE s.Id_Solicitud = @SolicitudId
+
+        UNION ALL
+
+        -- 2) Eventos del TRACKING (usa FechaUtc del tracking)
+        SELECT
+            t.FkSolicitud                                  AS SolicitudId,
+            t.FechaUtc                                     AS FechaUtc,       -- << fecha del tracking
+            t.Estado                                       AS Estado,
+            CAST(CASE t.Estado
+                    WHEN 0 THEN N'Rechazado'
+                    WHEN 1 THEN N'Pendiente'
+                    WHEN 2 THEN N'Revisada'
+                    WHEN 3 THEN N'Aceptada'
+                    WHEN 4 THEN N'En proceso'
+                    WHEN 5 THEN N'Finalizada'
+                    ELSE N'Desconocido'
+                 END AS NVARCHAR(30))                      AS EstadoTexto,
+            CAST(COALESCE(
+                    NULLIF(LTRIM(RTRIM(CONCAT(e.Nombres, N' ', e.Apellidos))), N' '),
+                    t.UserId
+                 ) AS NVARCHAR(200))                       AS Usuario,
+            CAST(N'Estado cambiado a ' + 
+                 CASE t.Estado
+                    WHEN 0 THEN N'Rechazado'
+                    WHEN 1 THEN N'Pendiente'
+                    WHEN 2 THEN N'Revisada'
+                    WHEN 3 THEN N'Aceptada'
+                    WHEN 4 THEN N'En proceso'
+                    WHEN 5 THEN N'Finalizada'
+                    ELSE N'Desconocido'
+                 END AS NVARCHAR(300))                     AS Texto
+        FROM dbo.Solicitud_Tracking t
+        LEFT JOIN dbo.Empleado e
+               ON e.UserId = t.UserId
+        WHERE t.FkSolicitud = @SolicitudId
+    )
+    SELECT
+        SolicitudId,
+        FechaUtc,     -- creación: CreatedAtUtc | demás: tracking.FechaUtc
+        Usuario,
+        Texto,
+        Estado,
+        EstadoTexto
+    FROM Timeline
+    ORDER BY FechaUtc ASC;   -- creación primero
+END
+GO
+

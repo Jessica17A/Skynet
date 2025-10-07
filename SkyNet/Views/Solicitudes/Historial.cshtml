@@ -1,0 +1,174 @@
+﻿@{
+    ViewData["Title"] = "Historial de solicitud";
+    var solicitudId = (long)ViewBag.SolicitudId;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">
+        <i class="bi bi-clock-history me-1"></i>
+        Historial · Solicitud @solicitudId
+    </h4>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div id="tl" class="tl px-3 py-4">
+            <div class="text-muted small px-2">Cargando…</div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* ===== Timeline limpio (sin línea central) ===== */
+    .tl {
+        position: relative;
+    }
+
+    .tl-item {
+        position: relative;
+        display: grid;
+        grid-template-columns: 56px 1fr;
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    /* Punto con color por estado */
+    .tl-dot {
+        position: relative;
+        z-index: 2;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(0,0,0,.12);
+        margin-left: 12px;
+    }
+
+        .tl-dot i {
+            font-size: 1rem;
+        }
+
+    /* Tarjeta */
+    .tl-card {
+        background: #fff;
+        border: 1px solid var(--bs-border-color);
+        border-radius: 12px;
+        padding: 12px 14px;
+        box-shadow: 0 2px 8px rgba(0,0,0,.05);
+    }
+
+    /* Encabezado compacto: estado + fecha juntos */
+    .tl-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px;
+        flex-wrap: wrap;
+    }
+
+    .tl-state {
+        font-weight: 600;
+    }
+
+    .tl-sep {
+        color: var(--bs-border-color);
+    }
+
+    .tl-time {
+        color: var(--bs-secondary-color);
+        font-size: .9rem;
+        white-space: nowrap;
+    }
+
+    /* Línea con usuario */
+    .tl-user {
+        color: var(--bs-emphasis-color);
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: .95rem;
+    }
+
+        .tl-user i {
+            color: var(--bs-primary);
+        }
+
+    /* Vacío / error */
+    .tl-empty {
+        text-align: center;
+        padding: 24px 12px;
+        color: var(--bs-secondary-color);
+    }
+
+    .tl-error {
+        color: #dc3545;
+    }
+</style>
+
+<script>
+    (function () {
+      const solicitudId = @solicitudId;
+      const apiUrl = '@Url.Content("~/api/solicitudes/")' + solicitudId + '/tracking';
+      const $tl = document.getElementById('tl');
+
+      const META = {
+        0: { name: 'Rechazado',   icon: 'bi-x-octagon',     color: 'danger'   },
+        1: { name: 'Creada',      icon: 'bi-plus-circle',   color: 'secondary'},
+        2: { name: 'Revisada',    icon: 'bi-search',        color: 'info'     },
+        3: { name: 'Aceptada',    icon: 'bi-check2-circle', color: 'success'  },
+        4: { name: 'En proceso',  icon: 'bi-activity',      color: 'warning'  },
+        5: { name: 'Finalizada',  icon: 'bi-flag',          color: 'primary'  },
+      };
+
+      const esc = s => (s ?? "").toString().replace(/[&<>"']/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[m]));
+      const fmt = iso => {
+        const d = new Date(iso);
+        return isNaN(d) ? esc(iso) : d.toLocaleString("es-GT",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
+      };
+
+      function itemTpl(x){
+        const st = Number(x.estado);
+        const m  = META[st] || { name: x.estadoTexto || 'Evento', icon: 'bi-record-circle', color: 'dark' };
+        const dotCls = `tl-dot bg-${m.color}`;
+        const badge  = `badge bg-${m.color}`;
+
+        return `
+          <div class="tl-item">
+            <div class="${dotCls}" title="${esc(m.name)}"><i class="bi ${m.icon}"></i></div>
+            <div class="tl-card">
+              <div class="tl-head">
+                <span class="tl-state ${badge}">${esc(x.estadoTexto || m.name)}</span>
+                <span class="tl-sep">•</span>
+                <span class="tl-time"><i class="bi bi-calendar2-week me-1"></i>${fmt(x.fechaUtc)}</span>
+              </div>
+              <div class="tl-user"><i class="bi bi-person-circle"></i><span>${esc(x.usuario)}</span></div>
+              <!-- Texto de acción eliminado a petición -->
+            </div>
+          </div>`;
+      }
+
+      async function cargar(){
+        try{
+          const res = await fetch(apiUrl, { credentials: "same-origin" });
+          if(!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+
+          if(!Array.isArray(data) || data.length === 0){
+            $tl.innerHTML = `<div class="tl-empty"><i class="bi bi-inboxes me-1"></i> Sin eventos de historial.</div>`;
+            return;
+          }
+
+          data.sort((a,b)=> new Date(a.fechaUtc) - new Date(b.fechaUtc));
+          $tl.innerHTML = data.map(itemTpl).join("");
+
+        }catch(err){
+          $tl.innerHTML = `<div class="tl-empty tl-error"><i class="bi bi-exclamation-octagon me-1"></i> Error al cargar historial: ${esc(String(err))}</div>`;
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", cargar);
+    })();
+</script>

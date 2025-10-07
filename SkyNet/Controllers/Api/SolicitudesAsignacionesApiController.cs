@@ -8,6 +8,7 @@ using SkyNet.Data;
 using SkyNet.Models;
 using SkyNet.Models.DTOs;
 using System.Linq;
+using System.Security.Claims;
 
 [ApiController]
 [Route("api/solicitudes")]
@@ -29,9 +30,9 @@ public class SolicitudesAsignacionesApiController : ControllerBase
 
     [HttpPatch("asignaciones/{id:long}/estado")]
     public async Task<IActionResult> PatchEstado(
-           long id,
-           [FromBody] SolicitudFinalizarDto dto,
-           CancellationToken ct)
+    long id,
+    [FromBody] SolicitudFinalizarDto dto,
+    CancellationToken ct)
     {
         if (dto is null) return BadRequest("Body requerido.");
 
@@ -43,37 +44,39 @@ public class SolicitudesAsignacionesApiController : ControllerBase
                             .FirstOrDefaultAsync(x => x.Id == id, ct);
         if (asig is null) return NotFound();
 
-        // Transacción para asegurar consistencia entre asignación y solicitud
+        // UserId para tracking
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(userId))
+            return Forbid(); // o asigna "system" si prefieres
+
         await using var tx = await _db.Database.BeginTransactionAsync(ct);
 
         // --- Actualiza ASIGNACIÓN ---
-        asig.Estado = estadoNuevo; // enum mapeado a byte en OnModelCreating
+        asig.Estado = estadoNuevo;
         if (!string.IsNullOrWhiteSpace(dto.Nota))
             asig.Notas = dto.Nota;
 
-        // Solo sellar Fecha_Fin cuando FINALIZA (5)
         if (estadoNuevo == SolicitudAsignacionEstado.Finalizada)
-        {
             asig.Fecha_Fin = dto.Fecha_Fin ?? DateTime.UtcNow;
-        }
 
         await _db.SaveChangesAsync(ct);
 
-        // --- Actualiza SOLICITUD SIEMPRE cuando sea 4 o 5 ---
+        // --- Propaga a SOLICITUD y registra tracking SOLO si 4=Proceso o 5=Finalizada ---
         if (estadoNuevo == SolicitudAsignacionEstado.Proceso
             || estadoNuevo == SolicitudAsignacionEstado.Finalizada)
         {
             var p1 = new SqlParameter("@SolicitudId", asig.FkSolicitud);
             var p2 = new SqlParameter("@NuevoEstado", (int)estadoNuevo);
+            var p3 = new SqlParameter("@UserId", userId);
+
             await _db.Database.ExecuteSqlRawAsync(
-                "EXEC dbo.sp_Solicitudes_CambiarEstado @SolicitudId, @NuevoEstado",
-                new[] { p1, p2 }, ct);
+                "EXEC dbo.sp_Solicitudes_CambiarEstado @SolicitudId, @NuevoEstado, @UserId",
+                new[] { p1, p2, p3 }, ct);
         }
 
         await tx.CommitAsync(ct);
         return NoContent();
     }
-
 
 
 
@@ -172,31 +175,6 @@ public class SolicitudesAsignacionesApiController : ControllerBase
     }
 
 
-    //// PATCH: /api/solicitudes/{id}/estado
-    //[HttpPatch("{id:long}/estado")]
-    //public async Task<ActionResult<SolicitudDto>> CambiarEstado(
-    //    long id, [FromBody] CambiarEstadoDto dto, CancellationToken ct)
-    //{
-    //    if (dto is null || dto.Estado < 0 || dto.Estado > 5)
-    //        return BadRequest(new { error = "Estado inválido. Debe ser 0..5" });
-
-    //    var p1 = new SqlParameter("@SolicitudId", id);
-    //    var p2 = new SqlParameter("@NuevoEstado", dto.Estado);
-
-    //    await _db.Database.ExecuteSqlRawAsync(
-    //        "EXEC dbo.sp_Solicitudes_CambiarEstado @SolicitudId, @NuevoEstado",
-    //        new[] { p1, p2 }, ct);
-
-    //    var s = await _db.Solicitudes.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
-    //    if (s is null) return NotFound();
-
-    //    return Ok(Map(s));
-    //}
-
-
-
-
-
     [HttpGet("{id:long}/asignacion-activa")]
     public async Task<IActionResult> GetActiva(long id)
     {
@@ -280,6 +258,18 @@ public class SolicitudesAsignacionesApiController : ControllerBase
         if (item is null) return NotFound();
         return Ok(item);
     }
+
+
+    //[HttpGet("solicitudes/{id:long}/tracking")]
+    //public async Task<ActionResult<IEnumerable<SolicitudTrackingTimelineRow>>> Tracking(long id, CancellationToken ct)
+    //{
+    //    var rows = await _db.SolicitudTrackingTimeline
+    //        .FromSqlRaw("EXEC dbo.sp_Solicitud_Tracking_Timeline @SolicitudId = {0}", id)
+    //        .AsNoTracking()
+    //        .ToListAsync(ct);
+
+    //    return Ok(rows);
+    //}
 
 
 

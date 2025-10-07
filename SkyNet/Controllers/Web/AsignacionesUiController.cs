@@ -206,6 +206,9 @@ public class AsignacionesUiController : Controller
     }
 
 
+
+
+
     //public async Task<IActionResult> DetalleTecnico(long id)
     //{
     //    var c = _http.CreateClient();

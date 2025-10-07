@@ -14,8 +14,7 @@ namespace SkyNet.Data
 
         public DbSet<Cliente> Clientes => Set<Cliente>();
         public DbSet<Solicitud> Solicitudes => Set<Solicitud>();
-        public DbSet<Empleado> Empleados => Set<Empleado>();
-        public DbSet<ArchivoSolicitud> ArchivosSolicitudes => Set<ArchivoSolicitud>();
+        public DbSet<Empleado> Empleados => Set<Empleado>();      
 
         public DbSet<GrupoSupervisorTec> GruposSupervisoresTec => Set<GrupoSupervisorTec>();
 
@@ -26,6 +25,8 @@ namespace SkyNet.Data
         public DbSet<SolicitudResumenDto> SolicitudResumen { get; set; } = null!;
 
         public DbSet<SolicitudAsignacionDetalleDto> SolicitudAsignacionDetalle => Set<SolicitudAsignacionDetalleDto>();
+
+        public DbSet<SolicitudTrackingTimelineRow> SolicitudTrackingTimeline => Set<SolicitudTrackingTimelineRow>();
 
 
         protected override void OnModelCreating(ModelBuilder b)

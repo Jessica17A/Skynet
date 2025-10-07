@@ -17,7 +17,7 @@ namespace SkyNet.Controllers
                     return RedirectToAction("Index", "Home");
 
                 if (User.IsInRole("Tecnico"))
-                    return RedirectToAction("Index", "Home");
+                    return RedirectToAction("IndexTecnico", "Home");
 
                 // fallback
                 return RedirectToAction("Index", "LayoutPrincipal");

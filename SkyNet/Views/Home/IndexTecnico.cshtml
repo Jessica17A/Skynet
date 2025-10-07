@@ -1,21 +1,13 @@
 ﻿@{
     ViewData["Title"] = "Dashboard";
-    Layout = "~/Views/Shared/_Admin.cshtml";
-    //Layout = "~/Views/Shared/_Tecnico.cshtml";
+  
+    Layout = "~/Views/Shared/_Tecnico.cshtml";
 }
 
 <div class="container-fluid">
     <!-- Encabezado -->
     <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-2">
-        <div class="flex-grow-1">
-            <h2 class="mb-1 text-truncate">Dashboard de SkyNet</h2>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
-                </ol>
-            </nav>
-        </div>
+
         <div class="d-flex gap-2">
             <a class="btn btn-primary" asp-controller="Visitas" asp-action="Create">
                 <i class="bi bi-plus-circle me-1"></i> Nueva visita

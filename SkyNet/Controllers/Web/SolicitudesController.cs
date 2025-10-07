@@ -132,5 +132,17 @@ namespace SkyNet.Controllers.Web
             var model = await resp.Content.ReadFromJsonAsync<SolicitudDto>(cancellationToken: ct);
             return View(model); // Views/Solicitudes/Tracking.cshtml
         }
+
+
+
+
+        [HttpGet("{id:long}/historial")]
+        public IActionResult Historial(long id)
+        {
+            ViewBag.SolicitudId = id;
+            return View();
+        }
+
+
     }
 }
