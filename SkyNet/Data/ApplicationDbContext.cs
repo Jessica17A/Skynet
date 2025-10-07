@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using SkyNet.Models;
 using SkyNet.Models.DTOs;
+using System.Reflection.Emit;
 
 namespace SkyNet.Data
 {
@@ -24,9 +25,15 @@ namespace SkyNet.Data
 
         public DbSet<SolicitudResumenDto> SolicitudResumen { get; set; } = null!;
 
-        public DbSet<SolicitudAsignacionDetalleDto> SolicitudAsignacionDetalle => Set<SolicitudAsignacionDetalleDto>();
+        public DbSet<SolicitudAsignacionDetalleDto> SolicitudAsignacionDetalle => Set<SolicitudAsignacionDetalleDto>();        
 
-        public DbSet<SolicitudTrackingTimelineRow> SolicitudTrackingTimeline => Set<SolicitudTrackingTimelineRow>();
+        public DbSet<SolicitudTracking> SolicitudTrackings { get; set; } = null!;
+
+        public DbSet<SolicitudTrackingTimelineRow> SolicitudTrackingTimeline { get; set; } = null!;
+
+        public DbSet<SolicitudDetalleCompletoDto> SolicitudDetalleCompleto { get; set; }
+
+
 
 
         protected override void OnModelCreating(ModelBuilder b)
@@ -36,7 +43,7 @@ namespace SkyNet.Data
             b.Entity<SolicitudAsignacionDetalleDto>(e =>
             {
                 e.HasNoKey();
-                e.ToView(null); // muy importante para FromSqlRaw sobre SP
+                e.ToView(null); 
             });
 
             b.Entity<SolicitudResumenDto>(e =>
@@ -146,6 +153,61 @@ namespace SkyNet.Data
                  .HasFilter("[Estado] = 1")
                  .IsUnique();
             });
+
+
+            b.Entity<SolicitudTracking>(e =>
+            {
+                e.ToTable("Solicitud_Tracking", "dbo");
+
+                // PK
+                e.HasKey(x => x.IdTracking)
+                 .HasName("PK_Solicitud_Tracking");
+
+                e.Property(x => x.IdTracking)
+                 .HasColumnName("IdTracking");                  // BIGINT IDENTITY(1,1)
+
+                e.Property(x => x.FkSolicitud)
+                 .HasColumnName("FkSolicitud");                 // BIGINT NOT NULL
+
+                e.Property(x => x.UserId)
+                 .HasColumnName("UserId")
+                 .HasMaxLength(450)
+                 .IsRequired();
+
+                // tinyint NULL
+                e.Property(x => x.Estado)
+                 .HasColumnName("Estado"); // byte? ya mapea a tinyint
+
+                // datetime2(7) con default SYSUTCDATETIME()
+                e.Property(x => x.FechaUtc)
+                 .HasColumnName("FechaUtc")
+                 .HasColumnType("datetime2(7)")
+                 .HasDefaultValueSql("SYSUTCDATETIME()");
+
+                e.HasOne(x => x.Solicitud)
+                 .WithMany() // sin navegación inversa
+                 .HasForeignKey(x => x.FkSolicitud)
+                 .HasConstraintName("FK_SolicitudTracking_Solicitud");
+
+
+            });
+
+            b.Entity<SolicitudTrackingTimelineRow>(e =>
+            {
+                e.HasNoKey();      // <- importantísimo
+                e.ToView(null);    // <- evita que EF lo trate como tabla o vista
+                e.Property(p => p.SolicitudId).HasColumnName("SolicitudId");
+                e.Property(p => p.FechaUtc).HasColumnName("FechaUtc");
+                e.Property(p => p.Usuario).HasColumnName("Usuario");
+                e.Property(p => p.Texto).HasColumnName("Texto");
+                e.Property(p => p.Estado).HasColumnName("Estado");
+                e.Property(p => p.EstadoTexto).HasColumnName("EstadoTexto");
+            });
+
+
+
+
+
 
         }
 

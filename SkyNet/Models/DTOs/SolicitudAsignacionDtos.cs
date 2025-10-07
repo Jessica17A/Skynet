@@ -61,11 +61,11 @@ namespace SkyNet.Models.DTOs
     public class SolicitudResumenDto
 {
     public long IdSolicitud { get; set; }
-    public DateTime? FechaVisita_Min { get; set; } // mapea FECHAVISITA_MIN
-    public byte Estado_Agregado { get; set; }      // mapea ESTADO_AGREGADO
+    public DateTime? FechaVisita_Min { get; set; } 
+    public byte Estado_Agregado { get; set; }     
     public string? Supervisores { get; set; }
     public string? Tecnicos { get; set; }
-    public string? Asignaciones_Json { get; set; } // mapea ASIGNACIONES_JSON
+    public string? Asignaciones_Json { get; set; } 
 }
 
 public class AsignacionItem

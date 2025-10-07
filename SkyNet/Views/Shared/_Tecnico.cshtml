@@ -187,38 +187,8 @@
             <nav id="sidebarMenu" class="nav flex-column">
                 <a class="nav-link @(IsActive("Home") ? "active" : "")"
                    asp-controller="Home" asp-action="Index">
-                    <i class="bi bi-speedometer2"></i> Dashboard
-                    <span class="badge bg-secondary ms-auto">NEW</span>
+                    <i class="bi bi-speedometer2"></i> INICIO                   
                 </a>
-
-
-                @*  GRUPOS TECNICOS *@
-
-                <div class="nav-title mt-3">Operación</div>
-
-                <!-- Toggler cerrado por defecto -->
-                <a class="nav-link collapsed"
-                   data-bs-toggle="collapse"
-                   href="#grpGrupos"
-                   role="button"
-                   aria-expanded="false"
-                   aria-controls="grpGrupos">
-                    <i class="bi bi-diagram-3"></i> Gestión de grupos
-                    <i class="bi bi-chevron-down ms-auto nav-caret"></i>
-                </a>
-@* 
-                <!-- Submenú SIN 'show' (cerrado) + acordeón -->
-                <div class="collapse" id="grpGrupos" data-bs-parent="#sidebarMenu">
-                    <a class="nav-link @(IsActive("GruposUi") ? "active" : "")"
-                       asp-controller="GruposUi" asp-action="Index">
-                        <i class="bi bi-people"></i> Grupos
-                    </a>
-                    <a class="nav-link @(IsActive("GruposUi") ? "active" : "")"
-                       asp-controller="GruposUi" asp-action="MisTecnicos">
-                        <i class="bi bi-person-badge"></i> Mis Técnicos
-                    </a>
-                </div> *@
-
 
                 @*  SOLICITUDES *@
                 <div class="nav-title mt-3">Operación</div>
@@ -241,12 +211,7 @@
                     <a class="nav-link @(IsActive("AsignacionesUi") ? "active" : "")"
                        asp-controller="AsignacionesUi" asp-action="Tecnicos">
                         <i class="bi bi-people"></i> Asignaciones
-                    </a>
-
-                    <a class="nav-link @(IsActive("AsignacionesUi") ? "active" : "")"
-                       asp-controller="AsignacionesUi" asp-action="Tecnicos">
-                        <i class="bi bi-people"></i> Hola
-                    </a>
+                    </a>                  
 
                 </div>
 

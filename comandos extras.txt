@@ -32,9 +32,10 @@ DBCC CHECKIDENT ('dbo.Empleados', RESEED, 0);
 COMMIT;
 
 
-TRUNCATE TABLE dbo.Solicitudes_Asignaciones;
-DELETE FROM dbo.Solicitudes_Asignaciones;
-DBCC CHECKIDENT ('dbo.Solicitudes_Asignaciones', RESEED, 0);
+TRUNCATE TABLE dbo.Solicitud_Asignacion;
+DELETE FROM dbo.Solicitud_Asignacion;
+DBCC CHECKIDENT ('dbo.Solicitud_Asignacion', RESEED, 0);
+
 
 
 -- habilitar sa

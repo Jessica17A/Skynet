@@ -3,6 +3,7 @@ wwwroot\css\site.css
 wwwroot\favicon.ico
 wwwroot\img\logo.png
 wwwroot\img\logo1.png
+wwwroot\js\reporteAsignacionCompleta.js
 wwwroot\js\site.js
 wwwroot\js\ticket-pdf.js
 wwwroot\lib\bootstrap\dist\css\bootstrap-grid.css

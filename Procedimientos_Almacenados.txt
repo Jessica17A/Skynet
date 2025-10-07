@@ -1,60 +1,4 @@
 -- =====================================================================
--- SP: Cambiar estado de Solicitud + propagar a Solicitud_Asignacion
--- =====================================================================
-CREATE OR ALTER PROCEDURE [dbo].[sp_Solicitudes_CambiarEstado]
-  @SolicitudId  BIGINT,
-  @NuevoEstado  INT   -- 0..5
-AS
-BEGIN
-  SET NOCOUNT ON;
-  SET XACT_ABORT ON;
-
-  BEGIN TRY
-    BEGIN TRAN;
-
-    -- Verifica existencia de la solicitud
-    IF NOT EXISTS (
-      SELECT 1
-      FROM dbo.Solicitud WITH (UPDLOCK, HOLDLOCK)
-      WHERE Id_Solicitud = @SolicitudId
-    )
-    BEGIN
-      THROW 50001, 'La solicitud no existe.', 1;
-    END
-
-    -- Actualiza Solicitud
-    UPDATE dbo.Solicitud
-      SET Estado = @NuevoEstado
-    WHERE Id_Solicitud = @SolicitudId;
-
-    -- Actualiza asignaciones relacionadas (si existen)
-    UPDATE sa
-       SET sa.Estado   = @NuevoEstado,
-           sa.FechaFin = CASE
-                           WHEN @NuevoEstado IN (0,5) AND sa.FechaFin IS NULL
-                             THEN SYSUTCDATETIME()
-                           ELSE sa.FechaFin
-                         END
-    FROM dbo.Solicitud_Asignacion AS sa
-    WHERE sa.FkSolicitud = @SolicitudId;
-
-    COMMIT;
-
-    -- Devuelve estado final (opcional)
-    SELECT Id_Solicitud AS Id, Estado
-    FROM dbo.Solicitud
-    WHERE Id_Solicitud = @SolicitudId;
-  END TRY
-  BEGIN CATCH
-    IF @@TRANCOUNT > 0 ROLLBACK;
-    DECLARE @msg NVARCHAR(4000) = ERROR_MESSAGE();
-    THROW 50002, @msg, 1;
-  END CATCH
-END
-GO
-
-
--- =====================================================================
 -- SP: Resumen de una solicitud (con agregados + JSON de asignaciones)
 -- Mantiene ALIAS en MAYÚSCULAS para mapear DTOs existentes
 -- =====================================================================
@@ -380,7 +324,93 @@ GO
 
 
 
-ALTER PROCEDURE [dbo].[sp_Solicitudes_CambiarEstado]
+
+
+CREATE OR ALTER PROCEDURE dbo.sp_Solicitud_Tracking_Timeline
+  @SolicitudId BIGINT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    ;WITH Timeline AS
+    (
+        -- 1) Evento de CREACIÓN (usa CreatedAtUtc de Solicitud)
+        SELECT
+            s.Id_Solicitud                                  AS SolicitudId,
+            s.CreatedAtUtc                                  AS FechaUtc,       -- << fecha de creación
+            CAST(1 AS TINYINT)                              AS Estado,
+            CAST(N'Creada' AS NVARCHAR(30))                 AS EstadoTexto,
+            CAST(s.Nombre AS NVARCHAR(200))                 AS Usuario,        -- nombre en la solicitud
+            CAST(N'Creación de solicitud' AS NVARCHAR(300)) AS Texto
+        FROM dbo.Solicitud s
+        WHERE s.Id_Solicitud = @SolicitudId
+
+        UNION ALL
+
+        -- 2) Eventos del TRACKING (usa FechaUtc del tracking)
+        SELECT
+            t.FkSolicitud                                  AS SolicitudId,
+            t.FechaUtc                                     AS FechaUtc,       -- << fecha del tracking
+            t.Estado                                       AS Estado,
+            CAST(CASE t.Estado
+                    WHEN 0 THEN N'Rechazado'
+                    WHEN 1 THEN N'Pendiente'
+                    WHEN 2 THEN N'Revisada'
+                    WHEN 3 THEN N'Aceptada'
+                    WHEN 4 THEN N'En proceso'
+                    WHEN 5 THEN N'Finalizada'
+                    ELSE N'Desconocido'
+                 END AS NVARCHAR(30))                      AS EstadoTexto,
+            CAST(COALESCE(
+                    NULLIF(LTRIM(RTRIM(CONCAT(e.Nombres, N' ', e.Apellidos))), N' '),
+                    t.UserId
+                 ) AS NVARCHAR(200))                       AS Usuario,
+            CAST(N'Estado cambiado a ' + 
+                 CASE t.Estado
+                    WHEN 0 THEN N'Rechazado'
+                    WHEN 1 THEN N'Pendiente'
+                    WHEN 2 THEN N'Revisada'
+                    WHEN 3 THEN N'Aceptada'
+                    WHEN 4 THEN N'En proceso'
+                    WHEN 5 THEN N'Finalizada'
+                    ELSE N'Desconocido'
+                 END AS NVARCHAR(300))                     AS Texto
+        FROM dbo.Solicitud_Tracking t
+        LEFT JOIN dbo.Empleado e
+               ON e.UserId = t.UserId
+        WHERE t.FkSolicitud = @SolicitudId
+    )
+    SELECT
+        SolicitudId,
+        FechaUtc,     -- creación: CreatedAtUtc | demás: tracking.FechaUtc
+        Usuario,
+        Texto,
+        Estado,
+        EstadoTexto
+    FROM Timeline
+    ORDER BY FechaUtc ASC;   -- creación primero
+END
+GO
+
+
+
+CREATE TABLE dbo.Solicitud_Tracking (
+    IdTracking      BIGINT IDENTITY(1,1) PRIMARY KEY,
+    FkSolicitud     BIGINT NOT NULL,           -- Referencia a la solicitud
+    UserId          NVARCHAR(450) NOT NULL,    -- Usuario que realizó la acción
+    Estado          TINYINT NULL,              -- Estado de la acción (por ejemplo: 1=Pendiente, 2=En proceso, 3=Finalizado, etc.)
+    FechaUtc        DATETIME2(7) NOT NULL 
+        CONSTRAINT DF_SolicitudTracking_FechaUtc DEFAULT SYSUTCDATETIME()
+);
+
+-- Clave foránea hacia la tabla de solicitudes
+ALTER TABLE dbo.Solicitud_Tracking
+ADD CONSTRAINT FK_SolicitudTracking_Solicitud
+    FOREIGN KEY (FkSolicitud) REFERENCES dbo.Solicitud(Id_Solicitud);
+
+
+
+CREATE OR ALTER PROCEDURE dbo.sp_Solicitudes_CambiarEstado
     @SolicitudId  BIGINT,
     @NuevoEstado  INT,               -- 0..5 (coincide con dbo.Solicitud.Estado)
     @UserId       NVARCHAR(450)      -- Id de AspNetUsers que hace la acción
@@ -454,74 +484,309 @@ GO
 
 
 
-
-
-
-
-
-CREATE OR ALTER PROCEDURE dbo.sp_Solicitud_Tracking_Timeline
-  @SolicitudId BIGINT
+CREATE OR ALTER PROCEDURE dbo.usp_SolicitudesAsignaciones_Tecnico
+  @AspNetUserId NVARCHAR(450)
 AS
 BEGIN
-    SET NOCOUNT ON;
+  SET NOCOUNT ON;
 
-    ;WITH Timeline AS
-    (
-        -- 1) Evento de CREACIÓN (usa CreatedAtUtc de Solicitud)
-        SELECT
-            s.Id_Solicitud                                  AS SolicitudId,
-            s.CreatedAtUtc                                  AS FechaUtc,       -- << fecha de creación
-            CAST(1 AS TINYINT)                              AS Estado,
-            CAST(N'Creada' AS NVARCHAR(30))                 AS EstadoTexto,
-            CAST(s.Nombre AS NVARCHAR(200))                 AS Usuario,        -- nombre en la solicitud
-            CAST(N'Creación de solicitud' AS NVARCHAR(300)) AS Texto
-        FROM dbo.Solicitud s
-        WHERE s.Id_Solicitud = @SolicitudId
+  DECLARE @IdTecnico BIGINT;
 
-        UNION ALL
+  SELECT TOP (1) @IdTecnico = E.Id_Empleado
+  FROM dbo.Empleado E
+  WHERE E.UserId = @AspNetUserId;
 
-        -- 2) Eventos del TRACKING (usa FechaUtc del tracking)
-        SELECT
-            t.FkSolicitud                                  AS SolicitudId,
-            t.FechaUtc                                     AS FechaUtc,       -- << fecha del tracking
-            t.Estado                                       AS Estado,
-            CAST(CASE t.Estado
-                    WHEN 0 THEN N'Rechazado'
-                    WHEN 1 THEN N'Pendiente'
-                    WHEN 2 THEN N'Revisada'
-                    WHEN 3 THEN N'Aceptada'
-                    WHEN 4 THEN N'En proceso'
-                    WHEN 5 THEN N'Finalizada'
-                    ELSE N'Desconocido'
-                 END AS NVARCHAR(30))                      AS EstadoTexto,
-            CAST(COALESCE(
-                    NULLIF(LTRIM(RTRIM(CONCAT(e.Nombres, N' ', e.Apellidos))), N' '),
-                    t.UserId
-                 ) AS NVARCHAR(200))                       AS Usuario,
-            CAST(N'Estado cambiado a ' + 
-                 CASE t.Estado
-                    WHEN 0 THEN N'Rechazado'
-                    WHEN 1 THEN N'Pendiente'
-                    WHEN 2 THEN N'Revisada'
-                    WHEN 3 THEN N'Aceptada'
-                    WHEN 4 THEN N'En proceso'
-                    WHEN 5 THEN N'Finalizada'
-                    ELSE N'Desconocido'
-                 END AS NVARCHAR(300))                     AS Texto
-        FROM dbo.Solicitud_Tracking t
-        LEFT JOIN dbo.Empleado e
-               ON e.UserId = t.UserId
-        WHERE t.FkSolicitud = @SolicitudId
-    )
-    SELECT
-        SolicitudId,
-        FechaUtc,     -- creación: CreatedAtUtc | demás: tracking.FechaUtc
-        Usuario,
-        Texto,
-        Estado,
-        EstadoTexto
-    FROM Timeline
-    ORDER BY FechaUtc ASC;   -- creación primero
+  IF @IdTecnico IS NULL
+  BEGIN
+    SELECT CAST(NULL AS BIGINT) AS Id WHERE 1 = 0;
+    RETURN;
+  END
+
+  SELECT
+    A.Id_Solicitud_Asignacion          AS Id,
+    A.FkSolicitud                      AS IdSolicitud,
+    A.IdGrupo                          AS IdGrupo,
+    A.FkTecnico                        AS FkTecnico,
+    A.FechaAsignacionUtc               AS FechaAsignacionUtc,
+    A.FechaInicio                      AS Fecha_Inicio,
+    A.FechaFin                         AS Fecha_Fin,
+    A.Notas                            AS Notas,
+    A.Estado                           AS Estado,
+    (TEC.Nombres + ' ' + TEC.Apellidos) AS TecnicoNombre,
+    (SUP.Nombres + ' ' + SUP.Apellidos) AS SupervisorNombre,
+    CONCAT('Grupo #', G.IdGrupo)       AS GrupoEtiqueta
+  FROM dbo.Solicitud_Asignacion A
+  LEFT JOIN dbo.Empleado TEC
+         ON TEC.Id_Empleado = A.FkTecnico
+  LEFT JOIN dbo.Grupo_Supervisor_Tec G
+         ON G.IdGrupo = A.IdGrupo
+        AND G.FkTecnico = A.FkTecnico
+  LEFT JOIN dbo.Empleado SUP
+         ON SUP.Id_Empleado = G.FkSupervisor
+  WHERE A.Estado IN (3,4,5)
+    AND A.FkTecnico = @IdTecnico
+  ORDER BY A.FechaInicio ASC;
 END
 GO
+
+
+
+
+USE [SkyNet01];
+GO
+SET ANSI_NULLS ON;
+GO
+SET QUOTED_IDENTIFIER ON;
+GO
+
+CREATE OR ALTER PROCEDURE [dbo].[usp_VisitasTecnico_KPIs_Estados]
+  @AspNetUserId NVARCHAR(450),
+  @FechasEnUtc  BIT = 0   -- 1 si FechaInicio/Fin están en UTC; 0 si ya son hora local GT
+AS
+BEGIN
+  SET NOCOUNT ON;
+
+  DECLARE @IdTecnico BIGINT;
+
+  SELECT TOP (1) @IdTecnico = E.Id_Empleado
+  FROM dbo.Empleado E
+  WHERE E.UserId = @AspNetUserId;
+
+  IF @IdTecnico IS NULL
+  BEGIN
+    SELECT 0 AS Asignadas, 0 AS EnProceso, 0 AS Finalizadas, 0 AS Total;
+    RETURN;
+  END
+
+  -- KPIs globales por estado (no dependen de hoy)
+  SELECT
+    SUM(CASE WHEN A.Estado = 3 THEN 1 ELSE 0 END) AS Asignadas,   -- Estado 3
+    SUM(CASE WHEN A.Estado = 4 THEN 1 ELSE 0 END) AS EnProceso,   -- Estado 4
+    SUM(CASE WHEN A.Estado = 5 THEN 1 ELSE 0 END) AS Finalizadas, -- Estado 5
+    COUNT(*) AS Total
+  FROM dbo.Solicitud_Asignacion A
+  WHERE A.FkTecnico = @IdTecnico
+    AND A.Estado IN (3,4,5);
+END
+GO
+
+
+
+CREATE OR ALTER PROCEDURE [dbo].[usp_VisitasTecnico_Hoy_Asignadas]
+  @AspNetUserId NVARCHAR(450),
+  @FechasEnUtc  BIT = 0   -- 1 si FechaInicio/Fin están en UTC; 0 si ya son hora local GT
+AS
+BEGIN
+  SET NOCOUNT ON;
+
+  DECLARE @IdTecnico BIGINT;
+
+  SELECT TOP (1) @IdTecnico = E.Id_Empleado
+  FROM dbo.Empleado E
+  WHERE E.UserId = @AspNetUserId;
+
+  IF @IdTecnico IS NULL
+  BEGIN
+    SELECT CAST(NULL AS BIGINT) AS Id WHERE 1 = 0;
+    RETURN;
+  END
+
+  /* === Zona horaria Guatemala === */
+  DECLARE @tz SYSNAME = N'Central America Standard Time';
+  DECLARE @AhoraLocal DATETIME2 =
+      CONVERT(DATETIME2, SYSUTCDATETIME() AT TIME ZONE 'UTC' AT TIME ZONE @tz);
+
+  DECLARE @HoyInicio DATETIME2 = DATEADD(DAY, DATEDIFF(DAY, 0, @AhoraLocal), 0);        -- 00:00 hoy
+  DECLARE @HoyFin    DATETIME2 = DATEADD(MILLISECOND, -3, DATEADD(DAY, 1, @HoyInicio)); -- 23:59:59.997
+
+  ;WITH CTE AS
+  (
+    SELECT
+      A.Id_Solicitud_Asignacion          AS Id,
+      A.FkSolicitud                      AS IdSolicitud,
+      A.IdGrupo                          AS IdGrupo,
+      A.FkTecnico                        AS FkTecnico,
+      A.FechaAsignacionUtc               AS FechaAsignacionUtc,
+      CASE WHEN @FechasEnUtc = 1
+           THEN CONVERT(DATETIME2, (A.FechaInicio AT TIME ZONE 'UTC' AT TIME ZONE @tz))
+           ELSE A.FechaInicio
+      END                                AS FechaInicioLocal,
+      CASE WHEN @FechasEnUtc = 1
+           THEN CONVERT(DATETIME2, (A.FechaFin AT TIME ZONE 'UTC' AT TIME ZONE @tz))
+           ELSE A.FechaFin
+      END                                AS FechaFinLocal,
+      A.Notas                            AS Notas,
+      A.Estado                           AS Estado,
+      (TEC.Nombres + ' ' + TEC.Apellidos) AS TecnicoNombre,
+      (SUP.Nombres + ' ' + SUP.Apellidos) AS SupervisorNombre,
+      CONCAT('Grupo #', G.IdGrupo)       AS GrupoEtiqueta
+    FROM dbo.Solicitud_Asignacion A
+    LEFT JOIN dbo.Empleado TEC
+           ON TEC.Id_Empleado = A.FkTecnico
+    LEFT JOIN dbo.Grupo_Supervisor_Tec G
+           ON G.IdGrupo = A.IdGrupo
+          AND G.FkTecnico = A.FkTecnico
+    LEFT JOIN dbo.Empleado SUP
+           ON SUP.Id_Empleado = G.FkSupervisor
+    WHERE A.FkTecnico = @IdTecnico
+      AND A.Estado = 3   -- SOLO asignadas (estado 3)
+  )
+  SELECT
+      C.Id,
+      C.IdSolicitud,
+      C.IdGrupo,
+      C.FkTecnico,
+      C.FechaAsignacionUtc,
+      C.FechaInicioLocal  AS Fecha_Inicio,
+      C.FechaFinLocal     AS Fecha_Fin,
+      C.Notas,
+      C.Estado,
+      N'Asignada'         AS EstadoTexto,
+      C.TecnicoNombre,
+      C.SupervisorNombre,
+      C.GrupoEtiqueta
+  FROM CTE AS C
+  WHERE C.FechaInicioLocal >= @HoyInicio
+    AND C.FechaInicioLocal <= @HoyFin
+  ORDER BY C.FechaInicioLocal ASC;
+END
+GO
+
+
+
+
+USE [SkyNet01];
+GO
+CREATE OR ALTER PROCEDURE [dbo].[usp_VisitasTecnico_Hoy_Listar]
+  @AspNetUserId       NVARCHAR(450),
+  @FechasEnUtc        BIT = 0,
+  @EstadoFiltro       TINYINT = NULL,  -- NULL=Todas (3,4,5)
+  @FinalizadasTodas   BIT = 0,
+  @Top                INT = 100
+AS
+BEGIN
+  SET NOCOUNT ON;
+
+  DECLARE @IdTecnico BIGINT;
+  SELECT TOP (1) @IdTecnico = E.Id_Empleado
+  FROM dbo.Empleado E
+  WHERE E.UserId = @AspNetUserId;
+
+  IF @IdTecnico IS NULL
+  BEGIN
+    SELECT CAST(NULL AS BIGINT) AS Id WHERE 1 = 0;
+    RETURN;
+  END
+
+  DECLARE @tz SYSNAME = N'Central America Standard Time';
+  DECLARE @AhoraLocal DATETIME2 = CONVERT(DATETIME2, SYSUTCDATETIME() AT TIME ZONE 'UTC' AT TIME ZONE @tz);
+  DECLARE @HoyInicio DATETIME2 = DATEADD(DAY, DATEDIFF(DAY, 0, @AhoraLocal), 0);
+  DECLARE @HoyFin    DATETIME2 = DATEADD(MILLISECOND, -3, DATEADD(DAY, 1, @HoyInicio));
+
+  ;WITH Base AS
+  (
+    SELECT
+      A.Id_Solicitud_Asignacion AS Id,
+      A.FkSolicitud             AS IdSolicitud,
+      A.FkTecnico               AS FkTecnico,
+      CASE WHEN @FechasEnUtc=1 THEN CONVERT(DATETIME2,(A.FechaInicio AT TIME ZONE 'UTC' AT TIME ZONE @tz)) ELSE A.FechaInicio END AS InicioLocal,
+      CASE WHEN @FechasEnUtc=1 THEN CONVERT(DATETIME2,(A.FechaFin    AT TIME ZONE 'UTC' AT TIME ZONE @tz)) ELSE A.FechaFin    END AS FinLocal,
+      A.Estado,
+      CASE A.Estado
+           WHEN 3 THEN N'Asignada'
+           WHEN 4 THEN N'En proceso'
+           WHEN 5 THEN N'Finalizada'
+           ELSE CONVERT(VARCHAR(12),A.Estado)
+      END AS EstadoTexto,
+      S.Tipo,
+      S.Prioridad
+    FROM dbo.Solicitud_Asignacion A
+    INNER JOIN dbo.Solicitud S ON S.Id_Solicitud = A.FkSolicitud
+    WHERE A.FkTecnico = @IdTecnico
+      AND (
+            @EstadoFiltro IS NULL AND A.Estado IN (3,4,5)
+         OR @EstadoFiltro IS NOT NULL AND A.Estado = @EstadoFiltro
+          )
+  )
+  SELECT TOP (@Top)
+      B.Id, B.IdSolicitud, B.FkTecnico,
+      B.InicioLocal AS Fecha_Inicio,
+      B.FinLocal    AS Fecha_Fin,
+      B.Estado, B.EstadoTexto,
+      B.Tipo, B.Prioridad
+  FROM Base B
+  WHERE
+      -- Asignadas (3): inician hoy
+      ( @EstadoFiltro = 3
+        AND B.InicioLocal >= @HoyInicio AND B.InicioLocal <= @HoyFin )
+   OR -- En proceso (4): iniciadas antes de hoy y no finalizadas aún
+      ( @EstadoFiltro = 4
+        AND B.InicioLocal < @HoyFin
+        AND (B.FinLocal IS NULL OR B.FinLocal > @HoyInicio) )
+   OR -- Finalizadas (5)
+      ( @EstadoFiltro = 5
+        AND ( @FinalizadasTodas = 1
+              OR (B.FinLocal IS NOT NULL AND B.FinLocal >= @HoyInicio AND B.FinLocal <= @HoyFin) ) )
+   OR -- Todas
+      ( @EstadoFiltro IS NULL
+        AND (
+            (B.Estado=3 AND B.InicioLocal >= @HoyInicio AND B.InicioLocal <= @HoyFin)
+         OR (B.Estado=4 AND B.InicioLocal < @HoyFin AND (B.FinLocal IS NULL OR B.FinLocal > @HoyInicio))
+         OR (B.Estado=5 AND B.FinLocal   IS NOT NULL AND B.FinLocal   >= @HoyInicio AND B.FinLocal   <= @HoyFin)
+        ) )
+  ORDER BY COALESCE(B.FinLocal, B.InicioLocal) DESC;
+END
+GO
+
+
+
+USE [SkyNet01];
+GO
+CREATE OR ALTER PROCEDURE [dbo].[usp_SolicitudDetalle_Completo]
+  @ID_SOLICITUD BIGINT
+AS
+BEGIN
+  SET NOCOUNT ON;
+
+  SELECT
+      S.Id_Solicitud,
+      S.Nombre,
+      S.Email,
+      S.Telefono,
+      S.Tipo,
+      S.Prioridad,
+      S.Descripcion,
+      S.Ticket,
+      S.CreatedAtUtc,
+      S.Estado AS EstadoSolicitud,
+      S.Direccion,
+      S.Latitud,
+      S.Longitud,
+
+      A.Id_Solicitud_Asignacion AS AsignacionId,
+      A.FkTecnico,
+      A.FechaAsignacionUtc AS AsignacionCreadaUtc,
+      A.FechaInicio AS AsignacionFechaInicio,
+      A.FechaFin AS AsignacionFechaFin,
+      A.Notas AS AsignacionNotas,
+      A.Estado AS EstadoAsignacion,
+
+      G.IdGrupo,
+      CONCAT('Grupo #', G.IdGrupo) AS GrupoEtiqueta,
+      (SUP.Nombres + ' ' + SUP.Apellidos) AS SupervisorNombre,
+      (TEC.Nombres + ' ' + TEC.Apellidos) AS TecnicoNombre
+  FROM dbo.Solicitud_Asignacion A
+  INNER JOIN dbo.Solicitud S ON S.Id_Solicitud = A.FkSolicitud
+  LEFT JOIN dbo.Grupo_Supervisor_Tec G ON G.IdGrupo = A.IdGrupo
+  LEFT JOIN dbo.Empleado TEC ON TEC.Id_Empleado = A.FkTecnico
+  LEFT JOIN dbo.Empleado SUP ON SUP.Id_Empleado = G.FkSupervisor
+  WHERE A.FkSolicitud = @ID_SOLICITUD
+  ORDER BY A.FechaInicio ASC;
+END
+GO
+
+
+
+
+
 

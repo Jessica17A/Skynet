@@ -19,8 +19,8 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using SkyNet.Data;           // DbContext
-using SkyNet.Models;         // Empleado
+using SkyNet.Data;           
+using SkyNet.Models;         
 
 namespace SkyNet.Areas.Identity.Pages.Account
 {
@@ -208,28 +208,32 @@ namespace SkyNet.Areas.Identity.Pages.Account
 
         private async Task CargarListasAsync(CancellationToken ct)
         {
-         
             var emps = await _db.Empleados.AsNoTracking()
                 .Where(e => e.Estado == 1 && !string.IsNullOrEmpty(e.Email) && e.UserId == null)
                 .OrderBy(e => e.Nombres)
-                .Select(e => new { e.Id, e.Nombres, e.Email })
+                .Select(e => new { e.Id, e.Nombres, e.Apellidos, e.Email })
                 .ToListAsync(ct);
 
             EmpleadosOptions = emps
                 .Select(e => new SelectListItem
                 {
                     Value = e.Id.ToString(),
-                    Text = $"{e.Nombres} — {e.Email}"
+                    Text = $"{e.Nombres} {e.Apellidos} — {e.Email}"
                 })
                 .ToList();
 
             RolesOptions = await _roleManager.Roles
                 .OrderBy(r => r.Name)
-                .Select(r => new SelectListItem { Value = r.Name, Text = r.Name })
+                .Select(r => new SelectListItem
+                {
+                    Value = r.Name,
+                    Text = r.Name
+                })
                 .ToListAsync(ct);
         }
 
-        // ---- Helpers ----
+
+
 
         private static string BuildBaseUserName(string nombres, string apellidos)
         {

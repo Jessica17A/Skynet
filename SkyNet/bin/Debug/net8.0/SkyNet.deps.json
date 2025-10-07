@@ -9,6 +9,7 @@
       "SkyNet/1.0.0": {
         "dependencies": {
           "CloudinaryDotNet": "1.27.7",
+          "Dapper": "2.1.66",
           "Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore": "8.0.19",
           "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "8.0.19",
           "Microsoft.AspNetCore.Identity.UI": "8.0.19",
@@ -67,6 +68,14 @@
           "lib/netstandard2.0/CloudinaryDotNet.dll": {
             "assemblyVersion": "1.27.7.0",
             "fileVersion": "1.27.7.0"
+          }
+        }
+      },
+      "Dapper/2.1.66": {
+        "runtime": {
+          "lib/net8.0/Dapper.dll": {
+            "assemblyVersion": "2.0.0.0",
+            "fileVersion": "2.1.66.48463"
           }
         }
       },
@@ -2618,6 +2627,13 @@
       "sha512": "sha512-xPpakjmJuj0z1MzcdCPoCQLUtWynaynQGzCmn9VlV01O8fWW02e2NUQzW1NAsqBUTMUuJozAKc1i1Oj3YvVSig==",
       "path": "cloudinarydotnet/1.27.7",
       "hashPath": "cloudinarydotnet.1.27.7.nupkg.sha512"
+    },
+    "Dapper/2.1.66": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-/q77jUgDOS+bzkmk3Vy9SiWMaetTw+NOoPAV0xPBsGVAyljd5S6P+4RUW7R3ZUGGr9lDRyPKgAMj2UAOwvqZYw==",
+      "path": "dapper/2.1.66",
+      "hashPath": "dapper.2.1.66.nupkg.sha512"
     },
     "Humanizer/2.14.1": {
       "type": "package",

@@ -163,6 +163,21 @@ namespace SkyNet.Controllers.Api
 
             return Ok(rows);
         }
+
+
+        [HttpGet("detalle-completo/{id:long}")]
+        public async Task<IActionResult> GetDetalleCompleto(long id)
+        {
+            var data = await _db.SolicitudDetalleCompleto
+                .FromSqlRaw("EXEC usp_SolicitudDetalle_Completo @ID_SOLICITUD={0}", id)
+                .ToListAsync();
+
+            if (!data.Any())
+                return NotFound();
+
+            return Ok(data);
+        }
+
     }
 
 }

@@ -107,7 +107,7 @@ public class AsignacionesUiController : Controller
     }
 
 
-  
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Asignar(long solicitudId, string[] TecnicosIds, string? notas, DateTime? fechaVisita)
@@ -119,23 +119,23 @@ public class AsignacionesUiController : Controller
             return View("~/Views/AsignacionesUi/Asignar.cshtml");
         }
 
-        // Fecha local -> UTC
-        DateTime? visitaUtc = null;
-        if (fechaVisita.HasValue)
-            visitaUtc = DateTime.SpecifyKind(fechaVisita.Value, DateTimeKind.Local).ToUniversalTime();
+        // Local -> UTC
+        DateTime? visitaUtc = fechaVisita.HasValue
+            ? DateTime.SpecifyKind(fechaVisita.Value, DateTimeKind.Local).ToUniversalTime()
+            : (DateTime?)null;
 
-       
         var c = _http.CreateClient();
         if (c.BaseAddress == null)
-        {
-            var baseUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}/";
-            c.BaseAddress = new Uri(baseUrl);   
-        }
+            c.BaseAddress = new Uri($"{Request.Scheme}://{Request.Host}{Request.PathBase}/");
+
+        // >>> Reenviar cookie de autenticación <<<
+        if (Request.Headers.TryGetValue("Cookie", out var cookie))
+            c.DefaultRequestHeaders.Add("Cookie", cookie.ToString());
 
         var pares = TecnicosIds
             .Select(x => x?.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-            .Where(x => x != null && x.Length == 2)
-            .Select(x => new { IdGrupo = int.Parse(x![0]), FkTecnico = long.Parse(x![1]) })
+            .Where(p => p is { Length: 2 })
+            .Select(p => new { IdGrupo = int.Parse(p![0]), FkTecnico = long.Parse(p![1]) })
             .ToList();
 
         var errores = new List<string>();
@@ -153,43 +153,18 @@ public class AsignacionesUiController : Controller
             };
 
             var resp = await c.PostAsJsonAsync($"api/solicitudes/{solicitudId}/asignaciones", payload);
-
-            if (resp.IsSuccessStatusCode)
-            {
-                okCount++;
-                continue;
-            }
-            if ((int)resp.StatusCode == StatusCodes.Status200OK)
-            {
-                okCount++;
-                continue;
-            }
+            if (resp.IsSuccessStatusCode) { okCount++; continue; }
 
             var msg = await resp.Content.ReadAsStringAsync();
             errores.Add($"Grupo {p.IdGrupo}: {resp.StatusCode} - {msg}");
         }
 
-        if (okCount > 0)
-        {
-            var patch = await c.PatchAsync($"api/solicitudes/{solicitudId}/estado",
-                new StringContent("{\"estado\":3}", System.Text.Encoding.UTF8, "application/json"));
-            if (!patch.IsSuccessStatusCode)
-            {
-                var msg = await patch.Content.ReadAsStringAsync();
-                errores.Add($"Se asignó técnico(s), pero falló el cambio de estado: {patch.StatusCode} - {msg}");
-            }
-        }
+        if (okCount > 0) TempData["Ok"] = "Asignación creada y estado actualizado.";
+        if (errores.Count > 0) TempData["Error"] = string.Join(" | ", errores);
 
-        if (errores.Count > 0)
-        {
-            ModelState.AddModelError(string.Empty, "Resultado parcial:\n" + string.Join("\n", errores));
-            ViewBag.SolicitudId = solicitudId;
-            return View("~/Views/AsignacionesUi/Asignar.cshtml");
-        }
-
-        TempData["ok"] = true;
-        return RedirectToAction("Detalle", "AsignacionesUi", new { solicitudId });
+        return RedirectToAction("Details", "Solicitudes", new { id = solicitudId });
     }
+
 
 
     public IActionResult Supervisores()

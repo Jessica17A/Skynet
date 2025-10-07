@@ -1,171 +1,220 @@
 ﻿@{
-    ViewData["Title"] = "Historial de solicitud";
+    ViewData["Title"] = "Tracking de solicitud";
     var solicitudId = (long)ViewBag.SolicitudId;
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 class="mb-0">
-        <i class="bi bi-clock-history me-1"></i>
-        Historial · Solicitud @solicitudId
-    </h4>
+<!-- Encabezado -->
+<div class="text-center mb-4">   
+    <h3 class="fw-bold mb-1">
+        <span class="text-secondary">Tracking ·</span> Solicitud No. @solicitudId
+    </h3>  
 </div>
 
-<div class="card border-0 shadow-sm">
-    <div class="card-body p-0">
-        <div id="tl" class="tl px-3 py-4">
-            <div class="text-muted small px-2">Cargando…</div>
+
+<!-- Card contenedora -->
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+
+        <div class="timeline-container">
+            <ul id="timeline" class="timeline">
+                <li class="loading text-secondary text-center">Cargando…</li>
+            </ul>
         </div>
+
     </div>
 </div>
 
 <style>
-    /* ===== Timeline limpio (sin línea central) ===== */
-    .tl {
-        position: relative;
-    }
-
-    .tl-item {
-        position: relative;
-        display: grid;
-        grid-template-columns: 56px 1fr;
-        gap: 12px;
-        margin-bottom: 18px;
-    }
-
-    /* Punto con color por estado */
-    .tl-dot {
-        position: relative;
-        z-index: 2;
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        display: grid;
-        place-items: center;
-        color: #fff;
-        box-shadow: 0 4px 12px rgba(0,0,0,.12);
-        margin-left: 12px;
-    }
-
-        .tl-dot i {
-            font-size: 1rem;
-        }
-
-    /* Tarjeta */
-    .tl-card {
-        background: #fff;
-        border: 1px solid var(--bs-border-color);
-        border-radius: 12px;
-        padding: 12px 14px;
-        box-shadow: 0 2px 8px rgba(0,0,0,.05);
-    }
-
-    /* Encabezado compacto: estado + fecha juntos */
-    .tl-head {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 6px;
-        flex-wrap: wrap;
-    }
-
-    .tl-state {
-        font-weight: 600;
-    }
-
-    .tl-sep {
-        color: var(--bs-border-color);
-    }
-
-    .tl-time {
-        color: var(--bs-secondary-color);
-        font-size: .9rem;
+    /* ===== CONTENEDOR GENERAL ===== */
+    .timeline-container {
+        overflow-x: auto;
         white-space: nowrap;
+        padding: 6px 0 18px;
     }
 
-    /* Línea con usuario */
-    .tl-user {
-        color: var(--bs-emphasis-color);
-        font-weight: 600;
+    .timeline {
         display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: .95rem;
+        justify-content: space-between;
+        align-items: flex-start;
+        list-style: none;
+        padding: 0;
+        position: relative;
+        min-width: 850px;
+        margin: 0;
     }
 
-        .tl-user i {
-            color: var(--bs-primary);
+        /* ===== CONECTOR ===== */
+        .timeline::before {
+            content: "";
+            position: absolute;
+            top: 36px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #e9ecef;
+            z-index: 1;
         }
 
-    /* Vacío / error */
-    .tl-empty {
+    /* ===== CADA PASO ===== */
+    .timeline-step {
+        position: relative;
         text-align: center;
-        padding: 24px 12px;
-        color: var(--bs-secondary-color);
+        flex: 1;
+        z-index: 2;
+        padding: 0 .5rem;
     }
 
-    .tl-error {
-        color: #dc3545;
+        .timeline-step .circle {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background-color: var(--color, #ccc);
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.05rem;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, .15);
+            transition: transform .2s;
+        }
+
+        .timeline-step.active .circle {
+            transform: scale(1.15);
+        }
+
+        /* ===== TEXTO ===== */
+        .timeline-step .title {
+            font-weight: 800;
+            color: var(--color, #6c757d);
+            font-size: .9rem;
+            margin-top: 10px;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+        }
+
+        .timeline-step .date {
+            font-size: .8rem;
+            color: #6c757d;
+            line-height: 1.1;
+        }
+
+        .timeline-step .user {
+            font-size: .86rem;
+            color: #212529;
+            font-weight: 600;
+            margin-top: 6px;
+        }
+
+        /* ===== ÍCONO BAJO NOMBRE ===== */
+        .timeline-step .icon {
+            display: block;
+            font-size: 1.05rem;
+            margin-top: 6px;
+            color: var(--color, #ccc);
+        }
+
+    /* ===== COLORES POR ESTADO ===== */
+    .step-0 {
+        --color: #e74c3c;
+    }
+    /* Rechazada */
+    .step-1 {
+        --color: #6c757d;
+    }
+    /* Creada */
+    .step-2 {
+        --color: #0dcaf0;
+    }
+    /* Revisada */
+    .step-3 {
+        --color: #20c997;
+    }
+    /* Aceptada */
+    .step-4 {
+        --color: #ffc107;
+    }
+    /* En proceso */
+    .step-5 {
+        --color: #0d6efd;
+    }
+    /* Finalizada */
+
+    .loading {
+        width: 100%;
+        padding: 1rem;
+        text-align: center;
+    }
+
+    /* Opcional: resalta el último estado */
+    .timeline-step.last .title,
+    .timeline-step.last .icon {
+        filter: saturate(1.1) drop-shadow(0 0 0 transparent);
+    }
+
+    .timeline-step.last .circle {
+        box-shadow: 0 4px 14px rgba(13,110,253,.25);
     }
 </style>
 
 <script>
-    (function () {
+    (() => {
       const solicitudId = @solicitudId;
       const apiUrl = '@Url.Content("~/api/solicitudes/")' + solicitudId + '/tracking';
-      const $tl = document.getElementById('tl');
+      const $timeline = document.getElementById('timeline');
 
+      // Íconos bonitos por estado
       const META = {
-        0: { name: 'Rechazado',   icon: 'bi-x-octagon',     color: 'danger'   },
-        1: { name: 'Creada',      icon: 'bi-plus-circle',   color: 'secondary'},
-        2: { name: 'Revisada',    icon: 'bi-search',        color: 'info'     },
-        3: { name: 'Aceptada',    icon: 'bi-check2-circle', color: 'success'  },
-        4: { name: 'En proceso',  icon: 'bi-activity',      color: 'warning'  },
-        5: { name: 'Finalizada',  icon: 'bi-flag',          color: 'primary'  },
+        0: { name: 'Rechazada',  icon: 'bi-x-octagon-fill' },
+        1: { name: 'Creada',     icon: 'bi-file-earmark-plus-fill' },
+        2: { name: 'Revisada',   icon: 'bi-search-heart-fill' },
+        3: { name: 'Aceptada',   icon: 'bi-patch-check-fill' },
+        4: { name: 'En proceso', icon: 'bi-rocket-takeoff-fill' },
+        5: { name: 'Finalizada', icon: 'bi-flag-fill' },
       };
 
       const esc = s => (s ?? "").toString().replace(/[&<>"']/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[m]));
       const fmt = iso => {
         const d = new Date(iso);
-        return isNaN(d) ? esc(iso) : d.toLocaleString("es-GT",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
+        if (isNaN(d)) return "";
+        const fecha = d.toLocaleDateString("es-GT");
+        const hora  = d.toLocaleTimeString("es-GT",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+        return `${fecha}<br><small>${hora}</small>`;
       };
 
-      function itemTpl(x){
+      function stepTpl(x, isLast) {
         const st = Number(x.estado);
-        const m  = META[st] || { name: x.estadoTexto || 'Evento', icon: 'bi-record-circle', color: 'dark' };
-        const dotCls = `tl-dot bg-${m.color}`;
-        const badge  = `badge bg-${m.color}`;
-
+        const meta = META[st] ?? { name: x.estadoTexto || 'Evento', icon: 'bi-record-circle' };
+        const clsLast = isLast ? ' last' : '';
         return `
-          <div class="tl-item">
-            <div class="${dotCls}" title="${esc(m.name)}"><i class="bi ${m.icon}"></i></div>
-            <div class="tl-card">
-              <div class="tl-head">
-                <span class="tl-state ${badge}">${esc(x.estadoTexto || m.name)}</span>
-                <span class="tl-sep">•</span>
-                <span class="tl-time"><i class="bi bi-calendar2-week me-1"></i>${fmt(x.fechaUtc)}</span>
-              </div>
-              <div class="tl-user"><i class="bi bi-person-circle"></i><span>${esc(x.usuario)}</span></div>
-              <!-- Texto de acción eliminado a petición -->
+          <li class="timeline-step step-${st}${clsLast}">
+            <div class="circle"><i class="bi ${meta.icon}"></i></div>
+            <div class="title">${esc((x.estadoTexto || meta.name)).toUpperCase()}</div>
+            <div class="date">
+                <i class="bi bi-calendar2-week me-1"></i>${fmt(x.fechaUtc)}
             </div>
-          </div>`;
+            <div class="user">
+                <i class="bi bi-person-circle me-1 text-primary"></i>${esc(x.usuario)}
+            </div>
+            <i class="icon bi ${meta.icon}"></i>
+          </li>`;
       }
 
-      async function cargar(){
-        try{
+      async function cargar() {
+        try {
           const res = await fetch(apiUrl, { credentials: "same-origin" });
-          if(!res.ok) throw new Error(`HTTP ${res.status}`);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const data = await res.json();
 
-          if(!Array.isArray(data) || data.length === 0){
-            $tl.innerHTML = `<div class="tl-empty"><i class="bi bi-inboxes me-1"></i> Sin eventos de historial.</div>`;
+          if (!Array.isArray(data) || data.length === 0) {
+            $timeline.innerHTML = `<li class="text-muted text-center py-3">Sin eventos registrados.</li>`;
             return;
           }
 
-          data.sort((a,b)=> new Date(a.fechaUtc) - new Date(b.fechaUtc));
-          $tl.innerHTML = data.map(itemTpl).join("");
-
-        }catch(err){
-          $tl.innerHTML = `<div class="tl-empty tl-error"><i class="bi bi-exclamation-octagon me-1"></i> Error al cargar historial: ${esc(String(err))}</div>`;
+          data.sort((a, b) => new Date(a.fechaUtc) - new Date(b.fechaUtc));
+          $timeline.innerHTML = data.map((x, i) => stepTpl(x, i === data.length - 1)).join("");
+        } catch (err) {
+          $timeline.innerHTML = `<li class="text-danger text-center py-3"><i class="bi bi-exclamation-octagon me-1"></i>Error al cargar: ${esc(String(err))}</li>`;
         }
       }
 

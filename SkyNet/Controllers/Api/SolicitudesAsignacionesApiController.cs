@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using SkyNet.Data;
 using SkyNet.Models;
 using SkyNet.Models.DTOs;
@@ -29,10 +30,7 @@ public class SolicitudesAsignacionesApiController : ControllerBase
     }
 
     [HttpPatch("asignaciones/{id:long}/estado")]
-    public async Task<IActionResult> PatchEstado(
-    long id,
-    [FromBody] SolicitudFinalizarDto dto,
-    CancellationToken ct)
+    public async Task<IActionResult> PatchEstado(long id,[FromBody] SolicitudFinalizarDto dto,CancellationToken ct)
     {
         if (dto is null) return BadRequest("Body requerido.");
 
@@ -126,53 +124,71 @@ public class SolicitudesAsignacionesApiController : ControllerBase
 
 
 
-    // Controllers/Api/SolicitudesAsignacionesApiController.cs
     [HttpPost("{id:long}/asignaciones")]
-    public async Task<IActionResult> CrearAsignacion(long id, [FromBody] SolicitudAsignacionCreateDto dto)
+    public async Task<IActionResult> CrearAsignacion(long id, [FromBody] SolicitudAsignacionCreateDto dto, CancellationToken ct)
     {
-        if (dto is null) return BadRequest("Body requerido.");
-        if (id != dto.IdSolicitud) return BadRequest("Id de ruta no coincide con el body.");
-       
-       
-        var yaEstaEseTecnico = await _db.SolicitudAsignaciones.AnyAsync(a =>
+        if (dto is null || id != dto.IdSolicitud) return BadRequest("Body o id inválidos.");
+
+        var userId = User?.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+        var yaEsta = await _db.SolicitudAsignaciones.AnyAsync(a =>
             a.FkSolicitud == id &&
             a.FkTecnico == dto.FkTecnico &&
-            a.Estado == SolicitudAsignacionEstado.Asignada);
+            a.Estado == SolicitudAsignacionEstado.Asignada, ct);
 
-        if (yaEstaEseTecnico)
+        if (yaEsta) return Ok(new { ok = true, ignored = true, reason = "Técnico ya activo." });
+
+        await using var tx = await _db.Database.BeginTransactionAsync(ct);
+        try
         {
-            
-            return Ok(new { ok = true, ignored = true, reason = "El técnico ya está activo en esta solicitud." });
+            var asign = new SolicitudAsignacion
+            {
+                FkSolicitud = id,
+                IdGrupo = dto.IdGrupo,
+                FkTecnico = dto.FkTecnico,
+                Fecha_Inicio = dto.Fecha_Inicio,
+                Notas = dto.Notas,
+                Estado = SolicitudAsignacionEstado.Asignada, // 3
+                FechaAsignacionUtc = DateTime.UtcNow
+            };
+
+            _db.SolicitudAsignaciones.Add(asign);
+            await _db.SaveChangesAsync(ct);
+
+            // Cambia estado de la SOLICITUD y registra tracking (SP)
+            await _db.Database.ExecuteSqlInterpolatedAsync($@"
+            EXEC dbo.sp_Solicitudes_CambiarEstado 
+                 @SolicitudId={id}, 
+                 @NuevoEstado={(int)SolicitudAsignacionEstado.Asignada}, 
+                 @UserId={userId}", ct);
+
+            await tx.CommitAsync(ct);
+
+            return Ok(new
+            {
+                ok = true,
+                asignacion = new
+                {
+                    asign.Id,
+                    asign.FkSolicitud,
+                    asign.IdGrupo,
+                    asign.FkTecnico,
+                    asign.FechaAsignacionUtc,
+                    asign.Fecha_Inicio,
+                    asign.Notas,
+                    Estado = (byte)asign.Estado
+                },
+                estadoSolicitud = (int)SolicitudAsignacionEstado.Asignada
+            });
         }
-
-        var asign = new SolicitudAsignacion
+        catch
         {
-            FkSolicitud = id,
-            IdGrupo = dto.IdGrupo,
-            FkTecnico = dto.FkTecnico,
-            Fecha_Inicio = dto.Fecha_Inicio, 
-            Notas = dto.Notas,
-            Estado = SolicitudAsignacionEstado.Asignada,
-            FechaAsignacionUtc = DateTime.UtcNow
-        };
-
-        _db.SolicitudAsignaciones.Add(asign);
-        await _db.SaveChangesAsync();
-
-        var outDto = new SolicitudAsignacionDto
-        {
-            Id = asign.Id,
-            IdSolicitud = asign.FkSolicitud,
-            IdGrupo = asign.IdGrupo,
-            FkTecnico = asign.FkTecnico,
-            FechaAsignacionUtc = asign.FechaAsignacionUtc,
-            Fecha_Inicio = asign.Fecha_Inicio,
-            Notas = asign.Notas,
-            Estado = (byte)asign.Estado
-        };
-
-        return Ok(outDto);
+            if (tx.GetDbTransaction().Connection is not null) await tx.RollbackAsync(ct);
+            throw;
+        }
     }
+
 
 
     [HttpGet("{id:long}/asignacion-activa")]

@@ -3,7 +3,6 @@
     ViewData["Title"] = "Detalle de asignación";
     Layout = "~/Views/Shared/_Tecnico.cshtml";
 
-    // Estados de asignación
     const int EST_ACEPTADA = 3;
     const int EST_PROCESO = 4;
     const int EST_FIN = 5;
@@ -19,67 +18,68 @@
     };
 
     string BadgeCss(int s) =>
-        s == EST_ACEPTADA ? "bg-success"
+        s == EST_ACEPTADA ? "bg-primary"
       : s == EST_PROCESO ? "bg-warning text-dark"
-      : s == EST_FIN ? "bg-secondary"
+      : s == EST_FIN ? "bg-success"
       : "bg-light text-dark";
 }
 
-@if (ViewBag.Mensaje != null)
-{
-    <div class="alert alert-warning text-center">@ViewBag.Mensaje</div>
-}
-
-<div class="p-3 rounded-0 bg-light shadow-sm mb-4 text-center">
-    <h2 class="mb-0 fw-bold text-dark">
-        <i class="bi bi-person-badge text-primary"></i> Detalle de mi asignación
-    </h2>
-</div>
-
 @if (Model == null)
 {
-    if (ViewBag.Mensaje == null)
-    {
-        <div class="alert alert-warning text-center mt-4">
-            <i class="bi bi-exclamation-triangle"></i> No se encontraron datos para esta asignación.
-        </div>
-    }
+    <div class="alert alert-warning text-center mt-4">
+        <i class="bi bi-exclamation-triangle"></i> No se encontraron datos para esta asignación.
+    </div>
 }
 else
 {
     <div class="container mb-5" data-asignacion-id="@Model.AsignacionId">
-        <!-- ENCABEZADO -->
-        <div class="card border-0 shadow rounded-4 mb-4">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <div>
-                        <h5 class="fw-bold text-primary mb-0">
-                            <i class="bi bi-ticket-detailed"></i> Ticket @Model.Ticket
-                        </h5>
-                        <small class="text-muted">Creado el @Model.CreatedAtUtc.ToString("dd/MM/yyyy HH:mm")</small>
-                    </div>
+        <!-- ENCABEZADO + BOTONES DE ACCIÓN -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div>
+                    <h4 class="fw-bold text-primary mb-1">
+                        <i class="bi bi-ticket-detailed"></i> Ticket @Model.Ticket
+                    </h4>
+                    <small class="text-muted">Creado el @Model.CreatedAtUtc.ToString("dd/MM/yyyy HH:mm")</small>
+                </div>
 
-                    <div class="d-flex align-items-center gap-2">
-                        @* Mostrar "Cómo llegar" solo si hay geo y no está finalizada *@
-                        @if (Model.Latitud.HasValue && Model.Longitud.HasValue && Model.EstadoAsignacion != EST_FIN)
-                        {
-                            <a class="btn btn-sm btn-outline-success"
-                               rel="noopener"
-                               target="_blank"
-                               href="https://www.google.com/maps/dir/?api=1&destination=@Model.Latitud,@Model.Longitud">
-                                <i class="bi bi-geo-alt"></i> Cómo llegar
-                            </a>
-                        }
-                        <span class="badge rounded-pill px-3 py-2 fs-6 @BadgeCss(Model.EstadoAsignacion)">
-                            @EstadoSolicitudTexto(Model.EstadoAsignacion)
-                        </span>
-                    </div>
+                <div class="d-flex align-items-center flex-wrap gap-2">
+                    <span class="badge rounded-pill px-3 py-2 fs-6 @BadgeCss(Model.EstadoAsignacion)">
+                        @EstadoSolicitudTexto(Model.EstadoAsignacion)
+                    </span>
+
+                    @* === Botones principales arriba === *@
+                    @if (Model.EstadoAsignacion == EST_ACEPTADA)
+                    {
+                        <button id="btn-checkin" class="btn btn-primary fw-bold">
+                            <i class="bi bi-play-circle"></i> Iniciar (Check-in)
+                        </button>
+                    }
+                    else if (Model.EstadoAsignacion == EST_PROCESO)
+                    {
+                        <button id="btn-checkout" class="btn btn-warning fw-bold text-dark">
+                            <i class="bi bi-stop-circle"></i> Finalizar
+                        </button>
+                    }
+                    else if (Model.EstadoAsignacion == EST_FIN)
+                    {
+                        <button id="btn-reporte" class="btn btn-outline-danger fw-bold">
+                            <i class="bi bi-file-earmark-pdf"></i> Ver reporte PDF
+                        </button>
+
+                        <a class="btn btn-outline-primary fw-bold"
+                           asp-controller="Solicitudes"
+                           asp-action="Historial"
+                           asp-route-id="@Model.IdSolicitud">
+                            <i class="bi bi-clock-history"></i> Ver tracking
+                        </a>
+                    }
                 </div>
             </div>
         </div>
 
-        <!-- INFORMACIÓN DE LA SOLICITUD -->
-        <div class="card border-0 shadow-sm mb-4">
+        <!-- INFO DE LA SOLICITUD -->
+        <div id="detalleAsignacion" class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-primary bg-opacity-10 fw-bold text-primary">
                 <i class="bi bi-info-circle"></i> Información de la solicitud
             </div>
@@ -89,7 +89,6 @@ else
                     <p><strong>Email:</strong> @Model.Email</p>
                     <p><strong>Teléfono:</strong> @(Model.Telefono ?? "-")</p>
                 </div>
-               
                 <div class="col-12">
                     <p><strong>Descripción:</strong></p>
                     <p class="border p-2 bg-light rounded">@Model.Descripcion</p>
@@ -100,66 +99,30 @@ else
             </div>
         </div>
 
-        <!-- INFORMACIÓN DE ASIGNACIÓN -->
+        <!-- INFO DE ASIGNACIÓN -->
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-success bg-opacity-10 fw-bold text-success">
                 <i class="bi bi-person-gear"></i> Información de la asignación
             </div>
             <div class="card-body row g-3">
                 <div class="col-md-6">
-                  
                     <p><strong>Técnico asignado:</strong> @Model.TecnicoNombre</p>
                     <p><strong>Supervisor:</strong> @Model.SupervisorNombre</p>
                 </div>
                 <div class="col-md-6">
                     <p><strong>Fecha de asignación:</strong> @Model.AsignacionCreadaUtc?.ToString("dd/MM/yyyy HH:mm")</p>
-                    <p><strong>Fecha de inicio:</strong> @Model.AsignacionFechaInicio?.ToString("dd/MM/yyyy HH:mm")</p>
-                    <p><strong>Fecha de finalización:</strong> @Model.AsignacionFechaFin?.ToString("dd/MM/yyyy HH:mm")</p>
+                    <p><strong>Inicio:</strong> @Model.AsignacionFechaInicio?.ToString("dd/MM/yyyy HH:mm")</p>
+                    <p><strong>Finalización:</strong> @Model.AsignacionFechaFin?.ToString("dd/MM/yyyy HH:mm")</p>
                 </div>
                 <div class="col-12">
                     <p><strong>Notas:</strong></p>
                     <p class="border p-2 bg-light rounded">@(!string.IsNullOrWhiteSpace(Model.AsignacionNotas) ? Model.AsignacionNotas : "Sin notas registradas")</p>
                 </div>
             </div>
-
-            <!-- ACCIONES (Footer) -->
-            <div class="card-footer d-flex justify-content-between align-items-center">
-                <a asp-action="Tecnicos" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left"></i> Volver a visitas programadas
-                </a>
-
-                <div class="d-flex gap-2">
-                    @* Si está ACEPTADA (3) => botón Check-in (pasa a 4) *@
-                    @if (Model.EstadoAsignacion == EST_ACEPTADA)
-                    {
-                        <button id="btn-checkin" class="btn btn-primary">
-                            <i class="bi bi-play-circle"></i> Check-in
-                        </button>
-                    }
-                    @* Si está EN PROCESO (4) => botón Finalizar (pasa a 5) *@
-                    @if (Model.EstadoAsignacion == EST_PROCESO)
-                    {
-                        <button id="btn-checkout" class="btn btn-dark">
-                            <i class="bi bi-stop-circle"></i> Finalizar
-                        </button>
-                    }
-
-                    @if (Model.EstadoAsignacion == 5 && Model.IdSolicitud > 0)
-                    {
-                        <a class="btn btn-outline-primary"
-                           asp-controller="Solicitudes"
-                           asp-action="Historial"
-                           asp-route-id="@Model.IdSolicitud">
-                            <i class="bi bi-clock-history"></i> Ver tracking
-                        </a>
-                    }
-
-                </div>
-            </div>
         </div>
 
-        @* MAPA (solo si NO está finalizada) *@
-        @if (Model.Latitud.HasValue && Model.Longitud.HasValue && Model.EstadoAsignacion != EST_FIN)
+        <!-- MAPA -->
+        @if (Model.Latitud.HasValue && Model.Longitud.HasValue)
         {
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-info bg-opacity-10 fw-bold text-info">
@@ -176,95 +139,69 @@ else
             </div>
         }
     </div>
-
-    @section Scripts {
-    
-     
-  <!-- SweetAlert2 (opcional, para mejor UX). Si no carga, hay fallback a prompt() -->
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script>
-  (() => {
-    // Ruta base del API (ajústala si usas otra):
-    // Controlador típico: [Route("api/solicitudes/asignaciones")], [HttpPatch("{id:long}/estado")]
-    const apiRoot = '/api/solicitudes/asignaciones';
-
-    const base   = `${window.location.origin}${document.body.getAttribute('data-pathbase') ?? ''}`;
-    const cont   = document.querySelector('.container[data-asignacion-id]');
-    const asigId = cont?.getAttribute('data-asignacion-id');
-
-    async function patchEstado({ estado, nota = null, fechaFinIso = null }) {
-      const url = `${base}${apiRoot}/${encodeURIComponent(asigId)}/estado`;
-      const body = { Estado: estado };
-      if (nota !== null && nota !== undefined) body.Nota = nota;
-      if (fechaFinIso) body.Fecha_Fin = fechaFinIso;
-
-      const r = await fetch(url, {
-        method: 'PATCH',
-        headers: { 'Content-Type':'application/json' },
-        body: JSON.stringify(body)
-      });
-      if (!r.ok) {
-        const t = await r.text().catch(()=> '');
-        throw new Error(`HTTP ${r.status} ${t}`);
-      }
-    }
-
-    // Estado 3 -> 4 (En proceso)
-    document.getElementById('btn-checkin')?.addEventListener('click', async (e) => {
-      const btn = e.currentTarget; btn.disabled = true;
-      try {
-        await patchEstado({ estado: 4 });
-        location.reload();
-      } catch (err) {
-        alert('Error cambiando a "En proceso": ' + (err?.message || err));
-      } finally { btn.disabled = false; }
-    });
-
-    // Estado 4 -> 5 (Finalizada) con Nota y Fecha_Fin = now (ISO)
-    document.getElementById('btn-checkout')?.addEventListener('click', async (e) => {
-      const btn = e.currentTarget; btn.disabled = true;
-      try {
-        const nowIso = new Date().toISOString();
-
-        // Si SweetAlert2 está disponible: usar modal con textarea (nota opcional)
-        if (window.Swal) {
-          const res = await Swal.fire({
-            title: 'Finalizar asignación',
-            html: `
-              <div class="text-start">
-                <label class="form-label">Nota (opcional)</label>
-                <textarea id="notaFin" class="form-control" rows="3" placeholder="Comentarios..."></textarea>
-                <small class="text-muted d-block mt-2">
-                  La fecha/hora se registrará automáticamente: <code>${nowIso}</code>
-                </small>
-              </div>`,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Finalizar',
-            cancelButtonText: 'Cancelar',
-            focusConfirm: false
-          });
-          if (!res.isConfirmed) return;
-          const nota = (document.getElementById('notaFin')?.value || '').trim();
-          await patchEstado({ estado: 5, nota, fechaFinIso: nowIso });
-        } else {
-          // Fallback simple sin SweetAlert2
-          const nota = prompt('Nota (opcional) para finalizar:') || '';
-          await patchEstado({ estado: 5, nota: nota.trim(), fechaFinIso: nowIso });
-        }
-
-        // hecho
-        if (window.Swal) await Swal.fire('Hecho', 'Asignación finalizada.', 'success');
-        location.reload();
-      } catch (err) {
-        if (window.Swal) Swal.fire('Error', String(err?.message || err), 'error');
-        else alert('Error finalizando: ' + (err?.message || err));
-      } finally { btn.disabled = false; }
-    });
-
-    console.debug('DetalleTecnico listo', { asigId, apiRoot, base });
-  })();
-  </script>
 }
 
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="~/js/reporteAsignacionCompleta.js"></script>
+
+    <script>
+        (() => {
+            const apiRoot = '/api/solicitudes/asignaciones';
+            const cont = document.querySelector('.container[data-asignacion-id]');
+            const asigId = cont?.getAttribute('data-asignacion-id');
+            const base = window.location.origin;
+
+            async function patchEstado({ estado, nota = null, fechaFinIso = null }) {
+                const url = `${base}${apiRoot}/${encodeURIComponent(asigId)}/estado`;
+                const body = { Estado: estado };
+                if (nota) body.Nota = nota;
+                if (fechaFinIso) body.Fecha_Fin = fechaFinIso;
+
+                const r = await fetch(url, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            }
+
+            document.getElementById('btn-checkin')?.addEventListener('click', async (e) => {
+                const btn = e.currentTarget; btn.disabled = true;
+                try {
+                    await patchEstado({ estado: 4 });
+                    Swal.fire('Hecho', 'Asignación iniciada correctamente.', 'success').then(()=>location.reload());
+                } catch (err) {
+                    Swal.fire('Error', String(err), 'error');
+                } finally { btn.disabled = false; }
+            });
+
+            document.getElementById('btn-checkout')?.addEventListener('click', async (e) => {
+                const btn = e.currentTarget; btn.disabled = true;
+                try {
+                    const nowIso = new Date().toISOString();
+                    const res = await Swal.fire({
+                        title: 'Finalizar asignación',
+                        input: 'textarea',
+                        inputPlaceholder: 'Nota (opcional)',
+                        showCancelButton: true,
+                        confirmButtonText: 'Finalizar',
+                    });
+                    if (!res.isConfirmed) return;
+                    await patchEstado({ estado: 5, nota: res.value, fechaFinIso: nowIso });
+                    Swal.fire('Hecho', 'Asignación finalizada.', 'success').then(()=>location.reload());
+                } catch (err) {
+                    Swal.fire('Error', String(err), 'error');
+                } finally { btn.disabled = false; }
+            });
+
+            // Generar PDF (archivo externo)
+                document.getElementById('btn-reporte')?.addEventListener('click', async () => {
+                generarReporteAsignacionCompleta(@Model.IdSolicitud);
+        });
+
+        })();
+    </script>
 }

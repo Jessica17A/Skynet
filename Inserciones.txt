@@ -59,23 +59,20 @@ VALUES
 (5, 19,  SYSUTCDATETIME(), 1),
 (5, 20,  SYSUTCDATETIME(), 1);
 
-------------------------------------------------------------
--- 3) Solicitud  (tabla: dbo.Solicitud)
---    PK: Id_Solicitud (IDENTITY) → no se especifica
-------------------------------------------------------------
+
+
+
 INSERT INTO dbo.Solicitud
     (Nombre, Email, Telefono, Tipo, Prioridad, Descripcion, Ticket, CreatedAtUtc, Estado, Direccion, Latitud, Longitud)
 VALUES
-('José Ramírez',  'jose.ramirez@mail.com',  '5555-1001', 'Soporte',      'Alta',  'Problema con impresora láser',         'TCK-0001', SYSUTCDATETIME(), 1, 'Zona 1, Ciudad',  14.6349, -90.5069),
-('Lucía Torres',  'lucia.torres@mail.com',  '5555-1002', 'Instalación',  'Media', 'Solicitud de instalación de software',  'TCK-0002', SYSUTCDATETIME(), 1, 'Zona 2, Ciudad',  14.6350, -90.5068),
-('Pedro López',   'pedro.lopez@mail.com',   '5555-1003', 'Mantenimiento','Alta',  'Revisión de cableado estructurado',     'TCK-0003', SYSUTCDATETIME(), 1, 'Zona 3, Ciudad',  14.6351, -90.5067),
-('María Gómez',   'maria.gomez@mail.com',   '5555-1004', 'Soporte',      'Baja',  'Consulta sobre acceso a internet',      'TCK-0004', SYSUTCDATETIME(), 1, 'Zona 4, Ciudad',  14.6352, -90.5066),
-('Carlos Pérez',  'carlos.perez@mail.com',  '5555-1005', 'Instalación',  'Alta',  'Instalación de punto de red',           'TCK-0005', SYSUTCDATETIME(), 1, 'Zona 5, Ciudad',  14.6353, -90.5065),
-('Ana Morales',   'ana.morales@mail.com',   '5555-1006', 'Mantenimiento','Media', 'Cambio de UPS en oficina principal',    'TCK-0006', SYSUTCDATETIME(), 1, 'Zona 6, Ciudad',  14.6354, -90.5064),
-('Jorge Castillo','jorge.castillo@mail.com','5555-1007', 'Soporte',      'Alta',  'PC no enciende tras apagón',            'TCK-0007', SYSUTCDATETIME(), 1, 'Zona 7, Ciudad',  14.6355, -90.5063),
-('Sofía Méndez',  'sofia.mendez@mail.com',  '5555-1008', 'Instalación',  'Baja',  'Configurar correo electrónico',         'TCK-0008', SYSUTCDATETIME(), 1, 'Zona 8, Ciudad',  14.6356, -90.5062),
-('Raúl Herrera',  'raul.herrera@mail.com',  '5555-1009', 'Mantenimiento','Media', 'Revisión de cámaras de seguridad',      'TCK-0009', SYSUTCDATETIME(), 1, 'Zona 9, Ciudad',  14.6357, -90.5061),
-('Elena Vásquez', 'elena.vasquez@mail.com', '5555-1010', 'Soporte',      'Alta',  'Problemas de acceso a VPN',             'TCK-0010', SYSUTCDATETIME(), 1, 'Zona 10, Ciudad', 14.6358, -90.5060);
-
-COMMIT;
+(N'José Ramírez',  'jose.ramirez@mail.com',  '5555-1001', N'Soporte',      N'Alta',  N'Problema con impresora láser',         'TCK-0001', SYSUTCDATETIME(), 1, N'Zona 1, Ciudad',  14.6349, -90.5069),
+(N'Lucía Torres',  'lucia.torres@mail.com',  '5555-1002', N'Instalación',  N'Media', N'Solicitud de instalación de software',  'TCK-0002', SYSUTCDATETIME(), 1, N'Zona 2, Ciudad',  14.6350, -90.5068),
+(N'Pedro López',   'pedro.lopez@mail.com',   '5555-1003', N'Mantenimiento',N'Alta',  N'Revisión de cableado estructurado',     'TCK-0003', SYSUTCDATETIME(), 1, N'Zona 3, Ciudad',  14.6351, -90.5067),
+(N'María Gómez',   'maria.gomez@mail.com',   '5555-1004', N'Soporte',      N'Baja',  N'Consulta sobre acceso a internet',      'TCK-0004', SYSUTCDATETIME(), 1, N'Zona 4, Ciudad',  14.6352, -90.5066),
+(N'Carlos Pérez',  'carlos.perez@mail.com',  '5555-1005', N'Instalación',  N'Alta',  N'Instalación de punto de red',           'TCK-0005', SYSUTCDATETIME(), 1, N'Zona 5, Ciudad',  14.6353, -90.5065),
+(N'Ana Morales',   'ana.morales@mail.com',   '5555-1006', N'Mantenimiento',N'Media', N'Cambio de UPS en oficina principal',    'TCK-0006', SYSUTCDATETIME(), 1, N'Zona 6, Ciudad',  14.6354, -90.5064),
+(N'Jorge Castillo','jorge.castillo@mail.com','5555-1007', N'Soporte',      N'Alta',  N'PC no enciende tras apagón',            'TCK-0007', SYSUTCDATETIME(), 1, N'Zona 7, Ciudad',  14.6355, -90.5063),
+(N'Sofía Méndez',  'sofia.mendez@mail.com',  '5555-1008', N'Instalación',  N'Baja',  N'Configurar correo electrónico',         'TCK-0008', SYSUTCDATETIME(), 1, N'Zona 8, Ciudad',  14.6356, -90.5062),
+(N'Raúl Herrera',  'raul.herrera@mail.com',  '5555-1009', N'Mantenimiento',N'Media', N'Revisión de cámaras de seguridad',      'TCK-0009', SYSUTCDATETIME(), 1, N'Zona 9, Ciudad',  14.6357, -90.5061),
+(N'Elena Vásquez', 'elena.vasquez@mail.com', '5555-1010', N'Soporte',      N'Alta',  N'Problemas de acceso a VPN',             'TCK-0010', SYSUTCDATETIME(), 1, N'Zona 10, Ciudad', 14.6358, -90.5060);
 GO

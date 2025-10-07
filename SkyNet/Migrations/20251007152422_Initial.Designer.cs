@@ -12,7 +12,7 @@ using SkyNet.Data;
 namespace SkyNet.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251005212546_Initial")]
+    [Migration("20251007152422_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -253,7 +253,7 @@ namespace SkyNet.Migrations
 
                     b.HasIndex("Fk_Solicitud");
 
-                    b.ToTable("ArchivosSolicitudes");
+                    b.ToTable("ArchivoSolicitud");
                 });
 
             modelBuilder.Entity("SkyNet.Models.Cliente", b =>
@@ -447,6 +447,32 @@ namespace SkyNet.Migrations
                     b.ToTable((string)null);
 
                     b.ToView(null, (string)null);
+                });
+
+            modelBuilder.Entity("SkyNet.Models.DTOs.SolicitudTrackingTimelineRow", b =>
+                {
+                    b.Property<byte>("Estado")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("EstadoTexto")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("FechaUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("SolicitudId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Texto")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Usuario")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.ToTable("SolicitudTrackingTimeline");
                 });
 
             modelBuilder.Entity("SkyNet.Models.Empleado", b =>
@@ -657,6 +683,43 @@ namespace SkyNet.Migrations
                     b.ToTable("Solicitud_Asignacion", (string)null);
                 });
 
+            modelBuilder.Entity("SolicitudTracking", b =>
+                {
+                    b.Property<long>("IdTracking")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("IdTracking");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("IdTracking"));
+
+                    b.Property<byte?>("Estado")
+                        .HasColumnType("tinyint")
+                        .HasColumnName("Estado");
+
+                    b.Property<DateTime>("FechaUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2(7)")
+                        .HasColumnName("FechaUtc")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
+
+                    b.Property<long>("FkSolicitud")
+                        .HasColumnType("bigint")
+                        .HasColumnName("FkSolicitud");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("UserId");
+
+                    b.HasKey("IdTracking")
+                        .HasName("PK_Solicitud_Tracking");
+
+                    b.HasIndex("FkSolicitud");
+
+                    b.ToTable("Solicitud_Tracking", "dbo");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -749,6 +812,18 @@ namespace SkyNet.Migrations
                     b.Navigation("Supervisor");
 
                     b.Navigation("Tecnico");
+                });
+
+            modelBuilder.Entity("SolicitudTracking", b =>
+                {
+                    b.HasOne("SkyNet.Models.Solicitud", "Solicitud")
+                        .WithMany()
+                        .HasForeignKey("FkSolicitud")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_SolicitudTracking_Solicitud");
+
+                    b.Navigation("Solicitud");
                 });
 
             modelBuilder.Entity("SkyNet.Models.Solicitud", b =>

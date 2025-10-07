@@ -139,7 +139,7 @@
                 allowClear: true,
                 width: "100%",
                 minimumInputLength: 0,
-                dropdownParent: $frm,
+                dropdownParent: $frm[0], // <--- ajuste
                 ajax: {
                     url: "/api/grupos",
                     dataType: "json",
@@ -154,7 +154,8 @@
                             .map(g => {
                                 const idGrupo   = g.IdGrupo ?? g.idGrupo ?? "";
                                 const tecnicoId = g.TecnicoId ?? g.tecnicoId ?? "";
-                                const activo    = (g.Estado ?? g.estado) === true;
+                                const rawEstado = g.Estado ?? g.estado;
+                                const activo    = (rawEstado === true || rawEstado === 1 || rawEstado === "1"); // <--- ajuste
                                 if (!idGrupo || !tecnicoId || !activo) return null;
                                 const text = `${g.TecnicoNombre ?? g.tecnicoNombre ?? ''}`;
                                 return { id: `${idGrupo}|${tecnicoId}`, text };
@@ -168,35 +169,35 @@
 
             // Validación envío
             $frm.on("submit", function (e) {
-            const vals = $sel.val();
-            if (!vals || vals.length === 0) {
-                e.preventDefault();
-                Swal.fire({
-                    title: "Atención",
-                    text: "Debes seleccionar al menos un técnico.",
-                    icon: "warning",
-                    confirmButtonText: "Entendido"
-                });
-                return;
-            }
-
-            // valida fecha opcional
-            if ($fecha.value) {
-                const min = new Date($fecha.min);
-                const val = new Date($fecha.value);
-                if (isFinite(min) && isFinite(val) && val < min) {
+                const vals = $sel.val();
+                if (!vals || vals.length === 0) {
                     e.preventDefault();
                     Swal.fire({
-                        title: "Fecha inválida",
-                        text: "La fecha de visita no puede ser anterior al mínimo sugerido.",
-                        icon: "error",
-                        confirmButtonText: "Corregir"
+                        title: "Atención",
+                        text: "Debes seleccionar al menos un técnico.",
+                        icon: "warning",
+                        confirmButtonText: "Entendido"
                     });
                     return;
                 }
-            }
-            $("#notasHidden").val($("#notasTextarea").val() || "");
-        });
+
+                // valida fecha opcional
+                if ($fecha.value) {
+                    const min = new Date($fecha.min);
+                    const val = new Date($fecha.value);
+                    if (isFinite(min) && isFinite(val) && val < min) {
+                        e.preventDefault();
+                        Swal.fire({
+                            title: "Fecha inválida",
+                            text: "La fecha de visita no puede ser anterior al mínimo sugerido.",
+                            icon: "error",
+                            confirmButtonText: "Corregir"
+                        });
+                        return;
+                    }
+                }
+                $("#notasHidden").val($("#notasTextarea").val() || "");
+            });
 
         })();
     </script>

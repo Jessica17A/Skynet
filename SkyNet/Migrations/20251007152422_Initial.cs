@@ -11,6 +11,9 @@ namespace SkyNet.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.EnsureSchema(
+                name: "dbo");
+
             migrationBuilder.CreateTable(
                 name: "AspNetRoles",
                 columns: table => new
@@ -106,6 +109,21 @@ namespace SkyNet.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("Id_Solicitud_Asignacion", x => x.Id_Solicitud_Asignacion);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SolicitudTrackingTimeline",
+                columns: table => new
+                {
+                    SolicitudId = table.Column<long>(type: "bigint", nullable: false),
+                    FechaUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Usuario = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Texto = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Estado = table.Column<byte>(type: "tinyint", nullable: false),
+                    EstadoTexto = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
                 });
 
             migrationBuilder.CreateTable(
@@ -243,7 +261,7 @@ namespace SkyNet.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ArchivosSolicitudes",
+                name: "ArchivoSolicitud",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -255,10 +273,33 @@ namespace SkyNet.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ArchivosSolicitudes", x => x.Id);
+                    table.PrimaryKey("PK_ArchivoSolicitud", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ArchivosSolicitudes_Solicitud_Fk_Solicitud",
+                        name: "FK_ArchivoSolicitud_Solicitud_Fk_Solicitud",
                         column: x => x.Fk_Solicitud,
+                        principalTable: "Solicitud",
+                        principalColumn: "Id_Solicitud",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Solicitud_Tracking",
+                schema: "dbo",
+                columns: table => new
+                {
+                    IdTracking = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    FkSolicitud = table.Column<long>(type: "bigint", nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    Estado = table.Column<byte>(type: "tinyint", nullable: true),
+                    FechaUtc = table.Column<DateTime>(type: "datetime2(7)", nullable: false, defaultValueSql: "SYSUTCDATETIME()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Solicitud_Tracking", x => x.IdTracking);
+                    table.ForeignKey(
+                        name: "FK_SolicitudTracking_Solicitud",
+                        column: x => x.FkSolicitud,
                         principalTable: "Solicitud",
                         principalColumn: "Id_Solicitud",
                         onDelete: ReferentialAction.Cascade);
@@ -291,8 +332,8 @@ namespace SkyNet.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_ArchivosSolicitudes_Fk_Solicitud",
-                table: "ArchivosSolicitudes",
+                name: "IX_ArchivoSolicitud_Fk_Solicitud",
+                table: "ArchivoSolicitud",
                 column: "Fk_Solicitud");
 
             migrationBuilder.CreateIndex(
@@ -357,13 +398,19 @@ namespace SkyNet.Migrations
                 columns: new[] { "FkSolicitud", "FkTecnico", "Estado" },
                 unique: true,
                 filter: "[Estado] = 1");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Solicitud_Tracking_FkSolicitud",
+                schema: "dbo",
+                table: "Solicitud_Tracking",
+                column: "FkSolicitud");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "ArchivosSolicitudes");
+                name: "ArchivoSolicitud");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
@@ -390,13 +437,20 @@ namespace SkyNet.Migrations
                 name: "Solicitud_Asignacion");
 
             migrationBuilder.DropTable(
-                name: "Solicitud");
+                name: "Solicitud_Tracking",
+                schema: "dbo");
+
+            migrationBuilder.DropTable(
+                name: "SolicitudTrackingTimeline");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
                 name: "Empleado");
+
+            migrationBuilder.DropTable(
+                name: "Solicitud");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
