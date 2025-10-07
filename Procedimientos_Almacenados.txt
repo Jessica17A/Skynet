@@ -790,3 +790,96 @@ GO
 
 
 
+USE [SkyNet01]
+GO
+/****** Object:  StoredProcedure [dbo].[usp_SolicitudDetalle_Tecnico]    Script Date: 7/10/2025 16:14:50 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER   PROCEDURE [dbo].[usp_SolicitudDetalle_Tecnico]
+  @ID_SOLICITUD BIGINT,
+  @AspNetUserId NVARCHAR(450)
+AS
+BEGIN
+  SET NOCOUNT ON;
+
+  DECLARE @IdTecnico BIGINT;
+
+  SELECT TOP (1) @IdTecnico = E.Id_Empleado
+  FROM dbo.Empleado E
+  WHERE E.UserId = @AspNetUserId;
+
+  IF @IdTecnico IS NULL
+  BEGIN
+    SELECT CAST(NULL AS BIGINT) AS Id WHERE 1=0;
+    RETURN;
+  END
+
+  ;WITH Asig AS (
+    SELECT TOP (1)
+      A.Id_Solicitud_Asignacion     AS AsignacionId,
+      A.FkSolicitud                 AS FkSolicitud,
+      A.IdGrupo                     AS IdGrupo,
+      A.FkTecnico                   AS FkTecnico,
+      A.FechaAsignacionUtc          AS AsignacionCreadaUtc,
+      A.FechaInicio                 AS AsignacionFechaInicio,
+      A.FechaFin                    AS AsignacionFechaFin,
+      A.Notas                       AS AsignacionNotas,
+      A.Estado                      AS EstadoAsignacion   -- tinyint
+    FROM dbo.Solicitud_Asignacion A
+    WHERE A.FkSolicitud = @ID_SOLICITUD
+      AND A.FkTecnico   = @IdTecnico
+      AND A.Estado IN (3,4,5)
+    ORDER BY A.FechaInicio DESC
+  )
+  SELECT
+    -- Solicitud
+    S.Id_Solicitud                    AS Id,
+    S.Id_Solicitud                    AS IdSolicitud,
+    S.Nombre,
+    S.Email,
+    S.Telefono,
+    S.Tipo,
+    S.Prioridad,
+    S.Descripcion,
+    S.Ticket,
+    S.CreatedAtUtc,
+    S.Estado                          AS EstadoSolicitud,  -- int
+    S.Direccion,
+    S.Latitud,
+    S.Longitud,
+
+    -- Asignación (casteos para evitar InvalidCast)
+    A.AsignacionId,
+    CAST(A.EstadoAsignacion AS INT)   AS EstadoAsignacion,
+    A.AsignacionCreadaUtc,
+    A.AsignacionFechaInicio,
+    A.AsignacionFechaFin,
+    A.AsignacionNotas,
+    CAST(A.IdGrupo AS BIGINT)         AS IdGrupo,          -- si tu DTO usa long
+    A.FkTecnico,
+
+    -- Aliases que espera el front/DTO
+    A.AsignacionFechaInicio           AS Fecha_Inicio,
+    A.AsignacionFechaFin              AS Fecha_Fin,
+    A.AsignacionNotas                 AS Notas,
+    CAST(A.EstadoAsignacion AS INT)   AS Estado,
+
+    CONCAT('Grupo #', G.IdGrupo)      AS GrupoEtiqueta,
+    (TEC.Nombres + ' ' + TEC.Apellidos) AS TecnicoNombre,
+    (SUP.Nombres + ' ' + SUP.Apellidos) AS SupervisorNombre
+  FROM Asig A
+  INNER JOIN dbo.Solicitud S
+      ON S.Id_Solicitud = A.FkSolicitud
+  LEFT JOIN dbo.Empleado TEC
+      ON TEC.Id_Empleado = A.FkTecnico
+  LEFT JOIN dbo.Grupo_Supervisor_Tec G
+      ON G.IdGrupo = A.IdGrupo AND G.FkTecnico = A.FkTecnico
+  LEFT JOIN dbo.Empleado SUP
+      ON SUP.Id_Empleado = G.FkSupervisor;
+END
+
+
+
+
