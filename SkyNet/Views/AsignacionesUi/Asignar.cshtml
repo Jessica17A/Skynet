@@ -1,57 +1,300 @@
-﻿@{
-    ViewData["Title"] = "Asignar técnico";
+﻿@model List<SkyNet.Models.DTOs.SolicitudAsignacionListado>
+@using SkyNet.Models.DTOs
+@{
     Layout = "~/Views/Shared/_Admin.cshtml";
-    long solicitudId = (long)(ViewBag.SolicitudId ?? 0L);
+
+    var sol = ViewBag.Solicitud as SolicitudDto;
+    if (sol is null)
+    {
+        <div class="container mt-4"><div class="alert alert-warning">No se encontró la solicitud.</div></div>
+        ; return;
+    }
+
+    bool esFinalizada = ((int)sol.Estado) == 5;
+
+    var steps = new (int val, string name)[] {
+        (1,"Pendiente"), (2,"Revisada"), (3,"Aceptada"), (4,"En proceso"), (5,"Finalizada")
+    };
+
+    var tecnicos = Model
+        .Select(a => string.IsNullOrWhiteSpace(a.TecnicoNombre) ? $"ID: {a.FkTecnico}" : a.TecnicoNombre!)
+        .Distinct()
+        .OrderBy(x => x)
+        .ToList();
+
+    var supervisores = Model
+        .Select(a => a.SupervisorNombre)
+        .Where(n => !string.IsNullOrWhiteSpace(n))
+        .Distinct()
+        .OrderBy(x => x)
+        .ToList();
+
+    var fechas = Model.Where(a => a.Fecha_Inicio.HasValue).Select(a => a.Fecha_Inicio!.Value).ToList();
+    DateTime? primeraVisita = fechas.Any() ? fechas.Min() : (DateTime?)null;
 }
 
-<div class="container mt-4">
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
-        <h4 class="mb-0"><i class="bi bi-person-plus"></i> Asignar técnico</h4>
-        <a asp-controller="Solicitudes" asp-action="Details" asp-route-id="@solicitudId"
-           class="btn btn-sm btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Volver a detalle
-        </a>
+<style>
+    .hero-bar {
+        background: linear-gradient(90deg,#0d6efd,#20c997);
+        color: #fff;
+        border-radius: .75rem
+    }
+
+        .hero-bar h4 {
+            font-weight: 800
+        }
+
+    .table-compact th, .table-compact td {
+        padding: .55rem .65rem;
+        vertical-align: middle
+    }
+
+    .flow {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: center
+    }
+
+    .dot {
+        width: 36px;
+        height: 36px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        font-weight: 700;
+        border: 2px solid var(--bs-border-color);
+        background: #fff;
+        color: #6c757d
+    }
+
+        .dot.done {
+            background: #e7f1ff;
+            color: #0d6efd;
+            border-color: #cfe2ff
+        }
+
+        .dot.active {
+            background: #0d6efd;
+            color: #fff;
+            border-color: #0d6efd
+        }
+
+    .link {
+        width: 56px;
+        height: 3px;
+        background: var(--bs-border-color);
+        border-radius: 2px
+    }
+
+        .link.done {
+            background: #0d6efd
+        }
+
+    .cta {
+        background: #f6fff9;
+        border: 1px solid #d2f4df;
+        border-radius: 16px;
+        padding: 1rem
+    }
+
+    .btn-cta {
+        border-radius: 999px;
+        padding: .7rem 1.25rem;
+        font-weight: 800
+    }
+</style>
+
+<div class="container mt-4" id="vDetalle" data-id="@sol.Id" data-estado="@((int)sol.Estado)">
+    <div class="hero-bar p-3 mb-3 text-center">
+        <h4 class="mb-0"><i class="bi bi-people"></i> Asignaciones — Ticket <strong>@sol.Ticket</strong></h4>
     </div>
 
-    <div class="card shadow-sm">
+    <!-- Stepper -->
+    <div class="card mb-3">
         <div class="card-body">
-            @Html.ValidationSummary(false, "", new { @class = "text-danger mb-2" })
+            <div class="flow">
+                @{
+                    var curr = (int)sol.Estado;
+                    for (int i = 0; i < steps.Length; i++)
+                    {
+                        var s = steps[i];
+                        var dotCls = s.val < curr ? "dot done" : (s.val == curr ? "dot active" : "dot");
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="@dotCls">@s.val</div>
+                            <div class="fw-semibold">@s.name</div>
+                        </div>
+                        ;
+                        if (i < steps.Length - 1)
+                        {
+                            var lk = steps[i].val < curr ? "link done" : "link";
+                            <div class="@lk"></div>
+                            ;
+                        }
+                    }
+                }
+            </div>
+        </div>
+    </div>
 
-            <form asp-action="Asignar" method="post" id="frmAsignar">
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="solicitudId" value="@solicitudId" />
-                <input type="hidden" name="notas" id="notasHidden" />
-
-                <!-- Selector (Select2) -->
-                <div class="mb-3">
-                    <label for="tecnicos" class="form-label fw-semibold">Selecciona técnico(s)</label>
-                    <select id="tecnicos" name="TecnicosIds" multiple class="form-select"></select>
-                    <div class="form-text">Puedes buscar por nombre.</div>
+    <!-- Resumen -->
+    <div class="row g-3 justify-content-center text-center mb-3">
+        <div class="col-12 col-md-4">
+            <div class="w-100 p-3 bg-white border rounded-3 shadow-sm">
+                <div class="small d-flex justify-content-center align-items-center gap-2 mb-1 text-primary">
+                    <i class="bi bi-people-fill"></i><span>Técnicos</span>
                 </div>
+                <div class="fw-bold fs-4 text-primary">@tecnicos.Count</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="w-100 p-3 bg-white border rounded-3 shadow-sm">
+                <div class="small d-flex justify-content-center align-items-center gap-2 mb-1 text-success">
+                    <i class="bi bi-calendar2-week"></i><span>Visita Programada</span>
+                </div>
+                <div class="fw-bold fs-5 text-success">@((primeraVisita?.ToString("dd/MM/yyyy HH:mm")) ?? "-")</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="w-100 p-3 bg-white border rounded-3 shadow-sm">
+                <div class="small d-flex justify-content-center align-items-center gap-2 mb-2 text-warning">
+                    <i class="bi bi-shield-check"></i><span>Supervisor(es)</span>
+                </div>
+                <div class="d-flex justify-content-center flex-wrap gap-2">
+                    @if (supervisores.Any())
+                    {
+                        foreach (var s in supervisores)
+                        {
+                            <span class="badge rounded-pill bg-white border border-warning text-warning px-3 py-2">@s</span>
+                        }
+                    }
+                    else
+                    {
 
-                <!-- Fecha de visita (opcional, aplica a todos) -->
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label for="fechaVisita" class="form-label fw-semibold">Fecha y hora de visita (opcional)</label>
-                        <input type="datetime-local" id="fechaVisita" name="fechaVisita" class="form-control" />
-                        <div class="form-text">Se asignará esta fecha a todos los técnicos seleccionados (puedes dejarla vacía).</div>
+                        <span class="text-warning">-</span>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Acciones del supervisor: Agregar técnicos con Select2 -->
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <h5 class="fw-bold mb-3"><i class="bi bi-person-plus"></i> Agregar técnicos</h5>
+
+            @if (!esFinalizada)
+            {
+                <form id="frmAgregarTec" class="mb-2">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-8">
+                            <label class="form-label fw-semibold">Selecciona técnico(s)</label>
+                            <select id="selTecnicos" multiple class="form-select"></select>
+                            <div class="form-text">Busca por nombre. Los técnicos ya asignados aparecerán deshabilitados.</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Nota (opcional)</label>
+                            <input id="txtNota" class="form-control" placeholder="Instrucciones para el técnico" />
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end mt-3">
+                        <button type="button" id="btnAdd" class="btn btn-primary">
+                            <i class="bi bi-check2-circle"></i> Asignar técnico(s)
+                        </button>
+                    </div>
+                    <div class="form-text mt-1">La fecha programada se hereda automáticamente de la solicitud.</div>
+                </form>
+            }
+            else
+            {
+                <div class="alert alert-secondary mb-0">
+                    <i class="bi bi-info-circle"></i> La solicitud está finalizada. No se pueden agregar ni quitar técnicos.
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Tabla de asignaciones -->
+    <div class="card">
+        <div class="card-body">
+            <h5 class="fw-bold mb-3"><i class="bi bi-list-task"></i> Técnicos asignados</h5>
+
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover table-compact align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Técnico</th>
+                                <th>Supervisor</th>
+                                <th>Asignado (UTC)</th>
+                                <th>Visita</th>
+                                <th>Notas</th>
+                                <th>Estado</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var a in Model.OrderBy(x => x.Fecha_Inicio ?? DateTime.MaxValue))
+                            {
+                                var esFin = (a.Estado == 5 || a.Estado == 2);
+                                var estClase = a.Estado == 0 ? "badge bg-secondary"
+                                : esFin ? "badge bg-primary"
+                                : a.Estado == 4 ? "badge bg-warning text-dark"
+                                : a.Estado == 3 ? "badge bg-success"
+                                : "badge bg-light text-dark";
+
+                                var estTexto = a.Estado == 0 ? "Anulada"
+                                : esFin ? "Finalizada"
+                                : a.Estado == 4 ? "En proceso"
+                                : a.Estado == 3 ? "Aceptada"
+                                : "-";
+
+                                <tr>
+                                    <td>@(a.TecnicoNombre ?? $"ID: {a.FkTecnico}")</td>
+                                    <td>@(a.SupervisorNombre ?? "-")</td>
+                                    <td>@a.FechaAsignacionUtc.ToString("yyyy-MM-dd HH:mm")</td>
+                                    <td>@(a.Fecha_Inicio?.ToString("yyyy-MM-dd HH:mm") ?? "-")</td>
+                                    <td>@(string.IsNullOrWhiteSpace(a.Notas) ? "-" : a.Notas)</td>
+                                    <td><span class="@estClase">@estTexto</span></td>
+                                    <td class="text-end">
+                                        @if (!esFinalizada && a.Estado == 3)
+                                        {
+                                            <button class="btn btn-sm btn-outline-danger" data-action="anular" data-id="@a.Id" title="Anular">
+                                                <i class="bi bi-x-circle"></i>
+                                            </button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info mb-0">Sin asignaciones.</div>
+            }
+        </div>
+
+        <!-- CTA tracking -->
+        <div class="card-footer">
+            <div class="cta d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-flag-fill text-success fs-4"></i>
+                    <div>
+                        <div class="fw-bold">Seguir con el tracking de la solicitud</div>
+                        <div class="text-muted small">Revisa el flujo completo y avanza el estado</div>
                     </div>
                 </div>
-
-                <!-- Notas -->
-                <div class="mb-3 mt-3">
-                    <label for="notasTextarea" class="form-label fw-semibold">Notas (opcional)</label>
-                    <textarea id="notasTextarea" class="form-control" rows="2" placeholder="Observaciones de la asignación..."></textarea>
-                </div>
-
-                <div class="d-flex justify-content-end gap-2">
-                    <a asp-controller="Solicitudes" asp-action="Details" asp-route-id="@solicitudId"
-                       class="btn btn-outline-secondary">Cancelar</a>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check2-circle"></i> Confirmar asignación
-                    </button>
-                </div>
-            </form>
+                <a class="btn btn-success btn-cta d-inline-flex align-items-center gap-2"
+                   asp-controller="Solicitudes"
+                   asp-action="Details"
+                   asp-route-id="@sol.Id">
+                    Ir al tracking <i class="bi bi-arrow-right-short fs-5"></i>
+                </a>
+            </div>
         </div>
     </div>
 </div>
@@ -59,56 +302,6 @@
 @section Styles {
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
-    <style>
-        /* CONTENEDOR */
-        .select2-container--bootstrap-5 .select2-selection--multiple,
-        .select2-container .select2-selection--multiple {
-            min-height: 42px !important;
-            border-radius: .8rem !important;
-            border: 1px solid #cfd6dc !important;
-            padding: .2rem !important;
-        }
-
-        .select2-container--bootstrap-5.select2-container--focus .select2-selection--multiple,
-        .select2-container.select2-container--focus .select2-selection--multiple {
-            border-color: #86b7fe !important;
-            box-shadow: 0 0 0 .2rem rgba(13,110,253,.15) !important;
-        }
-        /* CHIPS */
-        .select2-container--bootstrap-5 .select2-selection__choice,
-        .select2-container .select2-selection--multiple .select2-selection__choice {
-            background-color: #28B4EB !important;
-            border: 1px solid #b3cde0 !important;
-            border-radius: 999px !important;
-            color: #e6f4ff !important;
-            font-weight: 500 !important;
-            padding: .25rem .6rem !important;
-            margin-top: .25rem !important;
-            margin-right: .25rem !important;
-        }
-
-        .select2-container--bootstrap-5 .select2-selection__choice__remove,
-        .select2-container .select2-selection__choice__remove {
-            color: #0d6efd !important;
-            margin-right: .35rem !important;
-            font-weight: 700 !important;
-        }
-
-            .select2-container--bootstrap-5 .select2-selection__choice__remove:hover,
-            .select2-container .select2-selection__choice__remove:hover {
-                color: #084298 !important;
-            }
-
-        .select2-container--bootstrap-5 .select2-results__option--selected {
-            background-color: #e6f4ff !important;
-            color: #0d6efd !important;
-        }
-
-        .select2-container--bootstrap-5 .select2-results__option--highlighted.select2-results__option--selectable {
-            background-color: #eaf2ff !important;
-            color: #0b5ed7 !important;
-        }
-    </style>
 }
 
 @section Scripts {
@@ -116,89 +309,129 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        (function () {
-            const $sel = $("#tecnicos");
-            const $frm = $("#frmAsignar");
-            const $fecha = document.getElementById("fechaVisita");
+        (() => {
+          const base  = `${window.location.origin}${document.body.getAttribute('data-pathbase') ?? ''}`;
+          const solId = $("#vDetalle").data("id");
+          const estadoSol = Number($("#vDetalle").data("estado"));
 
-            // helper: YYYY-MM-DDTHH:mm local
-            function toLocalInputValue(dt) {
-                const pad = n => String(n).padStart(2, "0");
-                return `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
-            }
-            (function setMin() {
-                const now = new Date();
-                now.setMinutes(now.getMinutes() + 30);
-                $fecha.min = toLocalInputValue(now);
-            })();
+          // técnicos ya asignados (activos) para deshabilitarlos en el selector
+          const asignados = new Set(@Html.Raw(
+                    System.Text.Json.JsonSerializer.Serialize(
+                        Model.Where(m => m.Estado != 0).Select(m => m.FkTecnico).Distinct()
+                    )));
 
-            // Select2 AJAX
-            $sel.select2({
-                theme: "bootstrap-5",
-                placeholder: "Selecciona uno o varios técnicos",
-                allowClear: true,
-                width: "100%",
-                minimumInputLength: 0,
-                dropdownParent: $frm[0], // <--- ajuste
-                ajax: {
-                    url: "/api/grupos",
-                    dataType: "json",
+      // Abre Swal con <select> + Select2
+      async function mostrarModalAgregar() {
+        if (estadoSol === 5) {
+          Swal.fire("Bloqueado", "La solicitud está finalizada. No se pueden agregar técnicos.", "info");
+          return;
+        }
+
+            await Swal.fire({
+              title: 'Agregar técnico(s)',
+              html: `
+                <div class="text-start">
+                  <label class="form-label fw-semibold mb-1">Técnico(s)</label>
+                  <select id="sw-tecs" multiple style="width:100%"></select>
+                  <label class="form-label fw-semibold mt-3 mb-1">Nota (opcional)</label>
+                  <textarea id="sw-nota" class="form-control" rows="2" placeholder="Instrucciones para el técnico"></textarea>
+                  <div class="form-text mt-2">La fecha programada se hereda automáticamente de la solicitud.</div>
+                </div>
+              `,
+              showCancelButton: true,
+              confirmButtonText: 'Agregar',
+              cancelButtonText: 'Cancelar',
+              width: 650,
+              didOpen: () => {
+                // importantísimo: Parent del dropdown = el popup de Swal
+                const $sel = $('#sw-tecs');
+                $sel.select2({
+                  theme: 'bootstrap-5',
+                  placeholder: 'Selecciona técnico(s)',
+                  width: '100%',
+                  allowClear: true,
+                  closeOnSelect: false,
+                  dropdownParent: $('.swal2-popup'),
+                  ajax: {
+                    url: `${base}/api/grupos`,
+                    dataType: 'json',
                     delay: 200,
-                    data: params => ({
-                        mine: true,
-                        q: params.term || ""
-                    }),
-                    processResults: (data) => {
-                        const items = Array.isArray(data) ? data : [];
-                        const results = items
-                            .map(g => {
-                                const idGrupo   = g.IdGrupo ?? g.idGrupo ?? "";
-                                const tecnicoId = g.TecnicoId ?? g.tecnicoId ?? "";
-                                const rawEstado = g.Estado ?? g.estado;
-                                const activo    = (rawEstado === true || rawEstado === 1 || rawEstado === "1"); // <--- ajuste
-                                if (!idGrupo || !tecnicoId || !activo) return null;
-                                const text = `${g.TecnicoNombre ?? g.tecnicoNombre ?? ''}`;
-                                return { id: `${idGrupo}|${tecnicoId}`, text };
-                            })
-                            .filter(Boolean);
-                        return { results };
+                    data: params => ({ mine: true, q: params.term || '' }),
+                    processResults: data => {
+                      const items = Array.isArray(data) ? data : [];
+                      const results = items.map(g => {
+                        const idGrupo = g.IdGrupo ?? g.idGrupo;
+                        const fkTec   = g.FkTecnico ?? g.tecnicoId ?? g.FkTecnico;
+                        const activo  = g.Estado === true || g.Estado === 1 || g.Estado === "1";
+                        if (!idGrupo || !fkTec || !activo) return null;
+                        return {
+                          id: `${idGrupo}|${fkTec}`,
+                          text: g.TecnicoNombre ?? g.tecnicoNombre ?? `Tec ${fkTec}`,
+                          disabled: asignados.has(Number(fkTec)) // ya está asignado → deshabilitado
+                        };
+                      }).filter(Boolean);
+                      return { results };
                     }
-                },
-                closeOnSelect: false
-            });
-
-            // Validación envío
-            $frm.on("submit", function (e) {
-                const vals = $sel.val();
-                if (!vals || vals.length === 0) {
-                    e.preventDefault();
-                    Swal.fire({
-                        title: "Atención",
-                        text: "Debes seleccionar al menos un técnico.",
-                        icon: "warning",
-                        confirmButtonText: "Entendido"
-                    });
-                    return;
+                  }
+                });
+              },
+              preConfirm: () => {
+                const vals = $('#sw-tecs').val() || [];
+                if (!vals.length) {
+                  Swal.showValidationMessage('Selecciona al menos un técnico');
+                  return false;
                 }
-
-                // valida fecha opcional
-                if ($fecha.value) {
-                    const min = new Date($fecha.min);
-                    const val = new Date($fecha.value);
-                    if (isFinite(min) && isFinite(val) && val < min) {
-                        e.preventDefault();
-                        Swal.fire({
-                            title: "Fecha inválida",
-                            text: "La fecha de visita no puede ser anterior al mínimo sugerido.",
-                            icon: "error",
-                            confirmButtonText: "Corregir"
-                        });
-                        return;
-                    }
-                }
-                $("#notasHidden").val($("#notasTextarea").val() || "");
+                const tecnicos = vals.map(v => {
+                  const [g, t] = String(v).split('|').map(Number);
+                  return { idGrupo: g, fkTecnico: t };
+                }).filter(x => Number.isFinite(x.idGrupo) && Number.isFinite(x.fkTecnico));
+                const nota = ($('#sw-nota').val() || '').toString();
+                return { tecnicos, nota };
+              }
+            }).then(async res => {
+              if (!res.isConfirmed) return;
+              try {
+                const payload = res.value; // { tecnicos:[{idGrupo,fkTecnico}], nota }
+                const r = await fetch(`${base}/api/solicitudes/${solId}/asignaciones/tecnicos`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(payload)
+                });
+                if (!r.ok) throw new Error(await r.text() || 'No se pudo asignar.');
+                await Swal.fire('Hecho', 'Técnico(s) agregado(s).', 'success');
+                location.reload();
+              } catch (e) {
+                Swal.fire('Error', e.message || String(e), 'error');
+              }
             });
+          }
 
+          // Botón: acepta tanto #btnAdd como #btn-add-tech
+          document.getElementById('btnAdd')?.addEventListener('click', mostrarModalAgregar);
+          document.getElementById('btn-add-tech')?.addEventListener('click', mostrarModalAgregar);
+
+          // Anular (esto ya lo tenías; lo dejo intacto)
+          $(document).on('click', "button[data-action='anular']", async function () {
+            const id = $(this).data('id');
+            const { value: nota } = await Swal.fire({
+              title: 'Anular asignación',
+              input: 'text',
+              inputLabel: 'Motivo (opcional)',
+              showCancelButton: true,
+              confirmButtonText: 'Anular',
+              cancelButtonText: 'Cancelar',
+              icon: 'warning'
+            });
+            if (nota === undefined) return;
+            const r = await fetch(`${base}/api/solicitudes/asignaciones/${id}/estado`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ estado: 0, nota: (nota ?? "") })
+            });
+            if (r.ok) Swal.fire('Hecho', 'Asignación anulada.', 'success').then(()=>location.reload());
+            else Swal.fire('Error', await r.text() || 'No se pudo anular.', 'error');
+          });
         })();
     </script>
+
 }

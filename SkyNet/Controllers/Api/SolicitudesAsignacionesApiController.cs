@@ -243,21 +243,6 @@ public class SolicitudesAsignacionesApiController : ControllerBase
 
 
 
-    //[HttpGet("solicitudes/{id:long}/asignaciones/tecnico/detalle")]
-    //public async Task<ActionResult<SolicitudAsignacionListado>> DetalleAsignacionTecnico(long id)
-    //{
-    //    var userId = _userManager.GetUserId(User);
-
-    //    var rows = await _db.SolicitudAsignacionListado
-    //        .FromSqlRaw("EXEC dbo.usp_SolicitudDetalle_Tecnico @ID_SOLICITUD = {0}, @AspNetUserId = {1}", id, userId)
-    //        .AsNoTracking()
-    //        .ToListAsync();
-
-    //    var item = rows.FirstOrDefault();
-    //    if (item is null) return NotFound();  // el técnico no tiene asignación en esa solicitud
-
-    //    return Ok(item);
-    //}
 
     [HttpGet("{id:long}/asignaciones/tecnico/detalle")]
     public async Task<ActionResult<SolicitudAsignacionDetalleDto>> DetalleAsignacionTecnico(long id)
@@ -276,16 +261,44 @@ public class SolicitudesAsignacionesApiController : ControllerBase
     }
 
 
-    //[HttpGet("solicitudes/{id:long}/tracking")]
-    //public async Task<ActionResult<IEnumerable<SolicitudTrackingTimelineRow>>> Tracking(long id, CancellationToken ct)
-    //{
-    //    var rows = await _db.SolicitudTrackingTimeline
-    //        .FromSqlRaw("EXEC dbo.sp_Solicitud_Tracking_Timeline @SolicitudId = {0}", id)
-    //        .AsNoTracking()
-    //        .ToListAsync(ct);
+        // POST /api/solicitudes/{id}/asignaciones/tecnicos
+        [HttpPost("{id:long}/asignaciones/tecnicos")]
+        public async Task<IActionResult> AgregarTecnicos(long id, [FromBody] AddTechsDto dto)
+        {
+            var userId = _userManager.GetUserId(User);
+            var idSup = await _db.Empleados.Where(e => e.UserId == userId).Select(e => e.Id).FirstOrDefaultAsync();
+            if (idSup == 0) return Forbid();
 
-    //    return Ok(rows);
-    //}
+            foreach (var tecId in dto.Tecnicos.Distinct())
+            {
+                await _db.Database.ExecuteSqlRawAsync(
+                    "EXEC dbo.usp_Solicitud_Asignacion_AgregarTecnico @ID_SOLICITUD={0}, @IdSupervisor={1}, @FkTecnico={2}, @Nota={3}",
+                    id, idSup, tecId, dto.Nota ?? (object)DBNull.Value
+                );
+            }
+            return NoContent();
+        }
+
+        public record AddTechsDto(List<long> Tecnicos, string? Nota);
+
+        // PATCH /api/solicitudes/asignaciones/{asigId}/anular
+        [HttpPatch("asignaciones/{asigId:long}/anular")]
+        public async Task<IActionResult> AnularAsignacion(long asigId, [FromBody] MotivoDto body)
+        {
+            var userId = _userManager.GetUserId(User);
+            var idSup = await _db.Empleados.Where(e => e.UserId == userId).Select(e => e.Id).FirstOrDefaultAsync();
+            if (idSup == 0) return Forbid();
+
+            await _db.Database.ExecuteSqlRawAsync(
+                "EXEC dbo.usp_Solicitud_Asignacion_Anular @IdAsignacion={0}, @IdSupervisor={1}, @Nota={2}",
+                asigId, idSup, body?.Nota ?? (object)DBNull.Value
+            );
+            return NoContent();
+        }
+
+        public record MotivoDto(string? Nota);
+
+
 
 
 

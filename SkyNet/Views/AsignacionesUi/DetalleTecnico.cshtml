@@ -122,7 +122,7 @@ else
         </div>
 
         <!-- MAPA -->
-        @if (Model.Latitud.HasValue && Model.Longitud.HasValue)
+        @if (Model.Latitud.HasValue && Model.Longitud.HasValue && Model.EstadoAsignacion != EST_FIN)
         {
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-info bg-opacity-10 fw-bold text-info">
@@ -138,6 +138,7 @@ else
                 </div>
             </div>
         }
+
     </div>
 }
 

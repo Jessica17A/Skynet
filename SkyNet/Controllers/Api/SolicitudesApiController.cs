@@ -59,6 +59,8 @@ namespace SkyNet.Controllers.Api
             return s is null ? NotFound() : Ok(Map(s));
         }
 
+
+
         // GET: /api/solicitudes/by-ticket/{ticket}
         [HttpGet("by-ticket/{ticket}")]
         public async Task<ActionResult<SolicitudDto>> GetByTicket(string ticket, CancellationToken ct)

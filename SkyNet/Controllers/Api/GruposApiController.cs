@@ -57,7 +57,6 @@ namespace SkyNet.Controllers.Api
 
 
         // POST: api/grupos
-        // POST: api/grupos
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] GrupoCreateDto dto)
         {

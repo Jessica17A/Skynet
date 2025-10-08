@@ -605,3 +605,4 @@ C:\Users\JESSICA GONZALEZ\Desktop\Skynet\SkyNet\bin\Debug\net8.0\Swashbuckle.Asp
 C:\Users\JESSICA GONZALEZ\Desktop\Skynet\SkyNet\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerGen.dll
 C:\Users\JESSICA GONZALEZ\Desktop\Skynet\SkyNet\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerUI.dll
 C:\Users\jgonzalez\source\repos\SkyNet\SkyNet\bin\Debug\net8.0\Dapper.dll
+C:\Users\JESSICA GONZALEZ\Desktop\Skynet\SkyNet\bin\Debug\net8.0\Dapper.dll

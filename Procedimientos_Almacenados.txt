@@ -883,3 +883,110 @@ END
 
 
 
+
+ALTER PROCEDURE dbo.usp_Solicitud_Asignacion_AgregarTecnico
+  @ID_SOLICITUD BIGINT,
+  @IdSupervisor BIGINT,
+  @FkTecnico BIGINT,
+  @Nota NVARCHAR(MAX) = NULL
+AS
+BEGIN
+  SET NOCOUNT ON;
+
+  -- Verifica que el técnico pertenezca a algún grupo del supervisor
+  IF NOT EXISTS (
+      SELECT 1
+      FROM dbo.Grupo_Supervisor_Tec gst
+      WHERE gst.FkSupervisor = @IdSupervisor AND gst.FkTecnico = @FkTecnico
+  )
+  BEGIN
+      RAISERROR('El técnico no está bajo este supervisor.', 16, 1);
+      RETURN;
+  END
+
+  -- Evita duplicados activos
+  IF EXISTS (
+      SELECT 1
+      FROM dbo.Solicitud_Asignacion sa
+      WHERE sa.FkSolicitud = @ID_SOLICITUD
+        AND sa.FkTecnico   = @FkTecnico
+        AND sa.Estado IN (3,4,5) -- activa/no anulada
+  )
+  BEGIN
+      RAISERROR('Este técnico ya está asignado a la solicitud.', 16, 1);
+      RETURN;
+  END
+
+  DECLARE @IdGrupo BIGINT;
+  SELECT TOP (1) @IdGrupo = gst.IdGrupo
+  FROM dbo.Grupo_Supervisor_Tec gst
+  WHERE gst.FkSupervisor = @IdSupervisor AND gst.FkTecnico = @FkTecnico;
+
+  -- Hereda la fecha programada (la mínima existente)
+  DECLARE @FechaProgramada DATETIME = (
+    SELECT MIN(sa.FechaInicio)
+    FROM dbo.Solicitud_Asignacion sa
+    WHERE sa.FkSolicitud = @ID_SOLICITUD AND sa.Estado IN (3,4,5)
+  );
+
+  IF @FechaProgramada IS NULL
+  BEGIN
+      RAISERROR('No existe fecha programada. Planifica primero la visita.', 16, 1);
+      RETURN;
+  END
+
+  INSERT INTO dbo.Solicitud_Asignacion
+    (FkSolicitud, IdGrupo, FkTecnico, FechaAsignacionUtc, FechaInicio, FechaFin, Notas, Estado)
+  VALUES
+    (@ID_SOLICITUD, @IdGrupo, @FkTecnico, GETUTCDATE(), @FechaProgramada, NULL, @Nota, 3); -- 3 = Aceptada
+END
+
+
+
+
+
+
+
+
+ALTER PROCEDURE dbo.usp_Solicitud_Asignacion_Anular
+  @IdAsignacion BIGINT,
+  @IdSupervisor BIGINT,
+  @Nota NVARCHAR(MAX) = NULL
+AS
+BEGIN
+  SET NOCOUNT ON;
+
+  -- Verifica pertenencia al supervisor
+  IF NOT EXISTS (
+      SELECT 1
+      FROM dbo.Solicitud_Asignacion a
+      JOIN dbo.Grupo_Supervisor_Tec g ON g.IdGrupo = a.IdGrupo AND g.FkTecnico = a.FkTecnico
+      WHERE a.Id_Solicitud_Asignacion = @IdAsignacion
+        AND g.FkSupervisor = @IdSupervisor
+  )
+  BEGIN
+      RAISERROR('No tiene permisos sobre esta asignación.', 16, 1);
+      RETURN;
+  END
+
+  -- Solo anulable si está Aceptada (3)
+  IF EXISTS (
+      SELECT 1
+      FROM dbo.Solicitud_Asignacion a
+      WHERE a.Id_Solicitud_Asignacion = @IdAsignacion
+        AND a.Estado NOT IN (3)
+  )
+  BEGIN
+      RAISERROR('Solo se pueden anular asignaciones en estado Aceptada.', 16, 1);
+      RETURN;
+  END
+
+  UPDATE dbo.Solicitud_Asignacion
+  SET Estado = 0, -- Anulada
+      Notas  = CONCAT(ISNULL(Notas,''), CHAR(10), '[Anulada por supervisor ', @IdSupervisor, ' ', CONVERT(NVARCHAR(19), GETUTCDATE(), 120), '] ', ISNULL(@Nota,'')),
+      FechaFin = ISNULL(FechaFin, NULL) -- no tocar
+  WHERE Id_Solicitud_Asignacion = @IdAsignacion;
+END
+
+
+
