@@ -237,7 +237,7 @@
                 url: `${base}/api/grupos`,
                 dataType: 'json',
                 delay: 200,
-                data: params => ({ q: params.term || '' }), // sin mine:true
+                data: params => ({ mine: true, q: params.term || '' }),
                 processResults: data => {
                     const items = Array.isArray(data) ? data : [];
                     const results = items.map(g => {

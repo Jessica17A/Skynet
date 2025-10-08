@@ -98,13 +98,22 @@ public class AsignacionesUiController : Controller
 
 
 
-    
+
+    //[HttpGet("Asignar/{solicitudId:long}")]
+    //public IActionResult Asignar(long solicitudId)
+    //{
+    //    ViewBag.SolicitudId = solicitudId;
+    //    return View();
+    //}
+
     [HttpGet]
     public IActionResult Asignar(long solicitudId)
     {
         ViewBag.SolicitudId = solicitudId;
-        return View(); 
+        return View();
     }
+
+
 
 
 

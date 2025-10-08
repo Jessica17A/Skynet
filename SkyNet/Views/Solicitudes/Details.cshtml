@@ -291,7 +291,8 @@
                   cancelButtonText: "Cancelar"
                 });
                 if (r.isConfirmed) {
-                  window.location.href = `/AsignacionesUi/Asignar?solicitudId=${id}`;
+                window.location.href = `/AsignacionesUi/Asignar?solicitudId=${id}`;
+
                 } else {
                   zone.querySelectorAll('button').forEach(b => b.disabled = false);
                 }
