@@ -990,3 +990,81 @@ END
 
 
 
+
+
+
+
+USE [SkyNet01];
+GO
+
+CREATE OR ALTER PROCEDURE dbo.usp_SolicitudAsignarTecnico
+    @IdSolicitud     BIGINT,
+    @IdGrupo         INT,
+    @FkTecnico       BIGINT,
+    @Notas           NVARCHAR(500) = NULL,
+    @FechaInicioUtc  DATETIME2(7) = NULL,
+    @UserId          NVARCHAR(450)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    BEGIN TRY
+        BEGIN TRAN;
+
+        -- 🔹 Validar existencia de Solicitud
+        IF NOT EXISTS (SELECT 1 FROM dbo.Solicitud WHERE Id_Solicitud = @IdSolicitud)
+        BEGIN
+            SELECT Ok = 0, Msg = N'La solicitud no existe.';
+            ROLLBACK TRAN;
+            RETURN;
+        END;
+
+        -- 🔹 Validar grupo y técnico
+        IF NOT EXISTS (SELECT 1 FROM dbo.Grupo_Supervisor_Tec WHERE IdGrupo = @IdGrupo AND FkTecnico = @FkTecnico)
+        BEGIN
+            SELECT Ok = 0, Msg = N'El técnico no pertenece al grupo indicado.';
+            ROLLBACK TRAN;
+            RETURN;
+        END;
+
+        -- 🔹 Evitar duplicado
+        IF EXISTS (
+            SELECT 1 
+            FROM dbo.Solicitud_Asignacion 
+            WHERE FkSolicitud = @IdSolicitud 
+              AND FkTecnico = @FkTecnico
+              AND Estado = 3
+        )
+        BEGIN
+            SELECT Ok = 1, Msg = N'El técnico ya está asignado a esta solicitud.';
+            ROLLBACK TRAN;
+            RETURN;
+        END;
+
+        -- 🔹 Insertar asignación
+        INSERT INTO dbo.Solicitud_Asignacion
+            (FkSolicitud, IdGrupo, FkTecnico, FechaAsignacionUtc, FechaInicio, FechaFin, Notas, Estado)
+        VALUES
+            (@IdSolicitud, @IdGrupo, @FkTecnico, SYSUTCDATETIME(), @FechaInicioUtc, NULL, @Notas, 3);
+
+        -- 🔹 Actualizar solicitud a estado 3 (Aceptada)
+        UPDATE dbo.Solicitud
+        SET Estado = 3
+        WHERE Id_Solicitud = @IdSolicitud;
+
+        COMMIT TRAN;
+
+        SELECT Ok = 1, Msg = N'Asignación creada correctamente.';
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRAN;
+        DECLARE @msg NVARCHAR(4000) = ERROR_MESSAGE();
+        SELECT Ok = 0, Msg = N'Error interno: ' + @msg;
+    END CATCH
+END;
+GO
+
+
+
+

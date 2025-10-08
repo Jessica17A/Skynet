@@ -6,7 +6,7 @@ using System.Net.Http.Json;
 
 namespace SkyNet.Controllers.Web
 {
-    [Authorize]
+
     public class SolicitudesController : Controller
     {
         private readonly IHttpClientFactory _factory;

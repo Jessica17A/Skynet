@@ -22,6 +22,7 @@ namespace SkyNet.Data
         public DbSet<SolicitudAsignacion> SolicitudAsignaciones { get; set; } = null!;
 
         public DbSet<SolicitudAsignacionListado> SolicitudAsignacionListado { get; set; } = default!;
+        public DbSet<SolicitudAsignacionListado> SolicitudAsignacionListadoS { get; set; } = default!;
 
         public DbSet<SolicitudResumenDto> SolicitudResumen { get; set; } = null!;
 
@@ -59,6 +60,7 @@ namespace SkyNet.Data
             });
 
             b.Entity<SolicitudAsignacionListado>().HasNoKey().ToView(null);
+            b.Entity<SolicitudAsignacionListadoS>().HasNoKey().ToView(null);
 
             // ===== Empleado =====
             b.Entity<Empleado>(e =>

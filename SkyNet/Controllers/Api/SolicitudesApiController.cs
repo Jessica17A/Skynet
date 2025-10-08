@@ -180,6 +180,50 @@ namespace SkyNet.Controllers.Api
             return Ok(data);
         }
 
+
+        //[HttpPost("{id:long}/asignaciones")]
+        //public async Task<IActionResult> CrearAsignacion(long id, [FromBody] SolicitudAsignacionCreateDto dto)
+        //{
+        //    if (dto is null || id != dto.IdSolicitud)
+        //        return BadRequest(new { ok = false, msg = "Datos inválidos." });
+
+        //    var userId = User?.FindFirstValue(ClaimTypes.NameIdentifier) ?? "sistema";
+
+        //    try
+        //    {
+        //        var result = await _db.Database.SqlQueryRaw<AsignacionResultDto>(
+        //            @"EXEC dbo.usp_SolicitudAsignarTecnico 
+        //        @IdSolicitud = {0},
+        //        @IdGrupo = {1},
+        //        @FkTecnico = {2},
+        //        @Notas = {3},
+        //        @FechaInicioUtc = {4},
+        //        @UserId = {5}",
+        //            dto.IdSolicitud,
+        //            dto.IdGrupo,
+        //            dto.FkTecnico,
+        //            dto.Notas,
+        //            dto.Fecha_Inicio,
+        //            userId
+        //        ).ToListAsync();
+
+        //        var r = result.FirstOrDefault();
+
+        //        if (r is null)
+        //            return StatusCode(500, new { ok = false, msg = "Sin respuesta del procedimiento." });
+
+        //        if (r.Ok)
+        //            return Ok(new { ok = true, msg = r.Msg });
+
+        //        return BadRequest(new { ok = false, msg = r.Msg });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, new { ok = false, msg = ex.Message });
+        //    }
+        //}
+
+
     }
 
 }

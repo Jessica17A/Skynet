@@ -122,72 +122,62 @@ public class SolicitudesAsignacionesApiController : ControllerBase
     }
 
 
-
-
     [HttpPost("{id:long}/asignaciones")]
-    public async Task<IActionResult> CrearAsignacion(long id, [FromBody] SolicitudAsignacionCreateDto dto, CancellationToken ct)
+    public async Task<IActionResult> CrearAsignacion(long id, [FromBody] SolicitudAsignacionCreateDto dto)
     {
-        if (dto is null || id != dto.IdSolicitud) return BadRequest("Body o id inválidos.");
+        if (dto is null || id != dto.IdSolicitud)
+            return BadRequest(new { ok = false, msg = "Datos inválidos." });
 
-        var userId = User?.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+        var userId = User?.FindFirstValue(ClaimTypes.NameIdentifier) ?? "sistema";
 
-        var yaEsta = await _db.SolicitudAsignaciones.AnyAsync(a =>
-            a.FkSolicitud == id &&
-            a.FkTecnico == dto.FkTecnico &&
-            a.Estado == SolicitudAsignacionEstado.Asignada, ct);
-
-        if (yaEsta) return Ok(new { ok = true, ignored = true, reason = "Técnico ya activo." });
-
-        await using var tx = await _db.Database.BeginTransactionAsync(ct);
         try
         {
-            var asign = new SolicitudAsignacion
+            var result = await _db.Database.SqlQueryRaw<AsignacionResultDto>(
+                @"EXEC dbo.usp_SolicitudAsignarTecnico 
+                @IdSolicitud = {0},
+                @IdGrupo = {1},
+                @FkTecnico = {2},
+                @Notas = {3},
+                @FechaInicioUtc = {4},
+                @UserId = {5}",
+                dto.IdSolicitud,
+                dto.IdGrupo,
+                dto.FkTecnico,
+                dto.Notas,
+                dto.Fecha_Inicio ?? DateTime.UtcNow, // Evita nulls
+                userId
+            ).ToListAsync();
+
+            var r = result.FirstOrDefault();
+
+            if (r is null)
+                return StatusCode(500, new { ok = false, msg = "Sin respuesta del procedimiento." });
+
+            if (r.Ok == 1)
+                return Ok(new { ok = true, msg = r.Msg });
+
+            return BadRequest(new { ok = false, msg = r.Msg });
+
+        }
+        catch (Exception ex)
+        {
+            var msg = ex.Message;
+            var inner = ex.InnerException?.Message;
+            var stack = ex.StackTrace;
+
+            // Esto devolverá todo el detalle al frontend (para depuración)
+            return StatusCode(500, new
             {
-                FkSolicitud = id,
-                IdGrupo = dto.IdGrupo,
-                FkTecnico = dto.FkTecnico,
-                Fecha_Inicio = dto.Fecha_Inicio,
-                Notas = dto.Notas,
-                Estado = SolicitudAsignacionEstado.Asignada, // 3
-                FechaAsignacionUtc = DateTime.UtcNow
-            };
-
-            _db.SolicitudAsignaciones.Add(asign);
-            await _db.SaveChangesAsync(ct);
-
-            // Cambia estado de la SOLICITUD y registra tracking (SP)
-            await _db.Database.ExecuteSqlInterpolatedAsync($@"
-            EXEC dbo.sp_Solicitudes_CambiarEstado 
-                 @SolicitudId={id}, 
-                 @NuevoEstado={(int)SolicitudAsignacionEstado.Asignada}, 
-                 @UserId={userId}", ct);
-
-            await tx.CommitAsync(ct);
-
-            return Ok(new
-            {
-                ok = true,
-                asignacion = new
-                {
-                    asign.Id,
-                    asign.FkSolicitud,
-                    asign.IdGrupo,
-                    asign.FkTecnico,
-                    asign.FechaAsignacionUtc,
-                    asign.Fecha_Inicio,
-                    asign.Notas,
-                    Estado = (byte)asign.Estado
-                },
-                estadoSolicitud = (int)SolicitudAsignacionEstado.Asignada
+                ok = false,
+                msg = msg,
+                inner = inner,
+                stack = stack
             });
         }
-        catch
-        {
-            if (tx.GetDbTransaction().Connection is not null) await tx.RollbackAsync(ct);
-            throw;
-        }
+
     }
+
+
 
 
 
@@ -214,19 +204,7 @@ public class SolicitudesAsignacionesApiController : ControllerBase
     }
 
 
-  
-    [HttpGet("asignaciones/supervisor")]
-    public async Task<ActionResult<IEnumerable<SolicitudAsignacionListado>>> ListarAsignacionesSupervisor()
-    {
-        var userId = _userManager.GetUserId(User); // AspNetUsers.Id
 
-        var rows = await _db.SolicitudAsignacionListado
-            .FromSqlRaw("EXEC dbo.usp_SolicitudesAsignaciones_Supervisor @AspNetUserId = {0}", userId)
-            .AsNoTracking()
-            .ToListAsync();
-
-        return Ok(rows);
-    }
 
     [HttpGet("asignaciones/tecnico")]
     public async Task<ActionResult<IEnumerable<SolicitudAsignacionListado>>> ListarAsignacionesTecnico()
@@ -240,6 +218,22 @@ public class SolicitudesAsignacionesApiController : ControllerBase
 
         return Ok(rows);
     }
+
+    [HttpGet("asignaciones/supervisor")]
+    public async Task<ActionResult<IEnumerable<SolicitudAsignacionListadoS>>> ListarAsignacionesSupervisor()
+    {
+        var userId = _userManager.GetUserId(User);
+
+       
+            var rows = await _db.SolicitudAsignacionListado
+                .FromSqlRaw("EXEC dbo.usp_SolicitudesAsignaciones_Supervisor @AspNetUserId = {0}", userId)
+                .AsNoTracking()
+                .ToListAsync();
+
+            return Ok(rows);
+       
+    }
+
 
 
 

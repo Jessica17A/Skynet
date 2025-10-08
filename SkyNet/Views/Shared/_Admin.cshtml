@@ -277,6 +277,11 @@
                        asp-controller="AsignacionesUi" asp-action="Todas">
                         <i class="bi bi-people"></i> Asignaciones
                     </a>
+
+                    <a class="nav-link @(IsActive("AsignacionesUi") ? "active" : "")"
+                       asp-controller="AsignacionesUi" asp-action="Supervisores">
+                        <i class="bi bi-people"></i> Supervisor
+                    </a>
                     
                 </div>
 

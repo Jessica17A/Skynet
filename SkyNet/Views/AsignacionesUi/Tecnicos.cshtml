@@ -167,12 +167,14 @@
                     <div>${chipsTecnicos}</div>
                   </div>
 
-                  <div class="mt-auto">
-                    <a class="btn btn-outline-primary w-100 fw-bold"
-                       href="${base}/AsignacionesUi/DetalleTecnico/${idSol}">
-                       <i class="bi bi-eye"></i> Ver detalles
-                    </a>
-                  </div>
+                     <div class="mt-auto">
+                      <a class="btn btn-outline-primary w-100 fw-bold d-flex align-items-center justify-content-center gap-2"
+                         href="${base}/ui/asignaciones/DetalleTecnico/${idSol}">
+                        <i class="bi bi-eye"></i>
+                        <span>Ver detalles</span>
+                      </a>
+                    </div>
+
                 </div>
               </div>
             </div>
@@ -181,18 +183,22 @@
       }
 
       async function init() {
-        try {
-          const res = await fetch(`${base}/api/solicitudes/asignaciones/tecnico`);
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const data = await res.json();
-          const groups = groupBySolicitud(data);
-          render(groups, $fEstado.value);
-          $fEstado.addEventListener('change', () => render(groups, $fEstado.value));
-        } catch (e) {
-          $cards.innerHTML = `<div class="col-12"><div class="alert alert-danger">No se pudo cargar el listado.</div></div>`;
-          $count.textContent = '';
-        }
+      try {
+        // ✅ endpoint correcto: todas las asignaciones del técnico logueado
+        const res = await fetch(`${base}/api/solicitudes/asignaciones/tecnico`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const data = await res.json();
+        const groups = groupBySolicitud(data);
+        render(groups, $fEstado.value);
+        $fEstado.addEventListener('change', () => render(groups, $fEstado.value));
+      } catch (e) {
+        console.error(e);
+        $cards.innerHTML = `<div class="col-12"><div class="alert alert-danger">No se pudo cargar el listado.</div></div>`;
+        $count.textContent = '';
       }
+    }
+
 
       init();
     })();

@@ -1,19 +1,31 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using SkyNet.Data;
 using SkyNet.Models.DTOs;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 
+
+[Route("ui/asignaciones/[action]")]
 
 public class AsignacionesUiController : Controller
 {
     private readonly ILogger<AsignacionesUiController> _log;
     private readonly IHttpClientFactory _http;
+    private readonly ApplicationDbContext _db;
 
-    public AsignacionesUiController(ILogger<AsignacionesUiController> log, IHttpClientFactory http)
+
+    public AsignacionesUiController(
+    ILogger<AsignacionesUiController> log,
+    IHttpClientFactory http,
+    ApplicationDbContext db)
     {
-        _log = log; _http = http;
+        _log = log;
+        _http = http;
+        _db = db;
     }
+
 
     [HttpGet("Index")]
     public IActionResult Index() => View();
@@ -42,14 +54,14 @@ public class AsignacionesUiController : Controller
 
 
 
-
+    [HttpGet("{id:long}")]
     public async Task<IActionResult> Detalle(long id)
     {
         var c = _http.CreateClient();
         c.BaseAddress ??= new Uri($"{Request.Scheme}://{Request.Host}{Request.PathBase}/");
 
         SolicitudDto? sol = null;
-        List<SolicitudAsignacionListado> data;
+        List<SolicitudAsignacionListadoS> data;
 
        
         try
@@ -65,7 +77,7 @@ public class AsignacionesUiController : Controller
       
         try
         {
-            data = await c.GetFromJsonAsync<List<SolicitudAsignacionListado>>(
+            data = await c.GetFromJsonAsync<List<SolicitudAsignacionListadoS>>(
                 $"api/solicitudes/{id}/asignaciones", HttpContext.RequestAborted
             ) ?? new();
         }
@@ -94,26 +106,52 @@ public class AsignacionesUiController : Controller
     }
 
 
-
-
-
-
-
-    //[HttpGet("Asignar/{solicitudId:long}")]
-    //public IActionResult Asignar(long solicitudId)
-    //{
-    //    ViewBag.SolicitudId = solicitudId;
-    //    return View();
-    //}
-
     [HttpGet]
-    public IActionResult Asignar(long solicitudId)
+    public async Task<IActionResult> Asignar(long solicitudId, CancellationToken ct)
     {
-        ViewBag.SolicitudId = solicitudId;
-        return View();
+        var solicitud = await _db.Solicitudes
+            .Where(s => s.Id == solicitudId)
+            .Select(s => new SolicitudDto
+            {
+                Id = s.Id,
+                Ticket = s.Ticket,
+                Nombre = s.Nombre,
+                Estado = s.Estado,
+                Prioridad = s.Prioridad
+            })
+            .FirstOrDefaultAsync(ct);
+
+        if (solicitud == null) return NotFound();
+
+        var asignaciones = await _db.SolicitudAsignaciones
+            .Where(a => a.FkSolicitud == solicitudId)
+            .Select(a => new SolicitudAsignacionListadoS
+            {
+                Id = a.Id,
+                FkSolicitud = a.FkSolicitud,
+                FkTecnico = a.FkTecnico,
+                IdGrupo = a.IdGrupo,
+                Estado = (int)a.Estado,
+                FechaAsignacionUtc = a.FechaAsignacionUtc,
+                Fecha_Inicio = a.Fecha_Inicio,
+                Notas = a.Notas,
+                TecnicoNombre = _db.Empleados
+                    .Where(e => e.Id == a.FkTecnico)
+                    .Select(e => (e.Nombres + " " + e.Apellidos).Trim())
+                    .FirstOrDefault(),
+                SupervisorNombre = (
+                    from g in _db.GruposSupervisoresTec
+                    join s in _db.Empleados on g.FkSupervisor equals s.Id
+                    where g.IdGrupo == a.IdGrupo
+                    select (s.Nombres + " " + s.Apellidos).Trim()
+                ).FirstOrDefault()
+            })
+            .ToListAsync(ct);
+
+        ViewBag.Solicitud = solicitud;
+        ViewBag.SolicitudId = solicitudId; // ✅ necesario para la vista
+        return View(asignaciones);
     }
-
-
 
 
 
@@ -121,66 +159,100 @@ public class AsignacionesUiController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Asignar(long solicitudId, string[] TecnicosIds, string? notas, DateTime? fechaVisita)
     {
-        if (solicitudId <= 0 || TecnicosIds == null || TecnicosIds.Length == 0)
+        if (solicitudId <= 0 || TecnicosIds is null || TecnicosIds.Length == 0)
         {
-            ModelState.AddModelError(string.Empty, "Debes seleccionar al menos un técnico.");
-            ViewBag.SolicitudId = solicitudId;
-            return View("~/Views/AsignacionesUi/Asignar.cshtml");
+            TempData["Error"] = "Debe seleccionar al menos un técnico.";
+            return RedirectToAction("Asignar", new { solicitudId });
         }
-
-        // Local -> UTC
-        DateTime? visitaUtc = fechaVisita.HasValue
-            ? DateTime.SpecifyKind(fechaVisita.Value, DateTimeKind.Local).ToUniversalTime()
-            : (DateTime?)null;
 
         var c = _http.CreateClient();
-        if (c.BaseAddress == null)
-            c.BaseAddress = new Uri($"{Request.Scheme}://{Request.Host}{Request.PathBase}/");
+        c.BaseAddress ??= new Uri($"{Request.Scheme}://{Request.Host}{Request.PathBase}/");
 
-        // >>> Reenviar cookie de autenticación <<<
-        if (Request.Headers.TryGetValue("Cookie", out var cookie))
-            c.DefaultRequestHeaders.Add("Cookie", cookie.ToString());
-
-        var pares = TecnicosIds
-            .Select(x => x?.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-            .Where(p => p is { Length: 2 })
-            .Select(p => new { IdGrupo = int.Parse(p![0]), FkTecnico = long.Parse(p![1]) })
-            .ToList();
-
-        var errores = new List<string>();
         int okCount = 0;
+        var errores = new List<string>();
 
-        foreach (var p in pares)
+        foreach (var item in TecnicosIds)
         {
-            var payload = new SolicitudAsignacionCreateDto
+            var partes = item.Split('|');
+            var dto = new SolicitudAsignacionCreateDto
             {
                 IdSolicitud = solicitudId,
-                IdGrupo = p.IdGrupo,
-                FkTecnico = p.FkTecnico,
+                IdGrupo = int.Parse(partes[0]),
+                FkTecnico = long.Parse(partes[1]),
                 Notas = notas,
-                Fecha_Inicio = visitaUtc
+                Fecha_Inicio = fechaVisita
             };
 
-            var resp = await c.PostAsJsonAsync($"api/solicitudes/{solicitudId}/asignaciones", payload);
-            if (resp.IsSuccessStatusCode) { okCount++; continue; }
+            var resp = await c.PostAsJsonAsync($"api/solicitudes/{solicitudId}/asignaciones", dto);
+            var json = await resp.Content.ReadAsStringAsync();
 
-            var msg = await resp.Content.ReadAsStringAsync();
-            errores.Add($"Grupo {p.IdGrupo}: {resp.StatusCode} - {msg}");
+            if (!resp.IsSuccessStatusCode)
+            {
+                errores.Add($"Error en grupo {dto.IdGrupo}: {resp.StatusCode}");
+                continue;
+            }
+
+            var data = JsonSerializer.Deserialize<JsonElement>(json);
+            bool ok = data.GetProperty("ok").GetBoolean();
+            string msg = data.GetProperty("msg").GetString() ?? "Sin mensaje";
+
+            if (ok)
+                okCount++;
+            else
+                errores.Add(msg);
         }
 
-        if (okCount > 0) TempData["Ok"] = "Asignación creada y estado actualizado.";
-        if (errores.Count > 0) TempData["Error"] = string.Join(" | ", errores);
+        if (okCount > 0)
+            TempData["Ok"] = $"Solicitud exitosa";
 
-        return RedirectToAction("Details", "Solicitudes", new { id = solicitudId });
+        if (errores.Any())
+            TempData["Error"] = string.Join(" | ", errores);
+
+        return RedirectToAction("Asignar", new { solicitudId });
     }
 
 
+
+
+
+
+
+    //public async Task<IActionResult> Supervisores()
+    //{
+    //    var c = _http.CreateClient();
+    //    c.BaseAddress ??= new Uri($"{Request.Scheme}://{Request.Host}{Request.PathBase}/");
+
+    //    List<SolicitudAsignacionListado> data;
+
+    //    try
+    //    {
+    //        // 🔹 Consumimos el endpoint específico del supervisor
+    //        data = await c.GetFromJsonAsync<List<SolicitudAsignacionListado>>(
+    //            "api/solicitudes/asignaciones/supervisor",
+    //            HttpContext.RequestAborted
+    //        ) ?? new();
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        _log.LogError(ex, "Error al cargar asignaciones del supervisor.");
+    //        ModelState.AddModelError("", "No se pudo contactar el API.");
+    //        data = new();
+    //    }
+
+    //    // Si no hay datos, muestra mensaje
+    //    if (data.Count == 0)
+    //        ViewBag.Mensaje = "No se encontraron asignaciones para tu usuario.";
+
+    //    return View(data);
+    //}
 
     public IActionResult Supervisores()
     {
-        // Solo retorna la vista, el consumo de la API se hará con JS
+        // Solo retorna la vista vacía
         return View();
     }
+
+
 
 
     public IActionResult Tecnicos()
@@ -189,10 +261,11 @@ public class AsignacionesUiController : Controller
         return View();
     }
 
-
+    [HttpGet("{id:long}")]
     public async Task<IActionResult> DetalleTecnico(long id)
+
     {
-        var baseUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}/"; // ← barra final
+        var baseUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}/";
 
         var handler = new HttpClientHandler
         {
@@ -200,7 +273,6 @@ public class AsignacionesUiController : Controller
             CookieContainer = new CookieContainer()
         };
 
-        // Copiar cookies actuales al mismo host/path
         var baseUri = new Uri(baseUrl);
         foreach (var kv in Request.Cookies)
             handler.CookieContainer.Add(baseUri, new Cookie(kv.Key, kv.Value));
@@ -211,7 +283,6 @@ public class AsignacionesUiController : Controller
         HttpResponseMessage resp;
         try
         {
-            // ruta relativa OK porque BaseAddress tiene barra final
             resp = await c.GetAsync($"api/solicitudes/{id}/asignaciones/tecnico/detalle", HttpContext.RequestAborted);
         }
         catch (Exception ex)
@@ -244,9 +315,10 @@ public class AsignacionesUiController : Controller
 
         return View(detalle);
     }
-
-
-
-
-
 }
+
+
+
+
+
+

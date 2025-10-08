@@ -58,6 +58,22 @@ namespace SkyNet.Models.DTOs
     }
 
 
+    public class SolicitudAsignacionListadoS
+    {
+        public long Id { get; set; }
+        public long FkSolicitud { get; set; }          // antes de cambiar a IdSolicitud
+        public int IdGrupo { get; set; }
+        public long FkTecnico { get; set; }
+        public DateTime FechaAsignacionUtc { get; set; }
+        public DateTime? Fecha_Inicio { get; set; }
+        public string? Notas { get; set; }
+        public int Estado { get; set; }                // 👈 aquí estaba el problema (int en lugar de byte)
+        public string? TecnicoNombre { get; set; }
+        public string? SupervisorNombre { get; set; }
+    }
+
+
+
     public class SolicitudResumenDto
 {
     public long IdSolicitud { get; set; }
@@ -138,6 +154,14 @@ public class AsignacionItem
         public string EstadoTexto { get; set; } = "";
     }
 
+    // ================================================
+    // Resultados de ejecución desde SP o API
+    // ================================================
+    public class AsignacionResultDto
+    {
+        public int Ok { get; set; }
+        public string Msg { get; set; } = string.Empty;
+    }
 
 
 
