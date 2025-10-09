@@ -4,7 +4,7 @@
     long solicitudId = (long)(ViewBag.SolicitudId ?? 0L);
 }
 
-@if (TempData["Ok"] != null)
+@* @if (TempData["Ok"] != null)
 {
     <div class="alert alert-success alert-dismissible fade show">
         @TempData["Ok"]
@@ -18,7 +18,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 }
-
+ *@
 <div class="container mt-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
         <h4 class="mb-0"><i class="bi bi-person-plus"></i> Asignar técnico</h4>
@@ -124,115 +124,144 @@
 
     <script>
         (function () {
-            const $sel = $("#tecnicos");
-            const $frm = $("#frmAsignar");
-            const $fecha = document.getElementById("fechaVisita");
+          const $sel = $("#tecnicos");
+          const $frm = $("#frmAsignar");
+          const $fecha = document.getElementById("fechaVisita");
 
-            function toLocalInputValue(dt) {
-                const pad = n => String(n).padStart(2, "0");
-                return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+          function toLocalInputValue(dt) {
+            const pad = n => String(n).padStart(2, "0");
+            return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+          }
+
+          // Min para fecha (ahora + 30 min)
+          (function setMin() {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() + 30);
+            $fecha.min = toLocalInputValue(now);
+          })();
+
+          // Select2
+          $sel.select2({
+            theme: "bootstrap-5",
+            placeholder: "Selecciona uno o varios técnicos",
+            allowClear: true,
+            width: "100%",
+            minimumInputLength: 0,
+            dropdownParent: $frm[0],
+            ajax: {
+              url: "/api/grupos",
+              dataType: "json",
+              delay: 200,
+              data: params => ({
+                mine: true,
+                q: params.term || ""
+              }),
+              processResults: (data) => {
+                const arr = Array.isArray(data) ? data : [];
+                const results = arr
+                  .filter(g => g && (g.estado === true || g.estado === 1 || g.estado === "1"))
+                  .map(g => {
+                    const idGrupo = g.idGrupo ?? g.IdGrupo;
+                    const tecnicoId = g.tecnicoId ?? g.TecnicoId;
+                    const text = `${(g.tecnicoNombre ?? g.TecnicoNombre ?? '').trim()}`;
+                    if (!idGrupo || !tecnicoId) return null;
+                    return { id: `${idGrupo}|${tecnicoId}`, text: text.trim() };
+                  })
+                  .filter(Boolean);
+                return { results };
+              }
+            },
+            closeOnSelect: false
+          });
+
+          // Validar + Confirmar antes de enviar
+          $frm.on("submit", async function (e) {
+            e.preventDefault();
+
+            const vals = $sel.val();
+            if (!vals || vals.length === 0) {
+              await Swal.fire({
+                title: "Atención",
+                text: "Debes seleccionar al menos un técnico.",
+                icon: "warning",
+                confirmButtonText: "Entendido"
+              });
+              return;
             }
 
-            (function setMin() {
-                const now = new Date();
-                now.setMinutes(now.getMinutes() + 30);
-                $fecha.min = toLocalInputValue(now);
-            })();
-
-            // Inicializar Select2
-            $sel.select2({
-                theme: "bootstrap-5",
-                placeholder: "Selecciona uno o varios técnicos",
-                allowClear: true,
-                width: "100%",
-                minimumInputLength: 0,
-                dropdownParent: $frm[0],
-                ajax: {
-                    url: "/api/grupos",
-                    dataType: "json",
-                    delay: 200,
-                    data: params => ({
-                        mine: true,
-                        q: params.term || ""
-                    }),
-                    processResults: (data) => {
-                        const arr = Array.isArray(data) ? data : [];
-                        const results = arr
-                            .filter(g => g && (g.estado === true || g.estado === 1 || g.estado === "1"))
-                            .map(g => {
-                                const idGrupo = g.idGrupo ?? g.IdGrupo;
-                                const tecnicoId = g.tecnicoId ?? g.TecnicoId;
-                                const text = `${(g.tecnicoNombre ?? g.TecnicoNombre ?? '').trim()} (${(g.supervisorNombre ?? g.SupervisorNombre ?? '').trim()})`;
-                                if (!idGrupo || !tecnicoId) return null;
-                                return { id: `${idGrupo}|${tecnicoId}`, text: text.trim() };
-                            })
-                            .filter(Boolean);
-                        return { results };
-                    }
-                },
-                closeOnSelect: false
-            });
-
-            // Validar antes de enviar
-            $frm.on("submit", function (e) {
-                const vals = $sel.val();
-
-                if (!vals || vals.length === 0) {
-                    e.preventDefault();
-                    Swal.fire({
-                        title: "Atención",
-                        text: "Debes seleccionar al menos un técnico.",
-                        icon: "warning",
-                        confirmButtonText: "Entendido"
-                    });
-                    return;
-                }
-
-                // Validar fecha
-                if ($fecha.value) {
-                    const min = new Date($fecha.min);
-                    const val = new Date($fecha.value);
-                    if (isFinite(min) && isFinite(val) && val < min) {
-                        e.preventDefault();
-                        Swal.fire({
-                            title: "Fecha inválida",
-                            text: "La fecha de visita no puede ser anterior al mínimo sugerido.",
-                            icon: "error",
-                            confirmButtonText: "Corregir"
-                        });
-                        return;
-                    }
-                }
-
-                // Agregar valores seleccionados como inputs ocultos
-                $frm.find('input[name="TecnicosIds"]').remove();
-                for (const v of vals) {
-                    $('<input>', { type: 'hidden', name: 'TecnicosIds', value: v }).appendTo($frm);
-                }
-
-                // Copiar notas
-                $("#notasHidden").val($("#notasTextarea").val() || "");
-            });
-
-            // 🔹 Mostrar alertas (TempData)
-            const okMsg = '@TempData["Ok"]';
-            const errMsg = '@TempData["Error"]';
-
-            if (okMsg && okMsg.trim() !== "") {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Asignación exitosa',
-                    text: okMsg,
-                    confirmButtonText: 'Aceptar'
+            // Validar fecha
+            if ($fecha.value) {
+              const min = new Date($fecha.min);
+              const val = new Date($fecha.value);
+              if (isFinite(min) && isFinite(val) && val < min) {
+                await Swal.fire({
+                  title: "Fecha inválida",
+                  text: "La fecha de visita no puede ser anterior al mínimo sugerido.",
+                  icon: "error",
+                  confirmButtonText: "Corregir"
                 });
-            } else if (errMsg && errMsg.trim() !== "") {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: errMsg,
-                    confirmButtonText: 'Cerrar'
-                });
+                return;
+              }
             }
-        })();
+
+            // Resumen para confirmar
+            const seleccion = ($sel.select2('data') || []).map(x => x.text).filter(Boolean);
+            const fechaTxt = $fecha.value || "(sin fecha)";
+            const notasTxt = ($("#notasTextarea").val() || "").trim();
+
+            const { isConfirmed } = await Swal.fire({
+              icon: 'question',
+              title: '¿Confirmar asignación?',
+              html: `
+                <div class="text-start">
+                  <div><b>Técnico(s):</b><br>${seleccion.length ? seleccion.join('<br>') : '(ninguno)'}</div>
+                  <div class="mt-2"><b>Fecha de visita:</b> ${fechaTxt.replace('T', ' ')}</div>
+                  <div class="mt-2"><b>Notas:</b> ${notasTxt ? notasTxt : '(sin notas)'}</div>
+                </div>
+              `,
+              showCancelButton: true,
+              confirmButtonText: 'Sí, asignar',
+              cancelButtonText: 'Cancelar',
+              reverseButtons: true,
+              focusCancel: true
+            });
+
+            if (!isConfirmed) return;
+
+            // Inputs ocultos con selección
+            $frm.find('input[name="TecnicosIds"]').remove();
+            for (const v of vals) {
+              $('<input>', { type: 'hidden', name: 'TecnicosIds', value: v }).appendTo($frm);
+            }
+
+            // Copiar notas
+            $("#notasHidden").val(notasTxt);
+
+            // Enviar ahora sí
+            this.submit();
+          }); // <-- cierra submit
+          // ----------------------^
+
+          // 🔹 Alertas (TempData) — fuera del submit
+          const okMsg = '@TempData["Ok"]';
+          const errMsg = '@TempData["Error"]';
+
+          if (okMsg && okMsg.trim() !== "") {
+            Swal.fire({
+              icon: 'success',
+              title: 'Asignación exitosa',
+              text: 'Técnicos asignados correctamente a la visita',
+              confirmButtonText: 'Aceptar'
+            });
+          } else if (errMsg && errMsg.trim() !== "") {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: errMsg,
+              confirmButtonText: 'Cerrar'
+            });
+          }
+        })(); // <-- cierra la IIFE
     </script>
+
 }

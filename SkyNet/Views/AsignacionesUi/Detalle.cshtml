@@ -178,15 +178,13 @@
                 <div class="mb-3">
                     <label class="form-label fw-bold">Selecciona técnico(s)</label>
                     <select id="sw-tecs" multiple class="form-select"></select>
-                    <div class="form-text">Solo técnicos activos. Los ya asignados aparecerán deshabilitados.</div>
+                    <div class="form-text">Solo técnicos disponibles</div>
                 </div>
                 <div class="mb-3">
                     <label class="form-label fw-bold">Nota (opcional)</label>
                     <textarea id="notaTec" class="form-control" rows="2" placeholder="Instrucciones para el técnico"></textarea>
                 </div>
-                <small class="text-muted">
-                    La fecha programada se hereda automáticamente de la solicitud.
-                </small>
+               
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -222,8 +220,8 @@
 
             // técnicos ya asignados (para deshabilitar en Select2)
             const asignados = new Set(@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(
-                            Model.Select(m => m.FkTecnico)
-                    )));
+                                                    Model.Select(m => m.FkTecnico)
+                                    )));
 
         // Select2 dentro del modal Bootstrap
         const $sel = $('#sw-tecs');
@@ -257,61 +255,84 @@
             }
         });
 
-            // Guardar técnicos seleccionados
-            document.getElementById('btnGuardarTec')?.addEventListener('click', async () => {
-                const sel = $sel.val();
-                const nota = (document.getElementById('notaTec').value || '').trim();
+         
+                 // Guardar técnicos seleccionados
+        document.getElementById('btnGuardarTec')?.addEventListener('click', async () => {
+            const sel = $sel.val();
+            const nota = (document.getElementById('notaTec').value || '').trim();
 
-                if (!sel || sel.length === 0) {
-                    Swal.fire('Atención', 'Debes seleccionar al menos un técnico.', 'warning');
-                    return;
-                }
-                try {
-                    const res = await fetch(`${base}/api/solicitudes/${encodeURIComponent(solicitudId)}/asignaciones/agregar`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ tecnicos: sel, nota })
-                    });
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            if (!sel || sel.length === 0) {
+                Swal.fire('Atención', 'Debes seleccionar al menos un técnico.', 'warning');
+                return;
+            }
 
-                    await Swal.fire({ icon: 'success', title: 'Técnico(s) agregado(s)', confirmButtonColor: '#1cc88a' });
-                    location.reload();
-                } catch (e) {
-                    Swal.fire('Error', 'No se pudo agregar los técnicos.', 'error');
-                }
-            });
+            try {
+            
+                const tecs = sel.map(x => Number(String(x).split('|')[1])).filter(n => !Number.isNaN(n));
 
-            // Anular asignación (solo si no está finalizada)
-            document.addEventListener('click', async (ev) => {
-                const btn = ev.target.closest('.btnAnular');
-                if (!btn || esFinalizada) return;
-
-                const id = btn.dataset.id;
-                const { value: nota } = await Swal.fire({
-                    title: 'Anular asignación',
-                    input: 'text',
-                    inputLabel: 'Motivo (opcional)',
-                    inputPlaceholder: 'Ej: Cliente reprograma',
-                    showCancelButton: true,
-                    confirmButtonText: 'Anular',
-                    cancelButtonText: 'Cancelar',
-                    icon: 'warning'
+                // Llamar endpoint SP dbo.usp_Solicitud_Asignacion_AgregarTecnico
+                const res = await fetch(`${base}/api/solicitudes/${encodeURIComponent(solicitudId)}/asignaciones/tecnicos`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tecnicos: tecs, nota })
                 });
-                if (nota === undefined) return;
 
-                try {
-                    const r = await fetch(`${base}/api/solicitudes/asignaciones/${encodeURIComponent(id)}/estado`, {
-                        method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ estado: 0, nota: nota ?? '' })
-                    });
-                    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-                    await Swal.fire('Hecho', 'Asignación anulada.', 'success');
-                    location.reload();
-                } catch {
-                    Swal.fire('Error', 'No se pudo anular.', 'error');
+                const data = await res.json().catch(() => ({})); 
+
+                if (!res.ok || data.ok === false) {
+                    throw new Error(data.msg || `Error HTTP ${res.status}`);
                 }
+
+                await Swal.fire({ icon: 'success', title: data.msg || 'Técnico(s) agregado(s)', confirmButtonColor: '#1cc88a' });
+                location.reload();
+
+            } catch (e) {
+                Swal.fire('Error', e.message || 'No se pudo agregar los técnicos.', 'error');
+            }
+        });
+
+
+                   // Anular asignación (solo si no está finalizada)
+        document.addEventListener('click', async (ev) => {
+            const btn = ev.target.closest('.btnAnular');
+            if (!btn || esFinalizada) return;
+
+            const id = btn.dataset.id;
+            const { value: nota } = await Swal.fire({
+                title: 'Anular asignación',
+                input: 'text',
+                inputLabel: 'Motivo (opcional)',
+                inputPlaceholder: 'Ej: Cliente reprograma',
+                showCancelButton: true,
+                confirmButtonText: 'Anular',
+                cancelButtonText: 'Cancelar',
+                icon: 'warning'
             });
+            if (nota === undefined) return;
+
+            try {
+                // Llamar endpoint SP dbo.usp_Solicitud_Asignacion_Anular
+                const r = await fetch(`${base}/api/solicitudes/asignaciones/${encodeURIComponent(id)}/anular`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nota: nota ?? '' })
+                });
+
+                const data = await r.json().catch(() => ({})); 
+
+                if (!r.ok || data.ok === false) {
+                    throw new Error(data.msg || `Error HTTP ${r.status}`);
+                }
+
+                await Swal.fire('Hecho', data.msg || 'Asignación anulada.', 'success');
+                location.reload();
+
+            } catch (e) {
+                Swal.fire('Error', e.message || 'No se pudo anular la asignación.', 'error');
+            }
+        });
+
         })();
     </script>
+
 }

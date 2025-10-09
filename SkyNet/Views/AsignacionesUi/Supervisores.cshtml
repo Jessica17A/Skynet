@@ -11,6 +11,7 @@
         <option value="all" selected class="text-dark">Todas</option>
         <option value="proceso" class="text-dark">En proceso</option>
         <option value="aceptada" class="text-dark">Aceptadas</option>
+        <option value="finalizado" class="text-dark">Finalizadas</option>
     </select>
     <small id="count" class="text-muted ms-2"></small>
 </div>
@@ -79,8 +80,10 @@
         const filtered = groups.filter(([, asigs]) => {
           const isProceso = asigs.some(a => a.estado === 4);
           const isAcept   = asigs.some(a => a.estado === 3) && !isProceso;
+          const isFin     = asigs.some(a => a.estado === 5);
           if (filtro === 'proceso')  return isProceso;
           if (filtro === 'aceptada') return isAcept;
+          if (filtro === 'finalizado') return isFin;
           return true;
         });
 
@@ -112,9 +115,15 @@
 
           const isProceso = asigs.some(a => a.estado === 4);
           const isAcept   = asigs.some(a => a.estado === 3) && !isProceso;
+          const isFin     = asigs.some(a => a.estado === 5); // NEW
+
           const badge = isProceso
             ? `<span class="badge bg-warning text-dark card-status-badge">En proceso</span>`
-            : (isAcept ? `<span class="badge bg-success card-status-badge">Aceptada</span>` : ``);
+            : (isAcept
+                ? `<span class="badge bg-success card-status-badge">Aceptada</span>`
+                : (isFin
+                    ? `<span class="badge bg-primary card-status-badge">Finalizada</span>`  // NEW
+                    : ``));
 
           return `
             <div class="col-12 col-md-6 col-lg-3">

@@ -195,7 +195,7 @@
           };
 
           function btnClassForState(state) {
-            switch(state){
+            switch (state) {
               case 0: return 'btn btn-pill btn-outline-danger';
               case 1: return 'btn btn-pill btn-info text-white';
               case 2: return 'btn btn-pill btn-primary';
@@ -207,7 +207,7 @@
           }
 
           function siguiente(curr) {
-            switch(curr){
+            switch (curr) {
               case 1: return 2;
               case 2: return 3;
               case 3: return 4;
@@ -223,9 +223,12 @@
             const zone = document.getElementById('acciones');
             zone.innerHTML = '';
 
+            // ya finalizada o rechazada => sin acciones
             if (curr === 0 || curr === 5) return;
 
             const nxt = siguiente(curr);
+
+            // si está en proceso (4) muestra "Finalizado"
             if (curr === 4) {
               const bFin = document.createElement('button');
               bFin.className = btnClassForState(5);
@@ -240,7 +243,7 @@
               zone.appendChild(bNext);
             }
 
-         
+            // botón de rechazar disponible 1..4
             if (curr >= 1 && curr <= 4) {
               const bRej = document.createElement('button');
               bRej.className = btnClassForState(0);
@@ -250,7 +253,31 @@
             }
           }
 
-        
+          // ===== Helper de confirmación genérica =====
+          async function confirmarCambio(curr, nuevo) {
+            const { isConfirmed } = await Swal.fire({
+              icon: 'question',
+              title: '¿Confirmar cambio de estado?',
+              html: `
+                <div class="text-start">
+                  <div><b>Actual:</b> ${estados[curr]?.text ?? curr}</div>
+                  <div><b>Nuevo:</b> ${estados[nuevo]?.text ?? nuevo}</div>
+                  ${nuevo === 5
+                    ? '<div class="mt-2 text-danger"><b>Nota:</b> esto marcará la solicitud como finalizada.</div>'
+                    : ''
+                  }
+                </div>
+              `,
+              showCancelButton: true,
+              confirmButtonText: 'Sí, continuar',
+              cancelButtonText: 'Cancelar',
+              reverseButtons: true,
+              focusCancel: true
+            });
+            return isConfirmed;
+          }
+
+          // ===== Llamada API =====
           async function ajaxCambiarEstado(id, nuevo) {
             const resp = await fetch(`/api/solicitudes/${id}/estado`, {
               method: "PATCH",
@@ -271,16 +298,20 @@
               } catch {}
               throw new Error(msg);
             }
-           
             return true;
           }
 
+          // ===== Controlador de cambio con confirmaciones =====
           async function onCambiarEstado(id, nuevo) {
             const zone = document.getElementById('acciones');
+            const cont = document.getElementById('solicitud');
+            const curr = parseInt(cont.dataset.estado, 10);
+
+            // deshabilita mientras decide/ejecuta
             zone.querySelectorAll('button').forEach(b => b.disabled = true);
 
             try {
-             
+              // Aceptar (3) => redirigir a asignar técnico
               if (nuevo === 3) {
                 const r = await Swal.fire({
                   title: "Asignar técnico",
@@ -288,19 +319,18 @@
                   icon: "info",
                   showCancelButton: true,
                   confirmButtonText: "Continuar",
-                  cancelButtonText: "Cancelar"
+                  cancelButtonText: "Cancelar",
+                  reverseButtons: true
                 });
                 if (r.isConfirmed) {
-                 window.location.href = `/ui/asignaciones/Asignar?solicitudId=${id}`;
-
-
+                  window.location.href = `/ui/asignaciones/Asignar?solicitudId=${id}`;
                 } else {
                   zone.querySelectorAll('button').forEach(b => b.disabled = false);
                 }
                 return;
               }
 
-           
+              // Rechazar (0) => confirmación específica
               if (nuevo === 0) {
                 const rj = await Swal.fire({
                   title: "¿Rechazar solicitud?",
@@ -314,10 +344,17 @@
                   zone.querySelectorAll('button').forEach(b => b.disabled = false);
                   return;
                 }
+              } else {
+                // Confirmación genérica para el resto (1→2, 2→3, 3→4, 4→5)
+                const ok = await confirmarCambio(curr, nuevo);
+                if (!ok) {
+                  zone.querySelectorAll('button').forEach(b => b.disabled = false);
+                  return;
+                }
               }
 
+              // Ejecuta el cambio
               await ajaxCambiarEstado(id, nuevo);
-           
               location.reload();
 
             } catch (e) {
@@ -330,6 +367,7 @@
           document.addEventListener('DOMContentLoaded', renderBotones);
         })();
     </script>
+
 }
 
 

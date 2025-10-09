@@ -255,14 +255,21 @@ public class SolicitudesAsignacionesApiController : ControllerBase
     }
 
 
-        // POST /api/solicitudes/{id}/asignaciones/tecnicos
-        [HttpPost("{id:long}/asignaciones/tecnicos")]
-        public async Task<IActionResult> AgregarTecnicos(long id, [FromBody] AddTechsDto dto)
-        {
-            var userId = _userManager.GetUserId(User);
-            var idSup = await _db.Empleados.Where(e => e.UserId == userId).Select(e => e.Id).FirstOrDefaultAsync();
-            if (idSup == 0) return Forbid();
+    // POST /api/solicitudes/{id}/asignaciones/tecnicos
+    [HttpPost("{id:long}/asignaciones/tecnicos")]
+    public async Task<IActionResult> AgregarTecnicos(long id, [FromBody] AddTechsDto dto)
+    {
+        var userId = _userManager.GetUserId(User);
+        var idSup = await _db.Empleados
+            .Where(e => e.UserId == userId)
+            .Select(e => e.Id)
+            .FirstOrDefaultAsync();
 
+        if (idSup == 0)
+            return Forbid();
+
+        try
+        {
             foreach (var tecId in dto.Tecnicos.Distinct())
             {
                 await _db.Database.ExecuteSqlRawAsync(
@@ -270,27 +277,50 @@ public class SolicitudesAsignacionesApiController : ControllerBase
                     id, idSup, tecId, dto.Nota ?? (object)DBNull.Value
                 );
             }
-            return NoContent();
+
+            return Ok(new { ok = true, msg = "Técnico(s) agregado(s) correctamente." });
         }
-
-        public record AddTechsDto(List<long> Tecnicos, string? Nota);
-
-        // PATCH /api/solicitudes/asignaciones/{asigId}/anular
-        [HttpPatch("asignaciones/{asigId:long}/anular")]
-        public async Task<IActionResult> AnularAsignacion(long asigId, [FromBody] MotivoDto body)
+        catch (SqlException ex)
         {
-            var userId = _userManager.GetUserId(User);
-            var idSup = await _db.Empleados.Where(e => e.UserId == userId).Select(e => e.Id).FirstOrDefaultAsync();
-            if (idSup == 0) return Forbid();
+            // 🔹 Captura errores lanzados por el SP (THROW)
+            return BadRequest(new { ok = false, msg = ex.Message });
+        }
+    }
 
+    public record AddTechsDto(List<long> Tecnicos, string? Nota);
+
+
+    // PATCH /api/solicitudes/asignaciones/{asigId}/anular
+    [HttpPatch("asignaciones/{asigId:long}/anular")]
+    public async Task<IActionResult> AnularAsignacion(long asigId, [FromBody] MotivoDto body)
+    {
+        var userId = _userManager.GetUserId(User);
+        var idSup = await _db.Empleados
+            .Where(e => e.UserId == userId)
+            .Select(e => e.Id)
+            .FirstOrDefaultAsync();
+
+        if (idSup == 0)
+            return Forbid();
+
+        try
+        {
             await _db.Database.ExecuteSqlRawAsync(
                 "EXEC dbo.usp_Solicitud_Asignacion_Anular @IdAsignacion={0}, @IdSupervisor={1}, @Nota={2}",
                 asigId, idSup, body?.Nota ?? (object)DBNull.Value
             );
-            return NoContent();
-        }
 
-        public record MotivoDto(string? Nota);
+            return Ok(new { ok = true, msg = "Asignación anulada correctamente." });
+        }
+        catch (SqlException ex)
+        {
+            // 🔹 Devuelve mensaje exacto que envió el SP
+            return BadRequest(new { ok = false, msg = ex.Message });
+        }
+    }
+
+    public record MotivoDto(string? Nota);
+
 
 
 
