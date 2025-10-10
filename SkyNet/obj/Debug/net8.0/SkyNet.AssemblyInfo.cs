@@ -16,7 +16,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SkyNet")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+69c79c5ed5babb6c7a45f54d97741c96bde17ef5")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+472683c47cb9e2400a5d3070e2a539ee2f4891a1")]
 [assembly: System.Reflection.AssemblyProductAttribute("SkyNet")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SkyNet")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -4,7 +4,8 @@ using System.Security.Claims;
 using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using SkyNet.Data;
 using SkyNet.Models.DTOs;
 
 namespace SkyNet.Controllers
@@ -12,52 +13,61 @@ namespace SkyNet.Controllers
     [Authorize(Roles = "Tecnico")]
     public class TecnicoDashboardController : Controller
     {
-        private readonly string _cn;
-        public TecnicoDashboardController(IConfiguration cfg)
+        private readonly ApplicationDbContext _db;
+
+        public TecnicoDashboardController(ApplicationDbContext db)
         {
-            _cn = cfg.GetConnectionString("DefaultConnection")!;
+            _db = db;
         }
 
         [HttpGet]
         public IActionResult Index() => View();
 
-        // KPIs mantienen el mismo SP y DTO (sin cambios)
+        // ======== KPIs =========
         [HttpGet]
         public async Task<IActionResult> Kpis()
         {
-            var aspNetUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrWhiteSpace(aspNetUserId)) return Unauthorized();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
 
-            using var cn = new SqlConnection(_cn);
+            var cn = _db.Database.GetDbConnection();
+
             var p = new DynamicParameters();
-            p.Add("@AspNetUserId", aspNetUserId, DbType.String, size: 450);
+            p.Add("@AspNetUserId", userId, DbType.String, size: 450);
             p.Add("@FechasEnUtc", 0, DbType.Boolean);
 
-            var kpis = await cn.QueryFirstOrDefaultAsync<DashboardTecnicoDto>(
-                "dbo.usp_VisitasTecnico_KPIs_Estados", p, commandType: CommandType.StoredProcedure);
+            var result = await cn.QueryFirstOrDefaultAsync<DashboardTecnicoDto>(
+                "dbo.usp_VisitasTecnico_KPIs_Estados",
+                p,
+                commandType: CommandType.StoredProcedure
+            );
 
-            return Json(kpis ?? new DashboardTecnicoDto());
+            return Json(result ?? new DashboardTecnicoDto());
         }
-        // TecnicoDashboardController.cs (solo acción Hoy)
+
+        // ======== Visitas de Hoy =========
         [HttpGet]
         public async Task<IActionResult> Hoy(int? estado, bool finalizadasTodas = false)
         {
-            var uid = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrWhiteSpace(uid)) return Unauthorized();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
 
-            using var cn = new SqlConnection(_cn);
+            var cn = _db.Database.GetDbConnection();
+
             var p = new DynamicParameters();
-            p.Add("@AspNetUserId", uid, DbType.String, size: 450);
+            p.Add("@AspNetUserId", userId, DbType.String, size: 450);
             p.Add("@FechasEnUtc", 0, DbType.Boolean);
             p.Add("@EstadoFiltro", estado, DbType.Byte);
-            p.Add("@FinalizadasTodas", finalizadasTodas, DbType.Boolean); // << nuevo
+            p.Add("@FinalizadasTodas", finalizadasTodas, DbType.Boolean);
             p.Add("@Top", 100, DbType.Int32);
 
             var list = await cn.QueryAsync<DashboardTecnicoDto>(
-                "dbo.usp_VisitasTecnico_Hoy_Listar", p, commandType: CommandType.StoredProcedure);
+                "dbo.usp_VisitasTecnico_Hoy_Listar",
+                p,
+                commandType: CommandType.StoredProcedure
+            );
 
             return Json(list);
         }
-
     }
 }
