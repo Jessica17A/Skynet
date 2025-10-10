@@ -45,7 +45,7 @@ public class SolicitudesAsignacionesApiController : ControllerBase
         // UserId para tracking
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrWhiteSpace(userId))
-            return Forbid(); // o asigna "system" si prefieres
+            return Forbid(); 
 
         await using var tx = await _db.Database.BeginTransactionAsync(ct);
 

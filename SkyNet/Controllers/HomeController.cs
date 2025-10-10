@@ -16,16 +16,13 @@ namespace SkyNet.Controllers
             _logger = logger;
         }
 
+
+      
         public IActionResult Index()
         {
             return View();
         }
 
-
-        public IActionResult IndexTecnico()
-        {
-            return View();
-        }
 
 
         public IActionResult Privacy()

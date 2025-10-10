@@ -208,27 +208,26 @@ namespace SkyNet.Areas.Identity.Pages.Account
 
         private async Task CargarListasAsync(CancellationToken ct)
         {
+         
             var emps = await _db.Empleados.AsNoTracking()
                 .Where(e => e.Estado == 1 && !string.IsNullOrEmpty(e.Email) && e.UserId == null)
                 .OrderBy(e => e.Nombres)
-                .Select(e => new { e.Id, e.Nombres, e.Apellidos, e.Email })
+                .Select(e => new { e.Id, e.Nombres, e.Apellidos, e.Cargo})
                 .ToListAsync(ct);
 
             EmpleadosOptions = emps
                 .Select(e => new SelectListItem
                 {
                     Value = e.Id.ToString(),
-                    Text = $"{e.Nombres} {e.Apellidos} — {e.Email}"
+                
+                    Text = $"{e.Nombres} {e.Apellidos}"
+                         + (string.IsNullOrWhiteSpace(e.Cargo) ? "" : $" ({e.Cargo})")                    
                 })
                 .ToList();
 
             RolesOptions = await _roleManager.Roles
                 .OrderBy(r => r.Name)
-                .Select(r => new SelectListItem
-                {
-                    Value = r.Name,
-                    Text = r.Name
-                })
+                .Select(r => new SelectListItem { Value = r.Name, Text = r.Name })
                 .ToListAsync(ct);
         }
 

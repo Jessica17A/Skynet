@@ -96,11 +96,10 @@ namespace SkyNet.Data
                 e.ToTable("Solicitud"); // singular
                 e.HasKey(x => x.Id).HasName("Id_Solicitud");
                 e.Property(x => x.Id).HasColumnName("Id_Solicitud");
-
-                e.HasMany(x => x.Archivos)
-                 .WithOne(a => a.Solicitud)
-                 .HasForeignKey(a => a.Fk_Solicitud)
-                 .OnDelete(DeleteBehavior.Cascade);
+                //e.HasMany(x => x.Archivos)
+                // .WithOne(a => a.Solicitud)
+                // .HasForeignKey(a => a.Fk_Solicitud)
+                // .OnDelete(DeleteBehavior.Cascade);
             });
 
 

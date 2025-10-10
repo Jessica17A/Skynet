@@ -84,6 +84,7 @@
         const filtered = groups.filter(([, asigs]) => {
           const isProceso = asigs.some(a => a.estado === 4);
           const isAcept   = asigs.some(a => a.estado === 3) && !isProceso; 
+          const isFinal   = asigs.some(a => a.estado === 5) && !isProceso && !isAcept;
           if (filtro === 'proceso')  return isProceso;
           if (filtro === 'aceptada') return isAcept;
           return true; 
@@ -113,10 +114,17 @@
           }, null);
 
           const isProceso = asigs.some(a => a.estado === 4);
-          const isAcept   = asigs.some(a => a.estado === 3) && !isProceso;
-          const badge = isProceso
-            ? `<span class="badge bg-warning text-dark card-status-badge">En proceso</span>`
-            : (isAcept ? `<span class="badge bg-success card-status-badge">Aceptada</span>` : ``);
+            const isAcept   = asigs.some(a => a.estado === 3) && !isProceso;
+            const isFinal   = asigs.some(a => a.estado === 5) && !isProceso && !isAcept;
+
+            const badge = isProceso
+              ? `<span class="badge bg-warning text-dark card-status-badge">En proceso</span>`
+              : (isFinal
+                  ? `<span class="badge bg-secondary card-status-badge">Finalizada</span>`
+                  : (isAcept
+                      ? `<span class="badge bg-success card-status-badge">Aceptada</span>`
+                      : ``));
+
 
           return `
             <div class="col-12 col-md-6 col-lg-3">

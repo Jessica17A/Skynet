@@ -53,7 +53,7 @@ namespace SkyNet.Controllers.Api
 
         // GET: /api/solicitudes/{id}
         [HttpGet("{id:long}")]
-        public async Task<ActionResult<SolicitudDto>> GetById(long id, CancellationToken ct)
+        public async Task<ActionResult<SolicitudDto>> Details(long id, CancellationToken ct)
         {
             var s = await _db.Solicitudes.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
             return s is null ? NotFound() : Ok(Map(s));
@@ -97,7 +97,7 @@ namespace SkyNet.Controllers.Api
             _db.Solicitudes.Add(entidad);
             await _db.SaveChangesAsync(ct);
 
-            return CreatedAtAction(nameof(GetById), new { id = entidad.Id }, Map(entidad));
+            return CreatedAtAction(nameof(Details), new { id = entidad.Id }, Map(entidad));
         }
 
         // PATCH: /api/solicitudes/{id}/estado
@@ -110,7 +110,7 @@ namespace SkyNet.Controllers.Api
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrWhiteSpace(userId))
-                return Forbid(); // o usa un fallback si lo prefieres
+                return Forbid(); 
 
             var p1 = new SqlParameter("@SolicitudId", id);
             var p2 = new SqlParameter("@NuevoEstado", dto.Estado);
@@ -181,47 +181,6 @@ namespace SkyNet.Controllers.Api
         }
 
 
-        //[HttpPost("{id:long}/asignaciones")]
-        //public async Task<IActionResult> CrearAsignacion(long id, [FromBody] SolicitudAsignacionCreateDto dto)
-        //{
-        //    if (dto is null || id != dto.IdSolicitud)
-        //        return BadRequest(new { ok = false, msg = "Datos inválidos." });
-
-        //    var userId = User?.FindFirstValue(ClaimTypes.NameIdentifier) ?? "sistema";
-
-        //    try
-        //    {
-        //        var result = await _db.Database.SqlQueryRaw<AsignacionResultDto>(
-        //            @"EXEC dbo.usp_SolicitudAsignarTecnico 
-        //        @IdSolicitud = {0},
-        //        @IdGrupo = {1},
-        //        @FkTecnico = {2},
-        //        @Notas = {3},
-        //        @FechaInicioUtc = {4},
-        //        @UserId = {5}",
-        //            dto.IdSolicitud,
-        //            dto.IdGrupo,
-        //            dto.FkTecnico,
-        //            dto.Notas,
-        //            dto.Fecha_Inicio,
-        //            userId
-        //        ).ToListAsync();
-
-        //        var r = result.FirstOrDefault();
-
-        //        if (r is null)
-        //            return StatusCode(500, new { ok = false, msg = "Sin respuesta del procedimiento." });
-
-        //        if (r.Ok)
-        //            return Ok(new { ok = true, msg = r.Msg });
-
-        //        return BadRequest(new { ok = false, msg = r.Msg });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return StatusCode(500, new { ok = false, msg = ex.Message });
-        //    }
-        //}
 
 
     }

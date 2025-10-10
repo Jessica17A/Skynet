@@ -53,7 +53,7 @@ namespace SkyNet.Models.DTOs
         public string? Direccion { get; set; }
         public double? Latitud { get; set; }
         public double? Longitud { get; set; }
-        public List<ArchivoDto> Adjuntos { get; set; } = new();
+       
     }
 
     public class CambiarEstadoDto

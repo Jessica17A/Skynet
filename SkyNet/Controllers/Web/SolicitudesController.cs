@@ -36,7 +36,7 @@ namespace SkyNet.Controllers.Web
                 TempData["Error"] = "No se pudo cargar el listado de solicitudes.";
             }
 
-            return View(lista); // Views/Solicitudes/Index.cshtml
+            return View(lista); 
         }
 
         // DETALLE

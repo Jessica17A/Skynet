@@ -1,4 +1,4 @@
-﻿// Models/DTOs/SolicitudAsignacionDtos.cs
+﻿
 using Microsoft.EntityFrameworkCore;
 using System;
 
@@ -15,7 +15,7 @@ namespace SkyNet.Models.DTOs
       
     }
 
-    // Para devolver a la UI
+
     public class SolicitudAsignacionDto
     {
         public long Id { get; set; }
@@ -41,7 +41,7 @@ namespace SkyNet.Models.DTOs
 
 
     [Keyless]
-    public class SolicitudAsignacionListado // o usa tu SolicitudAsignacionDto si prefieres
+    public class SolicitudAsignacionListado 
     {
         public long Id { get; set; }
         public long IdSolicitud { get; set; }

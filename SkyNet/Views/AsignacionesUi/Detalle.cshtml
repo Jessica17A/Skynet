@@ -35,7 +35,6 @@
     </h4>
 </div>
 
-
 <!-- ===== Resumen tarjetas ===== -->
 <div class="row g-3 justify-content-center text-center mb-3">
     <div class="col-12 col-md-4">
@@ -69,7 +68,6 @@
                 }
                 else
                 {
-
                     <span class="text-warning">-</span>
                 }
             </div>
@@ -100,7 +98,7 @@
                             <th>Técnico</th>
                             <th>Visita</th>
                             <th>Notas</th>
-                            <th>Estado</th>
+                           
                             @if (!esFinalizada)
                             {
                                 <th class="text-end">Acción</th>
@@ -126,7 +124,7 @@
                                 <td>@(a.TecnicoNombre ?? $"ID: {a.FkTecnico}")</td>
                                 <td>@(a.Fecha_Inicio?.ToString("yyyy-MM-dd HH:mm") ?? "-")</td>
                                 <td>@(string.IsNullOrWhiteSpace(a.Notas) ? "-" : a.Notas)</td>
-                                <td><span class="@estClase">@estTexto</span></td>
+                              
                                 @if (!esFinalizada)
                                 {
                                     <td class="text-end">
@@ -147,22 +145,61 @@
         }
     </div>
 
-    <!-- CTA Tracking -->
+    <!-- ===== Footer con acciones ===== -->
     <div class="card-footer">
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3"
-             style="background:#f6fff9;border:1px solid #d2f4df;border-radius:16px;padding:1rem;">
-            <div class="d-flex align-items-center gap-2">
-                <i class="bi bi-flag-fill text-success fs-4"></i>
-                <div>
-                    <div class="fw-bold">Seguir con el tracking de la solicitud</div>
-                    <div class="text-muted small">Revisa el flujo completo y avanza el estado</div>
+        @if (esFinalizada)
+        {
+            <!-- SOLO CUANDO ESTÁ FINALIZADA: botones solicitados -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 p-3 rounded-3"
+                 style="background:#f8f9fa;border:1px solid #dee2e6;">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-flag-fill text-secondary fs-4"></i>
+                    <div>
+                        <div class="fw-bold">Solicitud finalizada</div>
+                        <div class="text-muted small">Puedes consultar su historial o generar el reporte.</div>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">                    
+
+                    <button id="btn-reporte" type="button" class="btn btn-outline-danger fw-bold">
+                        <i class="bi bi-file-earmark-pdf"></i> Generar Reporte
+                    </button>
+
+                    <a class="btn btn-outline-primary fw-bold"
+                       asp-controller="Solicitudes"
+                       asp-action="Historial"
+                       asp-route-id="@solicitud?.Id">
+                        <i class="bi bi-clock-history"></i> Ver tracking
+                    </a>
+
+                    <a class="btn btn-primary fw-bold"
+                       asp-controller="Solicitudes"
+                       asp-action="Details"
+                       asp-route-id="@solicitud?.Id">
+                        <i class="bi bi-eye"></i> Ver Solicitud
+                    </a>
+
                 </div>
             </div>
-            <a class="btn btn-success rounded-pill fw-bold d-inline-flex align-items-center gap-2"
-               asp-controller="Solicitudes" asp-action="Details" asp-route-id="@solicitud?.Id">
-                Ir al tracking <i class="bi bi-arrow-right-short fs-5"></i>
-            </a>
-        </div>
+        }
+        else
+        {
+            <!-- Tu CTA original se mantiene intacta cuando NO está finalizada -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3"
+                 style="background:#f6fff9;border:1px solid #d2f4df;border-radius:16px;padding:1rem;">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-flag-fill text-success fs-4"></i>
+                    <div>
+                        <div class="fw-bold">Seguir con el tracking de la solicitud</div>
+                        <div class="text-muted small">Revisa el flujo completo y avanza el estado</div>
+                    </div>
+                </div>
+                <a class="btn btn-success rounded-pill fw-bold d-inline-flex align-items-center gap-2"
+                   asp-controller="Solicitudes" asp-action="Details" asp-route-id="@solicitud?.Id">
+                    Ir al tracking <i class="bi bi-arrow-right-short fs-5"></i>
+                </a>
+            </div>
+        }
     </div>
 </div>
 
@@ -184,7 +221,7 @@
                     <label class="form-label fw-bold">Nota (opcional)</label>
                     <textarea id="notaTec" class="form-control" rows="2" placeholder="Instrucciones para el técnico"></textarea>
                 </div>
-               
+
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -205,11 +242,29 @@
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+    <script src="~/js/reporteAsignacionCompleta.js"></script>
     <script>
         (function () {
             const base = `${window.location.origin}${document.body.getAttribute('data-pathbase') ?? ''}`;
             const solicitudId = '@(solicitud?.Id ?? 0)';
             const esFinalizada = @((esFinalizada ? "true" : "false"));
+
+            // Botón PDF solo si existe (cuando está finalizada)
+           document.getElementById('btn-reporte')?.addEventListener('click', () => {
+            try {
+                if (!solicitudId || solicitudId === '0') {
+                    Swal.fire('Atención', 'ID de solicitud inválido.', 'warning');
+                    return;
+                }
+                // Aquí llama directamente a tu función
+                generarReporteAsignacionCompleta(solicitudId);
+            } catch (e) {
+                console.error(e);
+                Swal.fire('Error', 'No se pudo generar el reporte.', 'error');
+            }
+        });
+
 
             // abrir modal
             document.getElementById('btnAgregarTec')?.addEventListener('click', () => {
@@ -220,8 +275,8 @@
 
             // técnicos ya asignados (para deshabilitar en Select2)
             const asignados = new Set(@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(
-                                                    Model.Select(m => m.FkTecnico)
-                                    )));
+                                                                                                    Model.Select(m => m.FkTecnico)
+                                                                    )));
 
         // Select2 dentro del modal Bootstrap
         const $sel = $('#sw-tecs');
@@ -255,84 +310,80 @@
             }
         });
 
-         
-                 // Guardar técnicos seleccionados
-        document.getElementById('btnGuardarTec')?.addEventListener('click', async () => {
-            const sel = $sel.val();
-            const nota = (document.getElementById('notaTec').value || '').trim();
+            // Guardar técnicos seleccionados
+            document.getElementById('btnGuardarTec')?.addEventListener('click', async () => {
+                const sel = $sel.val();
+                const nota = (document.getElementById('notaTec').value || '').trim();
 
-            if (!sel || sel.length === 0) {
-                Swal.fire('Atención', 'Debes seleccionar al menos un técnico.', 'warning');
-                return;
-            }
-
-            try {
-            
-                const tecs = sel.map(x => Number(String(x).split('|')[1])).filter(n => !Number.isNaN(n));
-
-                // Llamar endpoint SP dbo.usp_Solicitud_Asignacion_AgregarTecnico
-                const res = await fetch(`${base}/api/solicitudes/${encodeURIComponent(solicitudId)}/asignaciones/tecnicos`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ tecnicos: tecs, nota })
-                });
-
-                const data = await res.json().catch(() => ({})); 
-
-                if (!res.ok || data.ok === false) {
-                    throw new Error(data.msg || `Error HTTP ${res.status}`);
+                if (!sel || sel.length === 0) {
+                    Swal.fire('Atención', 'Debes seleccionar al menos un técnico.', 'warning');
+                    return;
                 }
 
-                await Swal.fire({ icon: 'success', title: data.msg || 'Técnico(s) agregado(s)', confirmButtonColor: '#1cc88a' });
-                location.reload();
+                try {
+                    const tecs = sel.map(x => Number(String(x).split('|')[1])).filter(n => !Number.isNaN(n));
 
-            } catch (e) {
-                Swal.fire('Error', e.message || 'No se pudo agregar los técnicos.', 'error');
-            }
-        });
+                    // Llamar endpoint SP dbo.usp_Solicitud_Asignacion_AgregarTecnico
+                    const res = await fetch(`${base}/api/solicitudes/${encodeURIComponent(solicitudId)}/asignaciones/tecnicos`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ tecnicos: tecs, nota })
+                    });
 
+                    const data = await res.json().catch(() => ({}));
 
-                   // Anular asignación (solo si no está finalizada)
-        document.addEventListener('click', async (ev) => {
-            const btn = ev.target.closest('.btnAnular');
-            if (!btn || esFinalizada) return;
+                    if (!res.ok || data.ok === false) {
+                        throw new Error(data.msg || `Error HTTP ${res.status}`);
+                    }
 
-            const id = btn.dataset.id;
-            const { value: nota } = await Swal.fire({
-                title: 'Anular asignación',
-                input: 'text',
-                inputLabel: 'Motivo (opcional)',
-                inputPlaceholder: 'Ej: Cliente reprograma',
-                showCancelButton: true,
-                confirmButtonText: 'Anular',
-                cancelButtonText: 'Cancelar',
-                icon: 'warning'
+                    await Swal.fire({ icon: 'success', title: data.msg || 'Técnico(s) agregado(s)', confirmButtonColor: '#1cc88a' });
+                    location.reload();
+
+                } catch (e) {
+                    Swal.fire('Error', e.message || 'No se pudo agregar los técnicos.', 'error');
+                }
             });
-            if (nota === undefined) return;
 
-            try {
-                // Llamar endpoint SP dbo.usp_Solicitud_Asignacion_Anular
-                const r = await fetch(`${base}/api/solicitudes/asignaciones/${encodeURIComponent(id)}/anular`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ nota: nota ?? '' })
+            // Anular asignación (solo si no está finalizada)
+            document.addEventListener('click', async (ev) => {
+                const btn = ev.target.closest('.btnAnular');
+                if (!btn || esFinalizada) return;
+
+                const id = btn.dataset.id;
+                const { value: nota } = await Swal.fire({
+                    title: 'Anular asignación',
+                    input: 'text',
+                    inputLabel: 'Motivo (opcional)',
+                    inputPlaceholder: 'Ej: Cliente reprograma',
+                    showCancelButton: true,
+                    confirmButtonText: 'Anular',
+                    cancelButtonText: 'Cancelar',
+                    icon: 'warning'
                 });
+                if (nota === undefined) return;
 
-                const data = await r.json().catch(() => ({})); 
+                try {
+                    // Llamar endpoint SP dbo.usp_Solicitud_Asignacion_Anular
+                    const r = await fetch(`${base}/api/solicitudes/asignaciones/${encodeURIComponent(id)}/anular`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ nota: nota ?? '' })
+                    });
 
-                if (!r.ok || data.ok === false) {
-                    throw new Error(data.msg || `Error HTTP ${r.status}`);
+                    const data = await r.json().catch(() => ({}));
+
+                    if (!r.ok || data.ok === false) {
+                        throw new Error(data.msg || `Error HTTP ${r.status}`);
+                    }
+
+                    await Swal.fire('Hecho', data.msg || 'Asignación anulada.', 'success');
+                    location.reload();
+
+                } catch (e) {
+                    Swal.fire('Error', e.message || 'No se pudo anular la asignación.', 'error');
                 }
-
-                await Swal.fire('Hecho', data.msg || 'Asignación anulada.', 'success');
-                location.reload();
-
-            } catch (e) {
-                Swal.fire('Error', e.message || 'No se pudo anular la asignación.', 'error');
-            }
-        });
+            });
 
         })();
     </script>
-
 }

@@ -34,58 +34,15 @@
     var steps = new (int val, string name)[] {
         (1,"Pendiente"), (2,"Revisada"), (3,"Aceptada"), (4,"En proceso"), (5,"Finalizado")
     };
+
+    var lat = Model.Latitud;
+    var lng = Model.Longitud;
+    var hasCoords = lat.HasValue && lng.HasValue;
+    var q = hasCoords ? $"{lat.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)},{lng.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)}"
+                      : (Model.Direccion ?? Model.Nombre ?? "Guatemala");
 }
 
 <style>
-    .flow-stepper {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        flex-wrap: wrap;
-        justify-content: center
-    }
-
-    .flow-dot {
-        width: 36px;
-        height: 36px;
-        border-radius: 999px;
-        display: grid;
-        place-items: center;
-        font-weight: 700;
-        border: 2px solid var(--bs-border-color);
-        background: #fff;
-        color: #6c757d
-    }
-
-        .flow-dot.done {
-            background: #e7f1ff;
-            color: #0d6efd;
-            border-color: #cfe2ff
-        }
-
-        .flow-dot.active {
-            background: #0d6efd;
-            color: #fff;
-            border-color: #0d6efd
-        }
-
-    .flow-label {
-        font-size: .95rem;
-        color: #495057;
-        font-weight: 600
-    }
-
-    .flow-link {
-        width: 56px;
-        height: 3px;
-        background: var(--bs-border-color);
-        border-radius: 2px
-    }
-
-        .flow-link.done {
-            background: #0d6efd
-        }
-
     .chip {
         display: inline-block;
         padding: .35rem .9rem;
@@ -108,266 +65,318 @@
         padding: .45rem 1rem;
         font-weight: 600
     }
+
+    /* ------ STEP PROGRESIVO LLAMATIVO ------ */
+    .stepper-wrap {
+        background: #f8faff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 14px
+    }
+
+    .stepper-title {
+        font-weight: 700;
+        color: #0b5ed7;
+        margin-bottom: .35rem
+    }
+
+    .stepper {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: center
+    }
+
+    .step-dot {
+        width: 40px;
+        height: 40px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+        border: 2px solid #cbd5e1;
+        background: #fff;
+        color: #64748b;
+        box-shadow: 0 2px 4px rgba(2,6,23,.06)
+    }
+
+        .step-dot.done {
+            background: #e7f1ff;
+            color: #0d6efd;
+            border-color: #cfe2ff
+        }
+
+        .step-dot.active {
+            background: #0d6efd;
+            color: #fff;
+            border-color: #0d6efd
+        }
+
+    .step-label {
+        font-size: .95rem;
+        color: #334155;
+        font-weight: 700
+    }
+
+    .step-link {
+        width: 64px;
+        height: 4px;
+        background: #e2e8f0;
+        border-radius: 3px;
+        box-shadow: inset 0 0 0 1px #e2e8f0
+    }
+
+        .step-link.done {
+            background: #0d6efd
+        }
+
+    /* ------ DESCRIPCIÓN: que no se salga ------ */
+    .desc-card {
+        display: flex;
+        flex-direction: column;
+        height: 100%
+    }
+
+    .desc-box {
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 12px;
+        min-height: 84px; /* asegura un bloque visual */
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    /* Mapa compacto */
+    .map-frame {
+        width: 100%;
+        height: 260px;
+        border: 0;
+        border-radius: .5rem;
+    }
 </style>
 
-<div class="container mt-4" id="solicitud" data-id="@Model.Id" data-estado="@((int)Model.Estado)">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="mb-0"><i class="bi bi-receipt"></i> Ticket <strong>@Model.Ticket</strong></h4>
-        <span id="estadoBadge" class="@EstadoBadge((int)Model.Estado)">@EstadoNombre((int)Model.Estado)</span>
-    </div>
-
-    <!-- Stepper -->
-    <div class="card mb-3">
-        <div class="card-body">
-            <div id="stepper" class="flow-stepper">
-                @{
-                    var curr = (int)Model.Estado;
-                    for (var i = 0; i < steps.Length; i++)
-                    {
-                        var s = steps[i];
-                        var dotCls = s.val < curr ? "flow-dot done" : (s.val == curr ? "flow-dot active" : "flow-dot");
-                        <div class="d-flex align-items-center gap-2">
-                            <div class="@dotCls">@s.val</div>
-                            <div class="flow-label">@s.name</div>
-                        </div>
-                        ;
-                        if (i < steps.Length - 1)
-                        {
-                            var linkCls = steps[i].val < curr ? "flow-link done" : "flow-link";
-                            <div class="@linkCls"></div>
-                            ;
-                        }
-                    }
-                }
-            </div>
+<div class="container mt-3" id="solicitud" data-id="@Model.Id" data-estado="@((int)Model.Estado)">
+    <!-- CABECERA + SIGUIENTES PASOS ARRIBA -->
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+        <div>
+            <h4 class="mb-1"><i class="bi bi-receipt"></i> Ticket <strong>@Model.Ticket</strong></h4>
+            <span id="estadoBadge" class="@EstadoBadge((int)Model.Estado)">@EstadoNombre((int)Model.Estado)</span>
+        </div>
+        <div class="text-end">
+            <div class="fw-semibold small text-muted mb-1">Siguientes pasos</div>
+            <div id="acciones" class="d-flex flex-wrap gap-2 justify-content-end"></div>
         </div>
     </div>
 
-    <!-- Datos -->
-    <div class="card shadow-sm">
+    <!-- STEPPER -->
+    <div class="stepper-wrap mb-3">
+        <div class="stepper-title"><i class="bi bi-diagram-3"></i> Flujo de estados</div>
+        <div id="stepper" class="stepper">
+            @{
+                var curr = (int)Model.Estado;
+                for (var i = 0; i < steps.Length; i++)
+                {
+                    var s = steps[i];
+                    var dotCls = s.val < curr ? "step-dot done" : (s.val == curr ? "step-dot active" : "step-dot");
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="@dotCls">@s.val</div>
+                        <div class="step-label">@s.name</div>
+                    </div>
+                    if (i < steps.Length - 1)
+                    {
+                        var linkCls = steps[i].val < curr ? "step-link done" : "step-link";
+                        <div class="@linkCls"></div>
+                    }
+                }
+            }
+        </div>
+    </div>
+
+    <!-- DATOS -->
+    <div class="card shadow-sm mb-3">
         <div class="card-body">
             <div class="row g-3">
                 <div class="col-lg-8">
                     <div class="row g-3">
-                        <div class="col-md-6"><label class="form-label fw-bold">Nombre</label><div>@Model.Nombre</div></div>
-                        <div class="col-md-3"><label class="form-label fw-bold">Email</label><div>@Model.Email</div></div>
-                        <div class="col-md-3"><label class="form-label fw-bold">Teléfono</label><div>@(Model.Telefono ?? "-")</div></div>
-                        <div class="col-md-3"><label class="form-label fw-bold">Tipo</label><div><span class="@PriClass(Model.Prioridad)">@Model.Tipo</span></div></div>
-                        <div class="col-md-3"><label class="form-label fw-bold">Prioridad</label><div><span class="@PriClass(Model.Prioridad)">@Model.Prioridad</span></div></div>
-                        <div class="col-md-3"><label class="form-label fw-bold">Creado (UTC)</label><div>@Model.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm")</div></div>
-                        <div class="col-md-3"><label class="form-label fw-bold">Dirección</label><div>@(Model.Direccion ?? "-")</div></div>
-                    </div>
-                </div>
-                <div class="col-lg-4">
-                    <label class="form-label fw-bold">Descripción</label>
-                    <div class="border rounded p-3 bg-light h-100" style="white-space:pre-wrap">@Model.Descripcion</div>
-                </div>
-                @if (Model.Latitud.HasValue && Model.Longitud.HasValue)
-                {
-                    <div class="col-12">
-                        <label class="form-label fw-bold">Ubicación</label>
-                        <div class="text-muted">Lat: @Model.Latitud, Lng: @Model.Longitud</div>
-                    </div>
-                }
-            </div>
-        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Nombre</label>
+                            <div>@Model.Nombre</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Email</label>
+                            <div>@Model.Email</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Teléfono</label>
+                            <div>@(Model.Telefono ?? "-")</div>
+                        </div>
 
-        <div class="card-footer d-flex flex-wrap justify-content-between align-items-start">
-            <div class="d-flex flex-column gap-2">
-                <div class="fw-semibold">Siguientes pasos</div>
-                <div class="section-hint">Acciones disponibles según el estado actual</div>
-                <div id="acciones" class="d-flex flex-wrap gap-2"></div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Tipo</label>
+                            <div><span class="@PriClass(Model.Prioridad)">@Model.Tipo</span></div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Prioridad</label>
+                            <div><span class="@PriClass(Model.Prioridad)">@Model.Prioridad</span></div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Creado (UTC)</label>
+                            <div>@Model.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm")</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Dirección</label>
+                            <div>@(Model.Direccion ?? "-")</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Descripción con contenedor propio -->
+                <div class="col-lg-4">
+                    <div class="desc-card">
+                        <label class="form-label fw-bold">Descripción</label>
+                        <div class="desc-box">@Model.Descripcion</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- MAPA COMPACTO + SOLO DOS BOTONES -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-primary bg-opacity-10 fw-bold text-primary d-flex justify-content-between">
+            <span><i class="bi bi-geo-alt"></i> Ubicación y cómo llegar</span>
+            @if (hasCoords)
+            {
+                <small class="text-muted">Lat: @lat, Lng: @lng</small>
+            }
+        </div>
+        <div class="card-body">
+            <iframe class="map-frame"
+                    loading="lazy" allowfullscreen
+                    referrerpolicy="no-referrer-when-downgrade"
+                    src="https://www.google.com/maps?q=@Uri.EscapeDataString(q)&hl=es&z=16&output=embed">
+            </iframe>
+        </div>
+        <div class="card-footer d-flex justify-content-end gap-2">
+            <a class="btn btn-outline-primary btn-pill"
+               href="https://www.google.com/maps/dir/?api=1&destination=@Uri.EscapeDataString(q)"
+               target="_blank" rel="noopener">
+                <i class="bi bi-signpost-2"></i> Cómo llegar (Google Maps)
+            </a>
+            <a class="btn btn-outline-dark btn-pill"
+               href="https://waze.com/ul?@(hasCoords ? $"ll={lat!.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)},{lng!.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)}&navigate=yes" : $"q={Uri.EscapeDataString(q)}&navigate=yes")"
+               target="_blank" rel="noopener">
+                <i class="bi bi-geo"></i> Abrir en Waze
+            </a>
+        </div>
+    </div>
 </div>
+
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         (() => {
           const estados = {
-            0: { text: "Rechazado",  cls: "badge rounded-pill px-3 py-2 bg-danger" },
-            1: { text: "Pendiente",  cls: "badge rounded-pill px-3 py-2 bg-secondary" },
-            2: { text: "Revisada",   cls: "badge rounded-pill px-3 py-2 bg-info" },
-            3: { text: "Aceptada",   cls: "badge rounded-pill px-3 py-2 bg-success" },
-            4: { text: "En proceso", cls: "badge rounded-pill px-3 py-2 bg-warning text-dark" },
-            5: { text: "Finalizado", cls: "badge rounded-pill px-3 py-2 bg-primary" }
+            0: { text: "Rechazado",  cls: "btn btn-pill btn-outline-danger" },
+            1: { text: "Pendiente",  cls: "btn btn-pill btn-info text-white" },
+            2: { text: "Revisada",   cls: "btn btn-pill btn-primary" },
+            3: { text: "Aceptada",   cls: "btn btn-pill btn-success" },
+            4: { text: "En proceso", cls: "btn btn-pill btn-warning text-dark" },
+            5: { text: "Finalizado", cls: "btn btn-pill btn-primary" }
           };
 
-          function btnClassForState(state) {
-            switch (state) {
-              case 0: return 'btn btn-pill btn-outline-danger';
-              case 1: return 'btn btn-pill btn-info text-white';
-              case 2: return 'btn btn-pill btn-primary';
-              case 3: return 'btn btn-pill btn-success';
-              case 4: return 'btn btn-pill btn-warning text-dark';
-              case 5: return 'btn btn-pill btn-primary';
-              default: return 'btn btn-pill btn-outline-secondary';
-            }
+          function siguiente(curr){
+            switch(curr){ case 1:return 2; case 2:return 3; case 3:return 4; case 4:return 5; default:return null; }
           }
 
-          function siguiente(curr) {
-            switch (curr) {
-              case 1: return 2;
-              case 2: return 3;
-              case 3: return 4;
-              case 4: return 5;
-              default: return null;
-            }
-          }
-
-          function renderBotones() {
+          function renderBotones(){
             const cont = document.getElementById('solicitud');
             const id   = cont.dataset.id;
-            const curr = parseInt(cont.dataset.estado, 10);
+            const curr = parseInt(cont.dataset.estado,10);
             const zone = document.getElementById('acciones');
             zone.innerHTML = '';
 
-            // ya finalizada o rechazada => sin acciones
-            if (curr === 0 || curr === 5) return;
-
-            const nxt = siguiente(curr);
-
-            // si está en proceso (4) muestra "Finalizado"
-            if (curr === 4) {
-              const bFin = document.createElement('button');
-              bFin.className = btnClassForState(5);
-              bFin.textContent = estados[5].text;
-              bFin.onclick = () => onCambiarEstado(id, 5);
-              zone.appendChild(bFin);
-            } else if (nxt !== null) {
-              const bNext = document.createElement('button');
-              bNext.className = btnClassForState(nxt);
-              bNext.textContent = estados[nxt].text;
-              bNext.onclick = () => onCambiarEstado(id, nxt);
-              zone.appendChild(bNext);
-            }
-
-            // botón de rechazar disponible 1..4
-            if (curr >= 1 && curr <= 4) {
-              const bRej = document.createElement('button');
-              bRej.className = btnClassForState(0);
-              bRej.textContent = 'Rechazar';
-              bRej.onclick = () => onCambiarEstado(id, 0);
-              zone.appendChild(bRej);
+            if (curr!==0 && curr!==5){
+              const nxt = siguiente(curr);
+              if (curr===4){
+                const bFin = document.createElement('button');
+                bFin.className = estados[5].cls; bFin.textContent = estados[5].text;
+                bFin.onclick = () => onCambiarEstado(id,5);
+                zone.appendChild(bFin);
+              } else if (nxt!==null){
+                const bNext = document.createElement('button');
+                bNext.className = estados[nxt].cls; bNext.textContent = estados[nxt].text;
+                bNext.onclick = () => onCambiarEstado(id,nxt);
+                zone.appendChild(bNext);
+              }
+              if (curr>=1 && curr<=4){
+                const bRej = document.createElement('button');
+                bRej.className = estados[0].cls; bRej.textContent = 'Rechazar';
+                bRej.onclick = () => onCambiarEstado(id,0);
+                zone.appendChild(bRej);
+              }
             }
           }
 
-          // ===== Helper de confirmación genérica =====
-          async function confirmarCambio(curr, nuevo) {
+          async function confirmarCambio(curr,nuevo){
             const { isConfirmed } = await Swal.fire({
-              icon: 'question',
-              title: '¿Confirmar cambio de estado?',
-              html: `
-                <div class="text-start">
-                  <div><b>Actual:</b> ${estados[curr]?.text ?? curr}</div>
-                  <div><b>Nuevo:</b> ${estados[nuevo]?.text ?? nuevo}</div>
-                  ${nuevo === 5
-                    ? '<div class="mt-2 text-danger"><b>Nota:</b> esto marcará la solicitud como finalizada.</div>'
-                    : ''
-                  }
-                </div>
-              `,
-              showCancelButton: true,
-              confirmButtonText: 'Sí, continuar',
-              cancelButtonText: 'Cancelar',
-              reverseButtons: true,
-              focusCancel: true
+              icon:'question', title:'¿Confirmar cambio de estado?',
+              html:`<div class="text-start">
+                      <div><b>Actual:</b> ${curr}</div>
+                      <div><b>Nuevo:</b> ${nuevo}</div>
+                      ${nuevo===5?'<div class="mt-2 text-danger"><b>Nota:</b> esto marcará la solicitud como finalizada.</div>':''}
+                    </div>`,
+              showCancelButton:true, confirmButtonText:'Sí, continuar', cancelButtonText:'Cancelar',
+              reverseButtons:true, focusCancel:true
             });
             return isConfirmed;
           }
 
-          // ===== Llamada API =====
-          async function ajaxCambiarEstado(id, nuevo) {
-            const resp = await fetch(`/api/solicitudes/${id}/estado`, {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ estado: nuevo })
+          async function ajaxCambiarEstado(id,nuevo){
+            const resp = await fetch(`/api/solicitudes/${id}/estado`,{
+              method:'PATCH', headers:{'Content-Type':'application/json'},
+              body:JSON.stringify({estado:nuevo})
             });
-            if (!resp.ok) {
-              let msg = "No se pudo actualizar el estado.";
-              try {
-                const ct = resp.headers.get('Content-Type') || '';
-                if (ct.includes('application/json')) {
-                  const j = await resp.json();
-                  if (j && (j.error || j.message)) msg = j.error || j.message;
-                } else {
-                  const t = await resp.text();
-                  if (t) msg = t;
-                }
-              } catch {}
-              throw new Error(msg);
-            }
+            if(!resp.ok) throw new Error('No se pudo actualizar el estado.');
             return true;
           }
 
-          // ===== Controlador de cambio con confirmaciones =====
-          async function onCambiarEstado(id, nuevo) {
-            const zone = document.getElementById('acciones');
-            const cont = document.getElementById('solicitud');
-            const curr = parseInt(cont.dataset.estado, 10);
+          async function onCambiarEstado(id,nuevo){
+            const zone=document.getElementById('acciones');
+            const cont=document.getElementById('solicitud');
+            const curr=parseInt(cont.dataset.estado,10);
+            zone.querySelectorAll('button').forEach(b=>b.disabled=true);
 
-            // deshabilita mientras decide/ejecuta
-            zone.querySelectorAll('button').forEach(b => b.disabled = true);
-
-            try {
-              // Aceptar (3) => redirigir a asignar técnico
-              if (nuevo === 3) {
-                const r = await Swal.fire({
-                  title: "Asignar técnico",
-                  text: "Para dar seguimiento debe asignar un técnico.",
-                  icon: "info",
-                  showCancelButton: true,
-                  confirmButtonText: "Continuar",
-                  cancelButtonText: "Cancelar",
-                  reverseButtons: true
-                });
-                if (r.isConfirmed) {
-                  window.location.href = `/ui/asignaciones/Asignar?solicitudId=${id}`;
-                } else {
-                  zone.querySelectorAll('button').forEach(b => b.disabled = false);
-                }
+            try{
+              if(nuevo===3){
+                const r=await Swal.fire({title:"Asignar técnico",text:"Para dar seguimiento debe asignar un técnico.",
+                  icon:"info",showCancelButton:true,confirmButtonText:"Continuar",cancelButtonText:"Cancelar",reverseButtons:true});
+                if(r.isConfirmed){ window.location.href=`/ui/asignaciones/Asignar?solicitudId=${id}`; }
+                else { zone.querySelectorAll('button').forEach(b=>b.disabled=false); }
                 return;
               }
 
-              // Rechazar (0) => confirmación específica
-              if (nuevo === 0) {
-                const rj = await Swal.fire({
-                  title: "¿Rechazar solicitud?",
-                  text: "Esto también cancelará las asignaciones vinculadas.",
-                  icon: "warning",
-                  showCancelButton: true,
-                  confirmButtonText: "Sí, rechazar",
-                  cancelButtonText: "Cancelar"
-                });
-                if (!rj.isConfirmed) {
-                  zone.querySelectorAll('button').forEach(b => b.disabled = false);
-                  return;
-                }
-              } else {
-                // Confirmación genérica para el resto (1→2, 2→3, 3→4, 4→5)
-                const ok = await confirmarCambio(curr, nuevo);
-                if (!ok) {
-                  zone.querySelectorAll('button').forEach(b => b.disabled = false);
-                  return;
-                }
+              if(nuevo===0){
+                const rj=await Swal.fire({title:"¿Rechazar solicitud?",text:"Esto también cancelará las asignaciones vinculadas.",
+                  icon:"warning",showCancelButton:true,confirmButtonText:"Sí, rechazar",cancelButtonText:"Cancelar"});
+                if(!rj.isConfirmed){ zone.querySelectorAll('button').forEach(b=>b.disabled=false); return; }
+              }else{
+                const ok=await confirmarCambio(curr,nuevo);
+                if(!ok){ zone.querySelectorAll('button').forEach(b=>b.disabled=false); return; }
               }
 
-              // Ejecuta el cambio
-              await ajaxCambiarEstado(id, nuevo);
+              await ajaxCambiarEstado(id,nuevo);
               location.reload();
-
-            } catch (e) {
-              console.error(e);
-              Swal.fire({ title: "Error", text: e.message || "No se pudo actualizar el estado.", icon: "error" });
-              zone.querySelectorAll('button').forEach(b => b.disabled = false);
+            }catch(e){
+              Swal.fire('Error', e.message || 'No se pudo actualizar el estado.', 'error');
+              zone.querySelectorAll('button').forEach(b=>b.disabled=false);
             }
           }
 
           document.addEventListener('DOMContentLoaded', renderBotones);
         })();
     </script>
-
 }
-
-

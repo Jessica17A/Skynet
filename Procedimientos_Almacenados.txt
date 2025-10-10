@@ -1139,3 +1139,164 @@ BEGIN
     END CATCH
 END;
 GO
+
+
+
+
+
+
+
+
+
+
+
+USE [SkyNet01];
+GO
+SET ANSI_NULLS ON;
+GO
+SET QUOTED_IDENTIFIER ON;
+GO
+
+-- KPIs globales de visitas por ESTADO para el SUPERVISOR logueado
+CREATE PROCEDURE [dbo].[usp_VisitasSupervisor_KPIs_Estados]
+  @AspNetUserId NVARCHAR(450),
+  @FechasEnUtc  BIT = 0   -- 1 si FechaInicio/Fin están en UTC; 0 si ya son hora local GT
+AS
+BEGIN
+  SET NOCOUNT ON;
+
+  DECLARE @IdSupervisor BIGINT;
+
+  -- 1) Obtener Id del supervisor
+  SELECT TOP (1) @IdSupervisor = E.Id_Empleado
+  FROM dbo.Empleado E
+  WHERE E.UserId = @AspNetUserId;
+
+  IF @IdSupervisor IS NULL
+  BEGIN
+    SELECT 0 AS Asignadas, 0 AS EnProceso, 0 AS Finalizadas, 0 AS Total;
+    RETURN;
+  END
+
+  -- 2) Calcular KPIs basados en las asignaciones de los técnicos bajo este supervisor
+  SELECT
+    SUM(CASE WHEN A.Estado = 3 THEN 1 ELSE 0 END) AS Asignadas,   -- Estado 3
+    SUM(CASE WHEN A.Estado = 4 THEN 1 ELSE 0 END) AS EnProceso,   -- Estado 4
+    SUM(CASE WHEN A.Estado = 5 THEN 1 ELSE 0 END) AS Finalizadas, -- Estado 5
+    COUNT(*) AS Total
+  FROM dbo.Solicitud_Asignacion A
+  INNER JOIN dbo.Grupo_Supervisor_Tec GST
+      ON GST.IdGrupo     = A.IdGrupo        -- relación con grupo asignado
+     AND GST.FkSupervisor = @IdSupervisor
+     AND GST.FkTecnico    = A.FkTecnico     -- coherencia supervisor-técnico
+     AND GST.Estado = 1;                    -- solo relaciones activas
+END;
+GO
+
+
+
+
+
+
+
+
+USE [SkyNet01];
+GO
+SET ANSI_NULLS ON;
+GO
+SET QUOTED_IDENTIFIER ON;
+GO
+
+-- Crea: visitas "de hoy" para el SUPERVISOR logueado
+CREATE PROCEDURE [dbo].[usp_VisitasSupervisor_Hoy_Listar]
+  @AspNetUserId       NVARCHAR(450),
+  @FechasEnUtc        BIT = 0,
+  @EstadoFiltro       TINYINT = NULL,   -- NULL=Todas (3,4,5)
+  @FinalizadasTodas   BIT = 0,
+  @Top                INT = 100
+AS
+BEGIN
+  SET NOCOUNT ON;
+
+  -- 1) Resolver Id del supervisor
+  DECLARE @IdSupervisor BIGINT;
+  SELECT TOP (1) @IdSupervisor = E.Id_Empleado
+  FROM dbo.Empleado E
+  WHERE E.UserId = @AspNetUserId;
+
+  IF @IdSupervisor IS NULL
+  BEGIN
+    -- Sin supervisor → devolver esquema vacío
+    SELECT CAST(NULL AS BIGINT) AS Id WHERE 1=0;
+    RETURN;
+  END
+
+  -- 2) Ventanas de tiempo “hoy” en TZ local
+  DECLARE @tz SYSNAME = N'Central America Standard Time';
+  DECLARE @AhoraLocal DATETIME2 = CONVERT(DATETIME2, SYSUTCDATETIME() AT TIME ZONE 'UTC' AT TIME ZONE @tz);
+  DECLARE @HoyInicio DATETIME2 = DATEADD(DAY, DATEDIFF(DAY, 0, @AhoraLocal), 0);
+  DECLARE @HoyFin    DATETIME2 = DATEADD(MILLISECOND, -3, DATEADD(DAY, 1, @HoyInicio));
+
+  ;WITH Base AS
+  (
+    SELECT
+      A.Id_Solicitud_Asignacion AS Id,
+      A.FkSolicitud             AS IdSolicitud,
+      A.FkTecnico               AS FkTecnico,
+      CASE WHEN @FechasEnUtc=1 THEN CONVERT(DATETIME2,(A.FechaInicio AT TIME ZONE 'UTC' AT TIME ZONE @tz)) ELSE A.FechaInicio END AS InicioLocal,
+      CASE WHEN @FechasEnUtc=1 THEN CONVERT(DATETIME2,(A.FechaFin    AT TIME ZONE 'UTC' AT TIME ZONE @tz)) ELSE A.FechaFin    END AS FinLocal,
+      A.Estado,
+      CASE A.Estado
+           WHEN 3 THEN N'Asignada'
+           WHEN 4 THEN N'En proceso'
+           WHEN 5 THEN N'Finalizada'
+           ELSE CONVERT(VARCHAR(12),A.Estado)
+      END AS EstadoTexto,
+      S.Tipo,
+      S.Prioridad
+    FROM dbo.Solicitud_Asignacion A
+    INNER JOIN dbo.Solicitud S
+      ON S.Id_Solicitud = A.FkSolicitud
+    INNER JOIN dbo.Grupo_Supervisor_Tec GST
+      ON GST.IdGrupo = A.IdGrupo              -- << usa FkGrupo si así se llama en Solicitud_Asignacion
+      -- ON GST.IdGrupo = A.IdGrupo            -- << alternativa si tu columna se llama IdGrupo
+     AND GST.FkSupervisor = @IdSupervisor
+     AND GST.FkTecnico    = A.FkTecnico
+     AND GST.Estado = 1
+    WHERE
+      (
+          (@EstadoFiltro IS NULL AND A.Estado IN (3,4,5))
+       OR (@EstadoFiltro IS NOT NULL AND A.Estado = @EstadoFiltro)
+      )
+  )
+  SELECT TOP (@Top)
+      B.Id, B.IdSolicitud, B.FkTecnico,
+      B.InicioLocal AS Fecha_Inicio,
+      B.FinLocal    AS Fecha_Fin,
+      B.Estado, B.EstadoTexto,
+      B.Tipo, B.Prioridad
+  FROM Base B
+  WHERE
+        -- Asignadas (3): inician hoy
+        ( @EstadoFiltro = 3
+          AND B.InicioLocal >= @HoyInicio AND B.InicioLocal <= @HoyFin )
+     OR -- En proceso (4): iniciadas antes de hoy y no finalizadas aún
+        ( @EstadoFiltro = 4
+          AND B.InicioLocal < @HoyFin
+          AND (B.FinLocal IS NULL OR B.FinLocal > @HoyInicio) )
+     OR -- Finalizadas (5)
+        ( @EstadoFiltro = 5
+          AND ( @FinalizadasTodas = 1
+                OR (B.FinLocal IS NOT NULL AND B.FinLocal >= @HoyInicio AND B.FinLocal <= @HoyFin) ) )
+     OR -- Todas
+        ( @EstadoFiltro IS NULL
+          AND (
+                (B.Estado=3 AND B.InicioLocal >= @HoyInicio AND B.InicioLocal <= @HoyFin)
+             OR (B.Estado=4 AND B.InicioLocal < @HoyFin AND (B.FinLocal IS NULL OR B.FinLocal > @HoyInicio))
+             OR (B.Estado=5 AND B.FinLocal   IS NOT NULL AND B.FinLocal   >= @HoyInicio AND B.FinLocal   <= @HoyFin)
+          ) )
+  ORDER BY COALESCE(B.FinLocal, B.InicioLocal) DESC;
+END
+GO
+
+

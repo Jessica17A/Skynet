@@ -45,20 +45,8 @@ namespace SkyNet.Models
         public double? Latitud { get; set; }
         public double? Longitud { get; set; }
 
-        public ICollection<ArchivoSolicitud> Archivos { get; set; } = new List<ArchivoSolicitud>();
+      
     }
 
-    public class ArchivoSolicitud
-    {
-        public int Id { get; set; } 
-        public long Fk_Solicitud { get; set; } 
-        public Solicitud Solicitud { get; set; } = null!;
-
-        [Required, StringLength(512)]
-        public string PublicId { get; set; } = null!;
-
-        public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
-        public int Estado { get; set; } = 1;
-
-    }
+    
 }

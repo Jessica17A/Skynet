@@ -354,7 +354,7 @@
   },
   {
     "ContainingType": "SkyNet.Controllers.Api.SolicitudesApiController",
-    "Method": "GetById",
+    "Method": "Details",
     "RelativePath": "api/solicitudes/{id}",
     "HttpMethod": "GET",
     "IsController": true,

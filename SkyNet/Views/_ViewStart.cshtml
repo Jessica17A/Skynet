@@ -6,20 +6,20 @@
         {
             if (User.IsInRole("Administrador"))
             {
-                Layout = "/Views/Shared/_Admin.cshtml"; // Layout para Admin
+                Layout = "/Views/Shared/_Admin.cshtml"; 
             }
             else if (User.IsInRole("Supervisor"))
             {
-                Layout = "/Views/Shared/_Supervisor.cshtml"; // Layout para Supervisor
+                Layout = "/Views/Shared/_Supervisor.cshtml"; 
             }
             else if (User.IsInRole("Tecnico"))
             {
-                Layout = "/Views/Shared/_Tecnico.cshtml"; // Layout para Técnico
+                Layout = "/Views/Shared/_Tecnico.cshtml"; 
             }
 
         }
         else
         {
-            Layout = "/Views/Shared/_Layout.cshtml"; // Layout para usuarios no autenticados
+            Layout = "/Views/Shared/_Layout.cshtml"; 
         }
     }

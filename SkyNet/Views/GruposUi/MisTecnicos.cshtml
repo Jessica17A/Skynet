@@ -1,6 +1,6 @@
 ﻿@{
     ViewData["Title"] = "Mis técnicos";
-    Layout = "~/Views/Shared/_Admin.cshtml";
+    Layout = "~/Views/Shared/_Supervisor.cshtml";
 }
 
 @section Styles {
@@ -30,14 +30,7 @@
 <div class="container mt-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
         <h4 class="mb-0"><i class="bi bi-person-badge"></i> Mis técnicos</h4>
-        <div class="d-flex gap-2">
-            <a asp-action="Index" asp-controller="Grupos" class="btn btn-sm btn-outline-secondary">
-                <i class="bi bi-arrow-left"></i> Volver a grupos
-            </a>
-            <a asp-action="Index" asp-controller="Solicitudes" class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-list-task"></i> Ir a solicitudes
-            </a>
-        </div>
+        
     </div>
 
     <div id="contextoSolicitud" class="mb-3" style="display:none">
@@ -78,13 +71,13 @@
 
         const solicitudId = new URLSearchParams(location.search).get('solicitudId');
 
-        // UI contextual si hay solicitudId
+      
         (function initContext(){
             if (solicitudId) {
                 document.getElementById('contextoSolicitud').style.display = '';
                 document.getElementById('ctxSolicitud').textContent = '#' + solicitudId;
             } else {
-                // Si no hay solicitud en contexto, ocultamos columna Acciones en el thead (estética).
+                
                 document.querySelector('th.acciones-col')?.classList.add('d-none');
             }
         })();
@@ -115,8 +108,7 @@
                 }
 
                 alert('Técnico asignado correctamente.');
-                // Opcional: redirige a detalle de solicitud o regresar al listado
-                // location.href = `/Solicitudes/Details/${idSolicitud}`;
+               
             } catch (err) {
                 console.error(err);
                 alert('Error de red al asignar el técnico.');
@@ -126,7 +118,7 @@
         function cargarMisTecnicos() {
             if (dt) dt.destroy();
 
-            // Columnas base del DataTable
+        
             const colsBase = [
                 { data: 'idGrupo', className: 'text-center' },
                 { data: 'tecnicoNombre' },
@@ -154,7 +146,7 @@
                 }
             ];
 
-            // Si hay solicitudId, agrega columna Acciones; si no, la ocultamos con CSS class
+        
             if (solicitudId) {
                 colsBase.push({
                     data: null,

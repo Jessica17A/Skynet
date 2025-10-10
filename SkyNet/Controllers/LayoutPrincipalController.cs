@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace SkyNet.Controllers
 {
-    public class LayoutPrincipal : Controller
+    public class LayoutPrincipalController : Controller
     {
-        [AllowAnonymous]
+       
         public IActionResult Index()
         {
             if (User?.Identity?.IsAuthenticated == true)
@@ -14,13 +14,14 @@ namespace SkyNet.Controllers
                     return RedirectToAction("Index", "Home");
 
                 if (User.IsInRole("Supervisor"))
-                    return RedirectToAction("Index", "Home");
+                    return RedirectToAction("Index", "SupervisorDashboard");
 
                 if (User.IsInRole("Tecnico"))
                     return RedirectToAction("Index", "TecnicoDashboard");
 
                 // fallback
-                return RedirectToAction("Index", "LayoutPrincipal");
+                return RedirectToAction("Index", "Home");
+
             }
 
             return View(); // si no está autenticado
