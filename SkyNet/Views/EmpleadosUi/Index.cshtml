@@ -55,7 +55,7 @@
                         <th class="d-none d-md-table-cell">Email</th>
                         <th class="d-none d-lg-table-cell">Teléfono</th>
                         <th class="d-none d-sm-table-cell">Cargo</th>
-                        <th class="text-end" style="width:120px;">Acciones</th>
+                        <th class="text-end" style="width:150px;">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -71,7 +71,7 @@
                         var isTec = e.Cargo?.Equals("Tecnico", StringComparison.OrdinalIgnoreCase) ?? false;
                         var cargoBadgeClass = isSup ? "text-bg-success" : (isTec ? "text-bg-primary" : "text-bg-secondary");
 
-                        <tr>
+                        <tr data-id="@e.Id">
                             <td class="col-num text-muted"></td>
                             <td title="@nombres">@nombres</td>
                             <td title="@apellidos">@apellidos</td>
@@ -82,7 +82,6 @@
                                 }
                                 else
                                 {
-
                                     <a class="link-primary" href="mailto:@email">@email</a>
                                 }
                             </td>
@@ -93,7 +92,6 @@
                                 }
                                 else
                                 {
-
                                     <a class="link-primary" href="tel:@tel">@tel</a>
                                 }
                             </td>
@@ -101,9 +99,18 @@
                                 <span class="badge @cargoBadgeClass">@cargo</span>
                             </td>
                             <td class="text-end">
-                                <a class="btn btn-sm btn-outline-primary" asp-action="Detalle" asp-route-id="@e.Id" title="Ver detalle">
+                                <a class="btn btn-sm btn-outline-primary"
+                                   asp-action="Detalle" asp-route-id="@e.Id" title="Ver detalle">
                                     <i class="bi bi-eye"></i>
                                 </a>
+
+                                <!-- NUEVO: botón Desactivar (soft-delete: Estado = 0) -->
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-danger ms-1 btn-desactivar"
+                                        title="Eliminar"
+                                        data-id="@e.Id">
+                                    <i class="bi bi-trash"></i>
+                                </button>
                             </td>
                         </tr>
                     }
@@ -116,6 +123,8 @@
 @section Scripts {
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- jsPDF + autoTable -->
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.1/dist/jspdf.plugin.autotable.min.js"></script>
@@ -215,7 +224,7 @@
             doc.autoTable({
               head, body, startY: 70,
               styles: { fontSize: 9, cellPadding: 4 },
-              headStyles: { fillColor: [10,40,90], textColor: 255, halign: 'left' }, // azul marino
+              headStyles: { fillColor: [10,40,90], textColor: 255, halign: 'left' },
               columnStyles: {
                 0: { cellWidth: 35 },
                 1: { cellWidth: 150 },
@@ -234,6 +243,71 @@
             });
 
             doc.save('empleados.pdf');
+          });
+
+          // ===== NUEVO: Desactivar (Estado = 0) con confirmación y actualización del UI =====
+          $tabla.on('click', '.btn-desactivar', async function () {
+            const btn = this;
+            const $tr = $(btn).closest('tr');
+            const id = $tr.data('id');
+
+            const r = await Swal.fire({
+              title: "¿Desea eliminar al empleado?",
+              text: "El empleado quedará inactivo",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonText: "Sí, Eliminar",
+              cancelButtonText: "Cancelar",
+              reverseButtons: true,
+              focusCancel: true
+            });
+
+            if (!r.isConfirmed) return;
+
+            // feedback en botón mientras procesa
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+            try {
+              const res = await fetch(`/api/empleados/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ estado: 0 })
+              });
+
+              if (!res.ok) {
+                let msg = "No se pudo desactivar el empleado.";
+                try { const j = await res.json(); msg = j?.error || msg; } catch {}
+                await Swal.fire({ icon: "error", title: "Error", text: msg });
+                return;
+              }
+
+              // UI: desaparecer fila y renumerar
+              $tr.fadeOut(250, function () {
+                $(this).remove();
+                renumerar();
+              });
+
+              await Swal.fire({
+                icon: "success",
+                title: "Empleado desactivado",
+                text: "El empleado fue marcado como inactivo correctamente.",
+                timer: 1800,
+                showConfirmButton: false
+              });
+
+            } catch (err) {
+              console.error(err);
+              await Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "Ocurrió un problema al desactivar el empleado."
+              });
+            } finally {
+              btn.disabled = false;
+              btn.innerHTML = originalHtml;
+            }
           });
 
           // inicio

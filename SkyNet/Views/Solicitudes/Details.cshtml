@@ -1,7 +1,7 @@
 ﻿@model SkyNet.Models.DTOs.SolicitudDto
 @{
     ViewData["Title"] = "Detalle solicitud";
-    Layout = "~/Views/Shared/_Admin.cshtml";
+    // Layout = "~/Views/Shared/_Admin.cshtml";
 
     string EstadoNombre(int e) => e switch
     {
@@ -361,7 +361,7 @@
 
               if(nuevo===0){
                 const rj=await Swal.fire({title:"¿Rechazar solicitud?",text:"Esto también cancelará las asignaciones vinculadas.",
-                  icon:"warning",showCancelButton:true,confirmButtonText:"Sí, rechazar",cancelButtonText:"Cancelar"});
+                  icon:"warning",showCancelButton:true,confirmButtonText:"Sí, rechazar",cancelButtonText:"Cancelar", reverseButtons: true});
                 if(!rj.isConfirmed){ zone.querySelectorAll('button').forEach(b=>b.disabled=false); return; }
               }else{
                 const ok=await confirmarCambio(curr,nuevo);

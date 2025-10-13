@@ -1,7 +1,16 @@
 ﻿@model IEnumerable<SkyNet.Models.DTOs.SolicitudDto>
 @{
     ViewData["Title"] = "Solicitudes";
-    Layout = "~/Views/Shared/_Admin.cshtml";
+
+    if (User.IsInRole("Administrador"))
+    {
+        Layout = "~/Views/Shared/_Admin.cshtml";
+    }
+    else if (User.IsInRole("Supervisor"))
+    {
+        Layout = "~/Views/Shared/_Supervisor.cshtml";
+    }
+    
 
     string EstadoNombre(int e) => e switch
     {

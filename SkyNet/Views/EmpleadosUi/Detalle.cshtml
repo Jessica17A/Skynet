@@ -1,100 +1,121 @@
 ﻿@model SkyNet.Models.DTOs.EmpleadoDTO
 @{
-    ViewData["Title"] = "Detalle de empleado";
+    ViewData["Title"] = "Editar empleado";
     Layout = "~/Views/Shared/_Admin.cshtml";
 }
 
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0">
-            <i class="bi bi-person-badge"></i> Detalle del empleado
+        <h2 class="mb-0 text-center w-100">
+            <i class="bi bi-person-badge"></i> Editar empleado
         </h2>
-        <a asp-action="Index" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Volver
-        </a>
+        
     </div>
 
     <div class="card shadow-sm border-0">
         <div class="card-body">
-            <div class="row g-4">
-                <div class="col-md-6">
-                    <div class="d-flex align-items-center mb-3">
-                        <i class="bi bi-person-fill text-primary me-2 fs-5"></i>
-                        <div>
-                            <small class="text-muted d-block">Nombre</small>
-                            <span class="fw-semibold">@Model.Nombres</span>
-                        </div>
+            <form id="formEmpleado" class="needs-validation" novalidate>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Nombres</label>
+                        <input id="nombres" class="form-control" value="@Model.Nombres" required maxlength="80" />
                     </div>
 
-                    <div class="d-flex align-items-center mb-3">
-                        <i class="bi bi-credit-card-2-front text-primary me-2 fs-5"></i>
-                        <div>
-                            <small class="text-muted d-block">DPI</small>
-                            <span>@Model.DPI</span>
-                        </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Apellidos</label>
+                        <input id="apellidos" class="form-control" value="@Model.Apellidos" required maxlength="80" />
                     </div>
 
-                    <div class="d-flex align-items-center mb-3">
-                        <i class="bi bi-geo-alt text-primary me-2 fs-5"></i>
-                        <div>
-                            <small class="text-muted d-block">Dirección</small>
-                            <span>@Model.Direccion</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-6">
-                    <div class="d-flex align-items-center mb-3">
-                        <i class="bi bi-telephone text-primary me-2 fs-5"></i>
-                        <div>
-                            <small class="text-muted d-block">Teléfono</small>
-                            <span>@Model.Telefono</span>
-                        </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">DPI</label>
+                        <input id="dpi" class="form-control" value="@Model.DPI" required maxlength="20" />
                     </div>
 
-                    <div class="d-flex align-items-center mb-3">
-                        <i class="bi bi-envelope text-primary me-2 fs-5"></i>
-                        <div>
-                            <small class="text-muted d-block">Email</small>
-                            <span>@Model.Email</span>
-                        </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Teléfono</label>
+                        <input id="telefono" class="form-control" value="@Model.Telefono" maxlength="30" />
                     </div>
 
-                    <div class="d-flex align-items-center mb-3">
-                        <i class="bi bi-briefcase text-primary me-2 fs-5"></i>
-                        <div>
-                            <small class="text-muted d-block">Cargo</small>
-                            <span>@Model.Cargo</span>
-                        </div>
+                    <div class="col-md-12">
+                        <label class="form-label fw-semibold">Dirección</label>
+                        <input id="direccion" class="form-control" value="@Model.Direccion" maxlength="200" />
                     </div>
-                </div>
-            </div>
 
-            <hr />
-
-            <div class="row g-4">
-                <div class="col-md-6">
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-circle-fill me-2 fs-6 @(Model.Estado == 1 ? "text-success" : "text-secondary")"></i>
-                        <div>
-                            <small class="text-muted d-block">Estado</small>
-                            <span class="badge @(Model.Estado == 1 ? "bg-success" : "bg-secondary")">
-                                @(Model.Estado == 1 ? "Activo" : "Inactivo")
-                            </span>
-                        </div>
+                    <div class="col-md-12">
+                        <label class="form-label fw-semibold">Email</label>
+                        <input id="email" type="email" class="form-control" value="@Model.Email" maxlength="120" />
                     </div>
                 </div>
 
-                <div class="col-md-6">
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-calendar-date text-primary me-2 fs-5"></i>
-                        <div>
-                            <small class="text-muted d-block">Creado (UTC)</small>
-                            <span>@Model.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm")</span>
-                        </div>
-                    </div>
+                <div class="mt-4 d-flex justify-content-end">
+                    <button id="btnGuardar" type="submit" class="btn btn-primary px-4">
+                        <i class="bi bi-save"></i> Guardar cambios
+                    </button>
                 </div>
-            </div>
+            </form>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        (() => {
+            const form = document.getElementById('formEmpleado');
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const btn = document.getElementById('btnGuardar');
+                const original = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Guardando...';
+
+                const payload = {
+                    nombres: document.getElementById('nombres').value.trim(),
+                    apellidos: document.getElementById('apellidos').value.trim(),
+                    dpi: document.getElementById('dpi').value.trim(),
+                    direccion: document.getElementById('direccion').value.trim(),
+                    telefono: document.getElementById('telefono').value.trim(),
+                    email: document.getElementById('email').value.trim()
+                };
+
+                try {
+                    const res = await fetch(`/api/empleados/@Model.Id`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                if (!res.ok) {
+                        console.log('Error HTTP:', res.status);
+                        let msg = 'No se pudo guardar.';
+                        try { const j = await res.json(); msg = j?.error || msg; } catch {}
+                        await Swal.fire({ icon: 'error', title: 'Error', text: msg });
+                        return;
+                    }
+
+                    console.log('Éxito HTTP:', res.status);
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Guardado',
+                        text: 'Cambios actualizados correctamente.'
+                    });
+
+
+                } catch (err) {
+                    console.error(err);
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Ocurrió un problema al guardar los cambios.'
+                    });
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = original;
+                }
+            });
+        })();
+    </script>
+}

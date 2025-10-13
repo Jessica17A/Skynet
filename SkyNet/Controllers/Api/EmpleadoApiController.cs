@@ -53,6 +53,7 @@ namespace SkyNet.Controllers.Api
                 {
                     Id = e.Id,
                     Nombres = e.Nombres,
+                    Apellidos = e.Apellidos,
                     DPI = e.DPI,
                     Direccion = e.Direccion,
                     Telefono = e.Telefono,
@@ -105,7 +106,7 @@ namespace SkyNet.Controllers.Api
             return CreatedAtAction(nameof(GetById), new { id = outDto.Id }, outDto);
         }
 
-        // PUT: /api/empleados/{id}
+      
         [HttpPut("{id:long}")]
         public async Task<IActionResult> Update(long id, [FromBody] EmpleadoEditarDTO? dto, CancellationToken ct)
         {
@@ -121,8 +122,9 @@ namespace SkyNet.Controllers.Api
             if (dto.Direccion != null) e.Direccion = F(dto.Direccion);
             if (dto.Telefono != null) e.Telefono = F(dto.Telefono);
             if (dto.Email != null) e.Email = F(dto.Email);
-            if (dto.Cargo != null) e.Cargo = dto.Cargo.Trim();
             if (dto.Estado.HasValue) e.Estado = dto.Estado.Value;
+
+
 
             await _db.SaveChangesAsync(ct);
             return NoContent();

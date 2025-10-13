@@ -221,7 +221,7 @@
 
 
                 @*  SOLICITUDES *@
-                <div class="nav-title mt-3">Operación</div>
+                <div class="nav-title mt-3">Administrativo</div>
 
                 <!-- Toggler cerrado por defecto -->
                 <a class="nav-link collapsed"
@@ -234,8 +234,13 @@
                     <i class="bi bi-chevron-down ms-auto nav-caret"></i>
                 </a>
 
-                <!-- Submenú con ID único -->
-                <div class="collapse" id="grpSolicitudes" data-bs-parent="#sidebarMenu">                   
+              
+                <div class="collapse" id="grpSolicitudes" data-bs-parent="#sidebarMenu">
+
+                    <a class="nav-link @(IsActive("Solicitudes") ? "active" : "")"
+                       asp-controller="Solicitudes" asp-action="Index">
+                        <i class="bi bi-people"></i> Listado Solicitudes
+                    </a>
                   
 
                     <a class="nav-link @(IsActive("AsignacionesUi") ? "active" : "")"
