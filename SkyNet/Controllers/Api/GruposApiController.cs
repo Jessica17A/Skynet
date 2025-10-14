@@ -83,13 +83,13 @@ namespace SkyNet.Controllers.Api
                 {
                     if (existente.Estado)
                     {
-                        // Ya existe ACTIVO -> no hacemos nada
+                    
                         continue;
                     }
 
-                    // Existe pero INACTIVO -> reactivar
+                   
                     existente.Estado = true;
-                    existente.FechaCreacionUtc = DateTime.UtcNow; // opcional: registra fecha de reactivación
+                    existente.FechaCreacionUtc = DateTime.UtcNow; 
                 }
                 else
                 {

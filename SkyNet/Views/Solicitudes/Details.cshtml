@@ -143,7 +143,7 @@
         border: 1px solid #e9ecef;
         border-radius: 12px;
         padding: 12px;
-        min-height: 84px; /* asegura un bloque visual */
+        min-height: 84px;
         white-space: pre-wrap;
         overflow-wrap: anywhere;
         word-break: break-word;
@@ -279,104 +279,188 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         (() => {
-          const estados = {
-            0: { text: "Rechazado",  cls: "btn btn-pill btn-outline-danger" },
-            1: { text: "Pendiente",  cls: "btn btn-pill btn-info text-white" },
-            2: { text: "Revisada",   cls: "btn btn-pill btn-primary" },
-            3: { text: "Aceptada",   cls: "btn btn-pill btn-success" },
-            4: { text: "En proceso", cls: "btn btn-pill btn-warning text-dark" },
-            5: { text: "Finalizado", cls: "btn btn-pill btn-primary" }
-          };
 
-          function siguiente(curr){
-            switch(curr){ case 1:return 2; case 2:return 3; case 3:return 4; case 4:return 5; default:return null; }
-          }
+            // ============================================================
+            // 🟦 Diccionario de estados y clases
+            // ============================================================
+            const estados = {
+                0: { text: "Rechazado",  cls: "btn btn-pill btn-outline-danger" },
+                1: { text: "Pendiente",  cls: "btn btn-pill btn-info text-white" },
+                2: { text: "Revisada",   cls: "btn btn-pill btn-primary" },
+                3: { text: "Aceptada",   cls: "btn btn-pill btn-success" },
+                4: { text: "En proceso", cls: "btn btn-pill btn-warning text-dark" },
+                5: { text: "Finalizado", cls: "btn btn-pill btn-primary" }
+            };
 
-          function renderBotones(){
-            const cont = document.getElementById('solicitud');
-            const id   = cont.dataset.id;
-            const curr = parseInt(cont.dataset.estado,10);
-            const zone = document.getElementById('acciones');
-            zone.innerHTML = '';
-
-            if (curr!==0 && curr!==5){
-              const nxt = siguiente(curr);
-              if (curr===4){
-                const bFin = document.createElement('button');
-                bFin.className = estados[5].cls; bFin.textContent = estados[5].text;
-                bFin.onclick = () => onCambiarEstado(id,5);
-                zone.appendChild(bFin);
-              } else if (nxt!==null){
-                const bNext = document.createElement('button');
-                bNext.className = estados[nxt].cls; bNext.textContent = estados[nxt].text;
-                bNext.onclick = () => onCambiarEstado(id,nxt);
-                zone.appendChild(bNext);
-              }
-              if (curr>=1 && curr<=4){
-                const bRej = document.createElement('button');
-                bRej.className = estados[0].cls; bRej.textContent = 'Rechazar';
-                bRej.onclick = () => onCambiarEstado(id,0);
-                zone.appendChild(bRej);
-              }
+            // ============================================================
+            // 🟦 Función para obtener el siguiente estado
+            // ============================================================
+            function siguiente(curr) {
+                switch (curr) {
+                    case 1: return 2;
+                    case 2: return 3;
+                    case 3: return 4;
+                    case 4: return 5;
+                    default: return null;
+                }
             }
-          }
 
-          async function confirmarCambio(curr,nuevo){
-            const { isConfirmed } = await Swal.fire({
-              icon:'question', title:'¿Confirmar cambio de estado?',
-              html:`<div class="text-start">
-                      <div><b>Actual:</b> ${curr}</div>
-                      <div><b>Nuevo:</b> ${nuevo}</div>
-                      ${nuevo===5?'<div class="mt-2 text-danger"><b>Nota:</b> esto marcará la solicitud como finalizada.</div>':''}
-                    </div>`,
-              showCancelButton:true, confirmButtonText:'Sí, continuar', cancelButtonText:'Cancelar',
-              reverseButtons:true, focusCancel:true
-            });
-            return isConfirmed;
-          }
+            // ============================================================
+            // 🟦 Renderizar botones de acciones dinámicamente
+            // ============================================================
+            function renderBotones() {
+                const cont = document.getElementById('solicitud');
+                const id = cont.dataset.id;
+                const curr = parseInt(cont.dataset.estado, 10);
+                const zone = document.getElementById('acciones');
+                zone.innerHTML = '';
 
-          async function ajaxCambiarEstado(id,nuevo){
-            const resp = await fetch(`/api/solicitudes/${id}/estado`,{
-              method:'PATCH', headers:{'Content-Type':'application/json'},
-              body:JSON.stringify({estado:nuevo})
-            });
-            if(!resp.ok) throw new Error('No se pudo actualizar el estado.');
-            return true;
-          }
+                if (curr !== 0 && curr !== 5) {
+                    const nxt = siguiente(curr);
 
-          async function onCambiarEstado(id,nuevo){
-            const zone=document.getElementById('acciones');
-            const cont=document.getElementById('solicitud');
-            const curr=parseInt(cont.dataset.estado,10);
-            zone.querySelectorAll('button').forEach(b=>b.disabled=true);
+                    // Finalizar si está en proceso
+                    if (curr === 4) {
+                        const bFin = document.createElement('button');
+                        bFin.className = estados[5].cls;
+                        bFin.textContent = estados[5].text;
+                        bFin.onclick = () => onCambiarEstado(id, 5);
+                        zone.appendChild(bFin);
+                    }
+                    // Pasar al siguiente estado
+                    else if (nxt !== null) {
+                        const bNext = document.createElement('button');
+                        bNext.className = estados[nxt].cls;
+                        bNext.textContent = estados[nxt].text;
+                        bNext.onclick = () => onCambiarEstado(id, nxt);
+                        zone.appendChild(bNext);
+                    }
 
-            try{
-              if(nuevo===3){
-                const r=await Swal.fire({title:"Asignar técnico",text:"Para dar seguimiento debe asignar un técnico.",
-                  icon:"info",showCancelButton:true,confirmButtonText:"Continuar",cancelButtonText:"Cancelar",reverseButtons:true});
-                if(r.isConfirmed){ window.location.href=`/ui/asignaciones/Asignar?solicitudId=${id}`; }
-                else { zone.querySelectorAll('button').forEach(b=>b.disabled=false); }
-                return;
-              }
-
-              if(nuevo===0){
-                const rj=await Swal.fire({title:"¿Rechazar solicitud?",text:"Esto también cancelará las asignaciones vinculadas.",
-                  icon:"warning",showCancelButton:true,confirmButtonText:"Sí, rechazar",cancelButtonText:"Cancelar", reverseButtons: true});
-                if(!rj.isConfirmed){ zone.querySelectorAll('button').forEach(b=>b.disabled=false); return; }
-              }else{
-                const ok=await confirmarCambio(curr,nuevo);
-                if(!ok){ zone.querySelectorAll('button').forEach(b=>b.disabled=false); return; }
-              }
-
-              await ajaxCambiarEstado(id,nuevo);
-              location.reload();
-            }catch(e){
-              Swal.fire('Error', e.message || 'No se pudo actualizar el estado.', 'error');
-              zone.querySelectorAll('button').forEach(b=>b.disabled=false);
+                    // Rechazar
+                    if (curr >= 1 && curr <= 4) {
+                        const bRej = document.createElement('button');
+                        bRej.className = estados[0].cls;
+                        bRej.textContent = 'Rechazar';
+                        bRej.onclick = () => onCambiarEstado(id, 0);
+                        zone.appendChild(bRej);
+                    }
+                }
             }
-          }
 
-          document.addEventListener('DOMContentLoaded', renderBotones);
+            // ============================================================
+            // 🟦 Confirmar cambio de estado (con nombres)
+            // ============================================================
+            async function confirmarCambio(curr, nuevo) {
+                const nombres = {
+                    0: "Rechazado",
+                    1: "Pendiente",
+                    2: "Revisada",
+                    3: "Aceptada",
+                    4: "En proceso",
+                    5: "Finalizado"
+                };
+
+                const currNombre = nombres[curr] || `Desconocido (${curr})`;
+                const nuevoNombre = nombres[nuevo] || `Desconocido (${nuevo})`;
+
+                const { isConfirmed } = await Swal.fire({
+                    icon: 'question',
+                    title: '¿Confirmar cambio de estado?',
+                    html: `
+                        <div class="text-start">
+                            <div><b>Actual:</b> ${currNombre}</div>
+                            <div><b>Nuevo:</b> ${nuevoNombre}</div>
+                            ${nuevo === 5
+                                ? '<div class="mt-2 text-danger"><b>Nota:</b> Esto marcará la solicitud como finalizada.</div>'
+                                : ''}
+                        </div>
+                    `,
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, continuar',
+                    cancelButtonText: 'Cancelar',
+                    reverseButtons: true,
+                    focusCancel: true
+                });
+
+                return isConfirmed;
+            }
+
+            // ============================================================
+            // 🟦 Llamada AJAX para cambiar estado
+            // ============================================================
+            async function ajaxCambiarEstado(id, nuevo) {
+                const resp = await fetch(`/api/solicitudes/${id}/estado`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ estado: nuevo })
+                });
+                if (!resp.ok) throw new Error('No se pudo actualizar el estado.');
+                return true;
+            }
+
+            // ============================================================
+            // 🟦 Controlador principal de cambio de estado
+            // ============================================================
+            async function onCambiarEstado(id, nuevo) {
+                const zone = document.getElementById('acciones');
+                const cont = document.getElementById('solicitud');
+                const curr = parseInt(cont.dataset.estado, 10);
+                zone.querySelectorAll('button').forEach(b => b.disabled = true);
+
+                try {
+                    if (nuevo === 3) {
+                        const r = await Swal.fire({
+                            title: "Asignar técnico",
+                            text: "Para dar seguimiento debe asignar un técnico.",
+                            icon: "info",
+                            showCancelButton: true,
+                            confirmButtonText: "Continuar",
+                            cancelButtonText: "Cancelar",
+                            reverseButtons: true
+                        });
+
+                        if (r.isConfirmed) {
+                            window.location.href = `/ui/asignaciones/Asignar?solicitudId=${id}`;
+                        } else {
+                            zone.querySelectorAll('button').forEach(b => b.disabled = false);
+                        }
+                        return;
+                    }
+
+                    if (nuevo === 0) {
+                        const rj = await Swal.fire({
+                            title: "¿Rechazar solicitud?",
+                            text: "Esto también cancelará las asignaciones vinculadas.",
+                            icon: "warning",
+                            showCancelButton: true,
+                            confirmButtonText: "Sí, rechazar",
+                            cancelButtonText: "Cancelar",
+                            reverseButtons: true
+                        });
+
+                        if (!rj.isConfirmed) {
+                            zone.querySelectorAll('button').forEach(b => b.disabled = false);
+                            return;
+                        }
+                    } else {
+                        const ok = await confirmarCambio(curr, nuevo);
+                        if (!ok) {
+                            zone.querySelectorAll('button').forEach(b => b.disabled = false);
+                            return;
+                        }
+                    }
+
+                    await ajaxCambiarEstado(id, nuevo);
+                    location.reload();
+
+                } catch (e) {
+                    Swal.fire('Error', e.message || 'No se pudo actualizar el estado.', 'error');
+                    zone.querySelectorAll('button').forEach(b => b.disabled = false);
+                }
+            }
+
+           
+            document.addEventListener('DOMContentLoaded', renderBotones);
+
         })();
     </script>
 }

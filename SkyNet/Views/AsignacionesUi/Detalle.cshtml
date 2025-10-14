@@ -1,6 +1,6 @@
 ﻿@model List<SkyNet.Models.DTOs.SolicitudAsignacionListadoS>
 @using SkyNet.Models.DTOs
-@using SkyNet.Models          @* <- donde está el enum SolicitudEstado *@
+@using SkyNet.Models      
 
 @{
     Layout = "~/Views/Shared/_Admin.cshtml";
@@ -26,7 +26,7 @@
     bool esFinalizada = solicitud?.Estado == SolicitudEstado.Finalizado;
 }
 
-<!-- ===== Encabezado verde sólido ===== -->
+
 <div class="rounded-4 p-3 text-white fw-bold text-center mb-4"
      style="background-color:#147A44;">
     <h4 class="mb-0">
@@ -35,7 +35,7 @@
     </h4>
 </div>
 
-<!-- ===== Resumen tarjetas ===== -->
+
 <div class="row g-3 justify-content-center text-center mb-3">
     <div class="col-12 col-md-4">
         <div class="w-100 p-3 bg-white border rounded-3 shadow-sm">
@@ -75,7 +75,7 @@
     </div>
 </div>
 
-<!-- ===== Tabla de técnicos asignados ===== -->
+
 <div class="card border-0 shadow-sm">
     <div class="card-header bg-light d-flex justify-content-between align-items-center">
         <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-list-check"></i> Técnicos asignados</h6>
@@ -250,14 +250,14 @@
             const solicitudId = '@(solicitud?.Id ?? 0)';
             const esFinalizada = @((esFinalizada ? "true" : "false"));
 
-            // Botón PDF solo si existe (cuando está finalizada)
+          
            document.getElementById('btn-reporte')?.addEventListener('click', () => {
             try {
                 if (!solicitudId || solicitudId === '0') {
                     Swal.fire('Atención', 'ID de solicitud inválido.', 'warning');
                     return;
                 }
-                // Aquí llama directamente a tu función
+           
                 generarReporteAsignacionCompleta(solicitudId);
             } catch (e) {
                 console.error(e);
@@ -266,7 +266,7 @@
         });
 
 
-            // abrir modal
+          
             document.getElementById('btnAgregarTec')?.addEventListener('click', () => {
                 if (esFinalizada) return;
                 const modal = new bootstrap.Modal(document.getElementById('modalAgregarTec'));
@@ -275,8 +275,8 @@
 
             // técnicos ya asignados (para deshabilitar en Select2)
             const asignados = new Set(@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(
-                                                                                                    Model.Select(m => m.FkTecnico)
-                                                                    )));
+            
+            Model.Select(m => m.FkTecnico))));
 
         // Select2 dentro del modal Bootstrap
         const $sel = $('#sw-tecs');
@@ -323,7 +323,6 @@
                 try {
                     const tecs = sel.map(x => Number(String(x).split('|')[1])).filter(n => !Number.isNaN(n));
 
-                    // Llamar endpoint SP dbo.usp_Solicitud_Asignacion_AgregarTecnico
                     const res = await fetch(`${base}/api/solicitudes/${encodeURIComponent(solicitudId)}/asignaciones/tecnicos`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -344,7 +343,7 @@
                 }
             });
 
-            // Anular asignación (solo si no está finalizada)
+         
             document.addEventListener('click', async (ev) => {
                 const btn = ev.target.closest('.btnAnular');
                 if (!btn || esFinalizada) return;
@@ -363,7 +362,7 @@
                 if (nota === undefined) return;
 
                 try {
-                    // Llamar endpoint SP dbo.usp_Solicitud_Asignacion_Anular
+                  
                     const r = await fetch(`${base}/api/solicitudes/asignaciones/${encodeURIComponent(id)}/anular`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },

@@ -42,7 +42,6 @@ public class SolicitudesAsignacionesApiController : ControllerBase
                             .FirstOrDefaultAsync(x => x.Id == id, ct);
         if (asig is null) return NotFound();
 
-        // UserId para tracking
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrWhiteSpace(userId))
             return Forbid(); 
@@ -59,7 +58,7 @@ public class SolicitudesAsignacionesApiController : ControllerBase
 
         await _db.SaveChangesAsync(ct);
 
-        // --- Propaga a SOLICITUD y registra tracking SOLO si 4=Proceso o 5=Finalizada ---
+        
         if (estadoNuevo == SolicitudAsignacionEstado.Proceso
             || estadoNuevo == SolicitudAsignacionEstado.Finalizada)
         {
@@ -282,7 +281,7 @@ public class SolicitudesAsignacionesApiController : ControllerBase
         }
         catch (SqlException ex)
         {
-            // 🔹 Captura errores lanzados por el SP (THROW)
+            
             return BadRequest(new { ok = false, msg = ex.Message });
         }
     }

@@ -23,8 +23,21 @@
 
     public class UsuarioResetDto
     {
+        public string NewPassword { get; set; } = string.Empty;
+    }
+
+    public class ResetPasswordRequest
+    {
+        public string Id { get; set; } = "";
         public string NewPassword { get; set; } = "";
     }
+
+    public class ResetPasswordDto
+    {
+        public string NewPassword { get; set; } = string.Empty;
+    }
+
+
 
 
 }

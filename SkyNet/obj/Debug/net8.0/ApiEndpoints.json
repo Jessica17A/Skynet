@@ -729,43 +729,6 @@
   },
   {
     "ContainingType": "SkyNet.Controllers.Api.UsuariosApiController",
-    "Method": "SoftDelete",
-    "RelativePath": "api/usuarios/{id}",
-    "HttpMethod": "DELETE",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.String",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "SkyNet.Controllers.Api.UsuariosApiController",
-    "Method": "UpdateEstado",
-    "RelativePath": "api/usuarios/{id}/estado",
-    "HttpMethod": "PUT",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.String",
-        "IsRequired": true
-      },
-      {
-        "Name": "dto",
-        "Type": "SkyNet.Models.DTOs.UsuarioEstadoUpdateDto",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "SkyNet.Controllers.Api.UsuariosApiController",
     "Method": "ResetPassword",
     "RelativePath": "api/usuarios/{id}/reset-password",
     "HttpMethod": "POST",
@@ -775,11 +738,6 @@
       {
         "Name": "id",
         "Type": "System.String",
-        "IsRequired": true
-      },
-      {
-        "Name": "dto",
-        "Type": "SkyNet.Controllers.Api.UsuarioResetDto",
         "IsRequired": true
       }
     ],
