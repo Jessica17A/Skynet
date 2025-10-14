@@ -19,63 +19,79 @@
         </div>
     </div>
 
-    <!-- KPIs -->
+    <!-- KPIs clicables -->
     <div class="row g-3 mb-4">
+
+        <!-- Asignadas -->
         <div class="col-12 col-md-3">
-            <div class="card shadow-sm border-0">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="text-muted small">Asignadas</div>
-                        <div id="k-asignadas" class="display-6 fw-bold">—</div>
+            <a href="@Url.Action("Supervisores", "AsignacionesUi", new { filtro = "aceptada" })" class="text-decoration-none">
+                <div class="card shadow-sm border-0 kpi-card">
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">Asignadas</div>
+                            <div id="k-asignadas" class="display-6 fw-bold text-dark">—</div>
+                        </div>
+                        <span class="badge text-bg-primary rounded-circle kpi-badge">
+                            <i class="bi bi-clipboard-check kpi-icon"></i>
+                        </span>
                     </div>
-                    <span class="badge text-bg-primary rounded-circle kpi-badge">
-                        <i class="bi bi-clipboard-check kpi-icon"></i>
-                    </span>
+                    <div class="border-bottom border-3 border-primary rounded-bottom"></div>
                 </div>
-                <div class="border-bottom border-3 border-primary rounded-bottom"></div>
-            </div>
+            </a>
         </div>
+
+        <!-- En proceso -->
         <div class="col-12 col-md-3">
-            <div class="card shadow-sm border-0">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="text-muted small">En proceso</div>
-                        <div id="k-proceso" class="display-6 fw-bold">—</div>
+            <a href="@Url.Action("Supervisores", "AsignacionesUi", new { filtro = "proceso" })" class="text-decoration-none">
+                <div class="card shadow-sm border-0 kpi-card">
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">En proceso</div>
+                            <div id="k-proceso" class="display-6 fw-bold text-dark">—</div>
+                        </div>
+                        <span class="badge text-bg-warning rounded-circle kpi-badge">
+                            <i class="bi bi-gear-wide-connected kpi-icon"></i>
+                        </span>
                     </div>
-                    <span class="badge text-bg-warning rounded-circle kpi-badge">
-                        <i class="bi bi-gear-wide-connected kpi-icon"></i>
-                    </span>
+                    <div class="border-bottom border-3 border-warning rounded-bottom"></div>
                 </div>
-                <div class="border-bottom border-3 border-warning rounded-bottom"></div>
-            </div>
+            </a>
         </div>
+
+        <!-- Finalizadas -->
         <div class="col-12 col-md-3">
-            <div class="card shadow-sm border-0">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="text-muted small">Finalizadas</div>
-                        <div id="k-finalizadas" class="display-6 fw-bold">—</div>
+            <a href="@Url.Action("Supervisores", "AsignacionesUi", new { filtro = "finalizada" })" class="text-decoration-none">
+                <div class="card shadow-sm border-0 kpi-card">
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">Finalizadas</div>
+                            <div id="k-finalizadas" class="display-6 fw-bold text-dark">—</div>
+                        </div>
+                        <span class="badge text-bg-success rounded-circle kpi-badge">
+                            <i class="bi bi-flag-fill kpi-icon"></i>
+                        </span>
                     </div>
-                    <span class="badge text-bg-success rounded-circle kpi-badge">
-                        <i class="bi bi-flag-fill kpi-icon"></i>
-                    </span>
+                    <div class="border-bottom border-3 border-success rounded-bottom"></div>
                 </div>
-                <div class="border-bottom border-3 border-success rounded-bottom"></div>
-            </div>
+            </a>
         </div>
+
+        <!-- Total -->
         <div class="col-12 col-md-3">
-            <div class="card shadow-sm border-0">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="text-muted small">Total</div>
-                        <div id="k-total" class="display-6 fw-bold">—</div>
+            <a href="@Url.Action("Supervisores", "AsignacionesUi", new { filtro = "all" })" class="text-decoration-none">
+                <div class="card shadow-sm border-0 kpi-card">
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">Total</div>
+                            <div id="k-total" class="display-6 fw-bold text-dark">—</div>
+                        </div>
+                        <span class="badge text-bg-secondary rounded-circle kpi-badge">
+                            <i class="bi bi-collection kpi-icon"></i>
+                        </span>
                     </div>
-                    <span class="badge text-bg-secondary rounded-circle kpi-badge">
-                        <i class="bi bi-collection kpi-icon"></i>
-                    </span>
+                    <div class="border-bottom border-3 border-secondary rounded-bottom"></div>
                 </div>
-                <div class="border-bottom border-3 border-secondary rounded-bottom"></div>
-            </div>
+            </a>
         </div>
     </div>
 
@@ -114,13 +130,13 @@
                         <table class="table table-sm align-middle table-hover mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th class="text-nowrap">Hora</th>
-                                    <th class="text-nowrap">Solicitud</th>
-                                    <th class="text-nowrap">Técnico</th>
-                                    <th class="text-nowrap">Tipo</th>
-                                    <th class="text-nowrap">Prioridad</th>
-                                    <th class="text-nowrap">Estado</th>
-                                    <th class="text-end text-nowrap">Acciones</th>
+                                    <th>Hora</th>
+                                    <th>Solicitud</th>
+                                    <th>Técnico</th>
+                                    <th>Tipo</th>
+                                    <th>Prioridad</th>
+                                    <th>Estado</th>
+                                    <th class="text-end">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="tb-hoy">
@@ -157,168 +173,152 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-                // ===== Config =====
-                let estadoActual = "3"; // por defecto: Asignadas
-                const base = "";        // base path si lo necesitas
+        let estadoActual = "3";
+        const base = "";
 
-                // ===== Helpers =====
-                function fmtFecha(dtStr){
-                    if(!dtStr) return '—';
-                    const d = new Date(dtStr); if(isNaN(d)) return dtStr;
-                    const hh = d.getHours().toString().padStart(2,'0');
-                    const mm = d.getMinutes().toString().padStart(2,'0');
-                    return `${d.toLocaleDateString()} ${hh}:${mm}`;
-                }
-                function nowStr(){ return new Date().toLocaleString(); }
-                function setUltima(){ document.getElementById('lbl-ultima-act').textContent = nowStr(); }
+        function fmtFecha(dtStr){
+            if(!dtStr) return '—';
+            const d = new Date(dtStr);
+            if(isNaN(d)) return dtStr;
+            const hh = d.getHours().toString().padStart(2,'0');
+            const mm = d.getMinutes().toString().padStart(2,'0');
+            return `${d.toLocaleDateString()} ${hh}:${mm}`;
+        }
+        function nowStr(){ return new Date().toLocaleString(); }
+        function setUltima(){ document.getElementById('lbl-ultima-act').textContent = nowStr(); }
 
-                const chip = (txt, cls) => `<span class="badge rounded-pill ${cls}">${txt}</span>`;
-                function chipEstado(e, t){
-                    if(e==5) return chip(t||'Finalizada', 'text-bg-success');
-                    if(e==4) return chip(t||'En proceso', 'text-bg-warning text-dark');
-                    return chip(t||'Asignada', 'text-bg-primary');
-                }
-                function chipTipo(t){ return chip(t||'—', 'text-bg-info'); }
-                function chipPrioridad(p){
-                    if(p==='Alta')  return chip('Alta','text-bg-danger');
-                    if(p==='Media') return chip('Media','text-bg-warning text-dark');
-                    if(p==='Baja')  return chip('Baja','text-bg-success');
-                    return chip(p||'—','text-bg-secondary');
-                }
+        const chip = (txt, cls) => `<span class="badge rounded-pill ${cls}">${txt}</span>`;
+        function chipEstado(e, t){
+            if(e==5) return chip(t||'Finalizada', 'text-bg-success');
+            if(e==4) return chip(t||'En proceso', 'text-bg-warning text-dark');
+            return chip(t||'Asignada', 'text-bg-primary');
+        }
+        function chipTipo(t){ return chip(t||'—', 'text-bg-info'); }
+        function chipPrioridad(p){
+            if(p==='Alta')  return chip('Alta','text-bg-danger');
+            if(p==='Media') return chip('Media','text-bg-warning text-dark');
+            if(p==='Baja')  return chip('Baja','text-bg-success');
+            return chip(p||'—','text-bg-secondary');
+        }
 
-                // ===== KPIs =====
-                async function cargarKpis(){
-                    const r = await fetch('@Url.Action("Kpis", "SupervisorDashboard")', { cache:'no-store' });
-                    const d = await r.json();
-                    document.getElementById('k-asignadas').textContent   = d.asignadas ?? 0;
-                    document.getElementById('k-proceso').textContent     = d.enProceso ?? 0;
-                    document.getElementById('k-finalizadas').textContent = d.finalizadas ?? 0;
-                    document.getElementById('k-total').textContent       = d.total ?? 0;
+        async function cargarKpis(){
+            const r = await fetch('@Url.Action("Kpis", "SupervisorDashboard")', { cache:'no-store' });
+            const d = await r.json();
+            document.getElementById('k-asignadas').textContent   = d.asignadas ?? 0;
+            document.getElementById('k-proceso').textContent     = d.enProceso ?? 0;
+            document.getElementById('k-finalizadas').textContent = d.finalizadas ?? 0;
+            document.getElementById('k-total').textContent       = d.total ?? 0;
+            renderChartEstados(d.asignadas ?? 0, d.enProceso ?? 0, d.finalizadas ?? 0);
+        }
 
-                    renderChartEstados(d.asignadas ?? 0, d.enProceso ?? 0, d.finalizadas ?? 0);
-                }
+        async function cargarHoy(){
+            const tbody = document.getElementById('tb-hoy');
+            const vacio = document.getElementById('msg-vacio');
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-3">Cargando…</td></tr>`;
+            vacio.classList.add('d-none');
 
-                // ===== Tabla =====
-                async function cargarHoy(){
-                    const tbody = document.getElementById('tb-hoy');
-                    const vacio = document.getElementById('msg-vacio');
-                    tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-3">Cargando…</td></tr>`;
-                    vacio.classList.add('d-none');
+            const qs = new URLSearchParams();
+            if (estadoActual) qs.set('estado', estadoActual);
+            if (estadoActual === '5') qs.set('finalizadasTodas', 'true');
 
-                    const qs = new URLSearchParams();
-                    if (estadoActual) qs.set('estado', estadoActual);
-                    if (estadoActual === '5') qs.set('finalizadasTodas', 'true');
+            try{
+                const r = await fetch('@Url.Action("Hoy", "SupervisorDashboard")' + (qs.toString()?`?${qs}`:''), { cache:'no-store' });
+                const list = await r.json();
 
-                    try{
-                        const r = await fetch('@Url.Action("Hoy", "SupervisorDashboard")' + (qs.toString()?`?${qs}`:''), { cache:'no-store' });
-                        const list = await r.json();
-
-                        if (!list || list.length === 0){
-                            tbody.innerHTML = '';
-                            vacio.classList.remove('d-none');
-                            return;
-                        }
-
-                        tbody.innerHTML = list.map(x => `
-        <tr>
-          <td class="text-nowrap">${fmtFecha(estadoActual==='5' ? x.fecha_Fin : x.fecha_Inicio)}</td>
-          <td class="text-nowrap">#${x.idSolicitud}</td>
-          <td class="text-nowrap">${(x.tecnicoNombre ?? 'Técnico ' + x.fkTecnico)}</td>
-          <td class="text-nowrap">${chipTipo(x.tipo)}</td>
-          <td class="text-nowrap">${chipPrioridad(x.prioridad)}</td>
-          <td class="text-nowrap">${chipEstado(x.estado, x.estadoTexto)}</td>
-          <td class="text-end text-nowrap">
-            <a class="btn btn-sm btn-outline-primary fw-bold btn-pill"
-               href="${base}/ui/asignaciones/DetalleSupervisor/${x.idSolicitud}">
-               <i class="bi bi-eye"></i> Detalles
-            </a>
-          </td>
-        </tr>`).join('');
-                    }catch(e){
-                        console.error(e);
-                        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-3">Error cargando datos</td></tr>`;
-                    }
+                if (!list || list.length === 0){
+                    tbody.innerHTML = '';
+                    vacio.classList.remove('d-none');
+                    return;
                 }
 
-                // ===== Chart =====
-                let chartEstados = null;
-                function renderChartEstados(asig, proc, fin){
-                    const total = (asig|0)+(proc|0)+(fin|0);
-                    const empty = document.getElementById('chart-empty');
-                    if(total === 0){
-                        empty.classList.remove('d-none');
-                        if(chartEstados){ chartEstados.destroy(); chartEstados=null; }
-                        return;
-                    } else {
-                        empty.classList.add('d-none');
-                    }
+                tbody.innerHTML = list.map(x => `
+                    <tr>
+                        <td>${fmtFecha(estadoActual==='5' ? x.fecha_Fin : x.fecha_Inicio)}</td>
+                        <td>#${x.idSolicitud}</td>
+                        <td>${(x.tecnicoNombre ?? 'Técnico ' + x.fkTecnico)}</td>
+                        <td>${chipTipo(x.tipo)}</td>
+                        <td>${chipPrioridad(x.prioridad)}</td>
+                        <td>${chipEstado(x.estado, x.estadoTexto)}</td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-primary fw-bold btn-pill"
+                               href="${base}/ui/asignaciones/DetalleSupervisor/${x.idSolicitud}">
+                               <i class="bi bi-eye"></i> Detalles
+                            </a>
+                        </td>
+                    </tr>`).join('');
+            }catch(e){
+                console.error(e);
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-3">Error cargando datos</td></tr>`;
+            }
+        }
 
-                    const ctx = document.getElementById('chartEstados').getContext('2d');
-                    if(chartEstados) chartEstados.destroy();
-                    chartEstados = new Chart(ctx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: ['Asignadas','En proceso','Finalizadas'],
-                            datasets: [{
-                                data: [asig, proc, fin],
-                                borderWidth: 1,
-                                backgroundColor: [
-                                    'rgba(13,110,253,0.85)',
-                                    'rgba(255,193,7,0.9)',
-                                    'rgba(25,135,84,0.9)'
-                                ]
-                            }]
-                        },
-                        options: {
-                            cutout: '55%',
-                            plugins: { legend: { position: 'bottom' } },
-                            maintainAspectRatio: false
-                        }
-                    });
+        let chartEstados = null;
+        function renderChartEstados(asig, proc, fin){
+            const total = (asig|0)+(proc|0)+(fin|0);
+            const empty = document.getElementById('chart-empty');
+            if(total===0){
+                empty.classList.remove('d-none');
+                if(chartEstados){ chartEstados.destroy(); chartEstados=null; }
+                return;
+            }
+            empty.classList.add('d-none');
+            const ctx = document.getElementById('chartEstados').getContext('2d');
+            if(chartEstados) chartEstados.destroy();
+            chartEstados = new Chart(ctx,{
+                type:'doughnut',
+                data:{
+                    labels:['Asignadas','En proceso','Finalizadas'],
+                    datasets:[{ data:[asig,proc,fin],
+                        borderWidth:1,
+                        backgroundColor:[
+                            'rgba(13,110,253,0.85)',
+                            'rgba(255,193,7,0.9)',
+                            'rgba(25,135,84,0.9)'
+                        ]}]
+                },
+                options:{
+                    cutout:'55%',
+                    plugins:{ legend:{ position:'bottom' } },
+                    maintainAspectRatio:false
                 }
+            });
+        }
 
-                // ===== Botones filtro =====
-                function setButtons(){
-                    const bTodas = document.getElementById('btn-todas');
-                    const bAsig  = document.getElementById('btn-asignadas');
-                    const bProc  = document.getElementById('btn-proceso');
-                    const bFin   = document.getElementById('btn-finalizadas');
+        function setButtons(){
+            const bTodas = document.getElementById('btn-todas');
+            const bAsig  = document.getElementById('btn-asignadas');
+            const bProc  = document.getElementById('btn-proceso');
+            const bFin   = document.getElementById('btn-finalizadas');
 
-                    bTodas.className = 'btn btn-outline-primary';
-                    bAsig.className  = 'btn btn-outline-primary';
-                    bProc.className  = 'btn btn-outline-warning text-dark';
-                    bFin.className   = 'btn btn-outline-success';
+            bTodas.className = 'btn btn-outline-primary';
+            bAsig.className  = 'btn btn-outline-primary';
+            bProc.className  = 'btn btn-outline-warning text-dark';
+            bFin.className   = 'btn btn-outline-success';
 
-                    if(estadoActual===''){
-                        bTodas.className = 'btn btn-primary';
-                    }else if(estadoActual==='3'){
-                        bAsig.className  = 'btn btn-primary';
-                    }else if(estadoActual==='4'){
-                        bProc.className  = 'btn btn-warning text-dark';
-                    }else{
-                        bFin.className   = 'btn btn-success';
-                    }
-                }
-                ['btn-todas','btn-asignadas','btn-proceso','btn-finalizadas'].forEach(id=>{
-                    document.getElementById(id).addEventListener('click', async (ev)=>{
-                        estadoActual = ev.currentTarget.getAttribute('data-estado');
-                        setButtons();
-                        await cargarHoy();
-                    });
-                });
+            if(estadoActual==='') bTodas.className='btn btn-primary';
+            else if(estadoActual==='3') bAsig.className='btn btn-primary';
+            else if(estadoActual==='4') bProc.className='btn btn-warning text-dark';
+            else bFin.className='btn btn-success';
+        }
 
-                // Botón actualizar
-                document.getElementById('btn-refresh').addEventListener('click', async ()=>{
-                    await Promise.all([cargarKpis(), cargarHoy()]);
-                    setUltima();
-                });
+        ['btn-todas','btn-asignadas','btn-proceso','btn-finalizadas'].forEach(id=>{
+            document.getElementById(id).addEventListener('click', async(ev)=>{
+                estadoActual = ev.currentTarget.getAttribute('data-estado');
+                setButtons();
+                await cargarHoy();
+            });
+        });
 
-                // init
-                (async function init(){
-                    setButtons();
-                    await Promise.all([cargarKpis(), cargarHoy()]);
-                    setUltima();
-                })();
+        document.getElementById('btn-refresh').addEventListener('click', async ()=>{
+            await Promise.all([cargarKpis(), cargarHoy()]);
+            setUltima();
+        });
+
+        (async function init(){
+            setButtons();
+            await Promise.all([cargarKpis(), cargarHoy()]);
+            setUltima();
+        })();
     </script>
 
     <style>
@@ -328,14 +328,6 @@
 
         table.table th, table.table td {
             vertical-align: middle;
-        }
-
-        thead th {
-            font-weight: 700;
-            white-space: nowrap;
-        }
-
-        tbody td {
             white-space: nowrap;
         }
 
@@ -347,9 +339,13 @@
             font-size: 1.8rem;
         }
 
-        #chartEstados {
-            width: 100% !important;
-            height: 100% !important;
+        .kpi-card {
+            transition: transform .2s, box-shadow .2s;
         }
+
+            .kpi-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,.1);
+            }
     </style>
 }

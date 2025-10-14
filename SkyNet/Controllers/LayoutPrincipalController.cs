@@ -11,7 +11,7 @@ namespace SkyNet.Controllers
             if (User?.Identity?.IsAuthenticated == true)
             {
                 if (User.IsInRole("Administrador"))
-                    return RedirectToAction("Index", "Home");
+                    return RedirectToAction("Index", "AdministradorDashboard");
 
                 if (User.IsInRole("Supervisor"))
                     return RedirectToAction("Index", "SupervisorDashboard");
@@ -19,8 +19,8 @@ namespace SkyNet.Controllers
                 if (User.IsInRole("Tecnico"))
                     return RedirectToAction("Index", "TecnicoDashboard");
 
-                // fallback
-                return RedirectToAction("Index", "Home");
+                //// fallback
+                //return RedirectToAction("Index", "Home");
 
             }
 

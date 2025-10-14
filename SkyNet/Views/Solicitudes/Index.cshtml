@@ -137,6 +137,15 @@
 
           $estado.addEventListener('change', apply);
           $search.addEventListener('input', apply);
+
+          
+          const params = new URLSearchParams(window.location.search);
+          const estadoParam = params.get("estado");
+
+          if (estadoParam) {
+            $estado.value = estadoParam;
+            apply();
+          }
         })();
     </script>
 }

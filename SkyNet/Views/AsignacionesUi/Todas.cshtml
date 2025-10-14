@@ -68,26 +68,33 @@
       const $fEstado = document.getElementById('f-estado');
       const $count = document.getElementById('count');
 
+      // 🔹 Detectar parámetro "filtro" desde la URL
+      const params = new URLSearchParams(window.location.search);
+      const filtroParam = params.get("filtro");
+      if (filtroParam) {
+        $fEstado.value = filtroParam;
+      }
+
       const groupBySolicitud = (rows) => {
-          const m = new Map();           
-          for (const a of rows) {
-            if (!m.has(a.idSolicitud)) m.set(a.idSolicitud, []);
-            m.get(a.idSolicitud).push(a);   
-          }
-          return Array.from(m.entries());    
-    };
+        const m = new Map();
+        for (const a of rows) {
+          if (!m.has(a.idSolicitud)) m.set(a.idSolicitud, []);
+          m.get(a.idSolicitud).push(a);
+        }
+        return Array.from(m.entries());
+      };
 
       const uniques = (arr) => [...new Set(arr)];
 
       function render(groups, filtro) {
-        
         const filtered = groups.filter(([, asigs]) => {
           const isProceso = asigs.some(a => a.estado === 4);
-          const isAcept   = asigs.some(a => a.estado === 3) && !isProceso; 
+          const isAcept   = asigs.some(a => a.estado === 3) && !isProceso;
           const isFinal   = asigs.some(a => a.estado === 5) && !isProceso && !isAcept;
           if (filtro === 'proceso')  return isProceso;
           if (filtro === 'aceptada') return isAcept;
-          return true; 
+          if (filtro === 'finalizadas') return isFinal;
+          return true;
         });
 
         $count.textContent = filtered.length ? `${filtered.length} solicitud(es)` : '';
@@ -114,17 +121,16 @@
           }, null);
 
           const isProceso = asigs.some(a => a.estado === 4);
-            const isAcept   = asigs.some(a => a.estado === 3) && !isProceso;
-            const isFinal   = asigs.some(a => a.estado === 5) && !isProceso && !isAcept;
+          const isAcept   = asigs.some(a => a.estado === 3) && !isProceso;
+          const isFinal   = asigs.some(a => a.estado === 5) && !isProceso && !isAcept;
 
-            const badge = isProceso
-              ? `<span class="badge bg-warning text-dark card-status-badge">En proceso</span>`
-              : (isFinal
-                  ? `<span class="badge bg-secondary card-status-badge">Finalizada</span>`
-                  : (isAcept
-                      ? `<span class="badge bg-success card-status-badge">Aceptada</span>`
-                      : ``));
-
+          const badge = isProceso
+            ? `<span class="badge bg-warning text-dark card-status-badge">En proceso</span>`
+            : (isFinal
+                ? `<span class="badge bg-secondary card-status-badge">Finalizada</span>`
+                : (isAcept
+                    ? `<span class="badge bg-success card-status-badge">Aceptada</span>`
+                    : ``));
 
           return `
             <div class="col-12 col-md-6 col-lg-3">
@@ -179,13 +185,17 @@
         const data = await res.json();
         const groups = groupBySolicitud(data);
 
-     
         render(groups, $fEstado.value);
 
-       
         $fEstado.addEventListener('change', () => render(groups, $fEstado.value));
+
+        // 🔹 Aplicar filtro desde dashboard si viene en URL
+        if (filtroParam) {
+          render(groups, filtroParam);
+        }
       }
 
       init();
     })();
 </script>
+

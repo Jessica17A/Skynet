@@ -1300,3 +1300,64 @@ END
 GO
 
 
+
+
+
+USE [SkyNet01]
+GO
+/****** Object:  StoredProcedure [dbo].[usp_VisitasGlobales_KPIs_Estados]    Script Date: 14/10/2025 15:42:00 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[usp_VisitasGlobales_KPIs_Estados]
+  @FechasEnUtc BIT = 0   -- se deja por compatibilidad futura
+AS
+BEGIN
+  SET NOCOUNT ON;
+
+  -- === KPIs para estados 0–2 desde Solicitud ===
+  DECLARE @Solicitudes TABLE (
+      Rechazado INT,
+      Pendiente INT,
+      Revisada INT
+  );
+
+  INSERT INTO @Solicitudes
+  SELECT
+      SUM(CASE WHEN S.Estado = 0 THEN 1 ELSE 0 END) AS Rechazado,
+      SUM(CASE WHEN S.Estado = 1 THEN 1 ELSE 0 END) AS Pendiente,
+      SUM(CASE WHEN S.Estado = 2 THEN 1 ELSE 0 END) AS Revisada
+  FROM dbo.Solicitud S
+  WHERE S.Estado BETWEEN 0 AND 2;
+
+  -- === KPIs para estados 3–5 desde Solicitud_Asignacion ===
+  DECLARE @Asignaciones TABLE (
+      Asignadas INT,
+      EnProceso INT,
+      Finalizado INT
+  );
+
+  INSERT INTO @Asignaciones
+  SELECT
+      SUM(CASE WHEN A.Estado = 3 THEN 1 ELSE 0 END) AS Asignadas,
+      SUM(CASE WHEN A.Estado = 4 THEN 1 ELSE 0 END) AS EnProceso,
+      SUM(CASE WHEN A.Estado = 5 THEN 1 ELSE 0 END) AS Finalizado
+  FROM dbo.Solicitud_Asignacion A
+  WHERE A.Estado BETWEEN 3 AND 5;
+
+  -- === Resultado combinado ===
+  SELECT
+      ISNULL(S.Rechazado, 0)   AS Rechazado,
+      ISNULL(S.Pendiente, 0)   AS Pendiente,
+      ISNULL(S.Revisada, 0)    AS Revisada,
+      ISNULL(A.Asignadas, 0)   AS Asignadas,
+      ISNULL(A.EnProceso, 0)   AS [En proceso],
+      ISNULL(A.Finalizado, 0)  AS Finalizado,
+      (ISNULL(S.Rechazado, 0) + ISNULL(S.Pendiente, 0) + ISNULL(S.Revisada, 0)
+       + ISNULL(A.Asignadas, 0) + ISNULL(A.EnProceso, 0) + ISNULL(A.Finalizado, 0)) AS Total
+  FROM @Solicitudes S CROSS JOIN @Asignaciones A;
+END
+GO
+

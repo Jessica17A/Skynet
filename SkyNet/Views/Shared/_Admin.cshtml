@@ -177,12 +177,12 @@
         <div class="sidebar-scroll">
             <div class="nav-title">Administración</div>
 
-            <!-- Usa un nav con id para acordeón -->
+          
             <nav id="sidebarMenu" class="nav flex-column">
-                <a class="nav-link @(IsActive("Home") ? "active" : "")"
-                   asp-controller="Home" asp-action="Index">
+                <a class="nav-link @(IsActive("AdministradorDashboard") ? "active" : "")"
+                   asp-controller="AdministradorDashboard" asp-action="Index">
                     <i class="bi bi-speedometer2"></i> Dashboard
-                    <span class="badge bg-secondary ms-auto">NEW</span>
+                    <span class="badge bg-secondary ms-auto">INICIO</span>
                 </a>
 
 

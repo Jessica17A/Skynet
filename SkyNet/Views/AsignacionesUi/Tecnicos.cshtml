@@ -1,5 +1,5 @@
 ﻿@{
-    ViewData["Title"] = "Visitas programadas";
+    ViewData["Title"] = "Listado de solicitudes";
     Layout = "~/Views/Shared/_Tecnico.cshtml";
 }
 
@@ -37,170 +37,176 @@
         font-size: .9rem;
         font-weight: 500;
         color: #0d6efd;
-        transition: all .2s ease
+        transition: all .2s ease;
     }
 
         .chip:hover {
             background: #e9f3ff;
             transform: translateY(-2px);
-            box-shadow: 0 2px 6px rgba(0,0,0,.08)
+            box-shadow: 0 2px 6px rgba(0,0,0,.08);
         }
 
     .meta {
         font-size: .9rem;
-        color: #6c757d
+        color: #6c757d;
     }
 
     .card-status-badge {
         position: absolute;
         right: .75rem;
-        top: .75rem
+        top: .75rem;
     }
 </style>
 
 <script>
     (() => {
-      const base = `${window.location.origin}${document.body.getAttribute("data-pathbase") ?? ""}`;
-      const $cards = document.getElementById('cards');
-      const $fEstado = document.getElementById('f-estado');
-      const $count = document.getElementById('count');
+        const base = `${window.location.origin}${document.body.getAttribute("data-pathbase") ?? ""}`;
+        const $cards = document.getElementById('cards');
+        const $fEstado = document.getElementById('f-estado');
+        const $count = document.getElementById('count');
 
-      const groupBySolicitud = (rows) => {
-        const m = new Map();
-        for (const a of rows) {
-          if (!m.has(a.idSolicitud)) m.set(a.idSolicitud, []);
-          m.get(a.idSolicitud).push(a);
-        }
-        return Array.from(m.entries());
-      };
+        const groupBySolicitud = (rows) => {
+            const m = new Map();
+            for (const a of rows) {
+                if (!m.has(a.idSolicitud)) m.set(a.idSolicitud, []);
+                m.get(a.idSolicitud).push(a);
+            }
+            return Array.from(m.entries());
+        };
 
-      const uniques = (arr) => [...new Set(arr)];
+        const uniques = (arr) => [...new Set(arr)];
 
-      function parseInicio(a) {
-        // Soporta tanto fechaInicio (camel normal) como fecha_Inicio (prop con guion bajo)
-        const raw = a.fechaInicio ?? a.fecha_Inicio ?? null;
-        return raw ? new Date(raw) : null;
-      }
-
-      function render(groups, filtro) {
-        const filtered = groups.filter(([, asigs]) => {
-          const hasFin   = asigs.some(a => a.estado === 5);
-          const hasProc  = asigs.some(a => a.estado === 4);
-          const hasAcept = asigs.some(a => a.estado === 3);
-
-          if (filtro === 'finalizada') return hasFin;
-          if (filtro === 'proceso')    return hasProc;
-          if (filtro === 'aceptada')   return hasAcept && !hasProc && !hasFin;
-          return true;
-        });
-
-        $count.textContent = `${filtered.length} solicitud(es)`;
-
-        if (!filtered.length) {
-          $cards.innerHTML = `<div class="col-12"><div class="alert alert-info m-0">Sin resultados.</div></div>`;
-          return;
+        function parseInicio(a) {
+            const raw = a.fechaInicio ?? a.fecha_Inicio ?? null;
+            return raw ? new Date(raw) : null;
         }
 
-        $cards.innerHTML = filtered.map(([, asigs]) => {
-          // Orden por nombre del técnico
-          asigs.sort((x,y)=>(x.tecnicoNombre||'').localeCompare(y.tecnicoNombre||''));
+        function render(groups, filtro) {
+            const filtered = groups.filter(([, asigs]) => {
+                const hasFin   = asigs.some(a => a.estado === 5);
+                const hasProc  = asigs.some(a => a.estado === 4);
+                const hasAcept = asigs.some(a => a.estado === 3);
 
-          const chipsTecnicos = asigs.map(a => `
-            <span class="chip">
-              <i class="bi bi-person-badge-fill text-primary"></i>
-              ${a.tecnicoNombre ?? a.fkTecnico}
-            </span>
-          `).join('');
+                if (filtro === 'finalizada') return hasFin;
+                if (filtro === 'proceso')    return hasProc;
+                if (filtro === 'aceptada')   return hasAcept && !hasProc && !hasFin;
+                return true;
+            });
 
-          const supervisores = uniques(asigs.map(a => a.supervisorNombre ?? '-')).join(', ');
+            $count.textContent = `${filtered.length} solicitud(es)`;
 
-          // fecha mínima de inicio
-          const inicioMin = asigs.reduce((acc,a)=>{
-            const dt = parseInicio(a);
-            return !dt ? acc : (!acc || dt < acc ? dt : acc);
-          }, null);
+            if (!filtered.length) {
+                $cards.innerHTML = `
+                    <div class="col-12">
+                        <div class="alert alert-info m-0">Sin resultados.</div>
+                    </div>`;
+                return;
+            }
 
-          const hasFin   = asigs.some(a => a.estado === 5);
-          const hasProc  = asigs.some(a => a.estado === 4);
-          const hasAcept = asigs.some(a => a.estado === 3);
+            $cards.innerHTML = filtered.map(([, asigs]) => {
+                asigs.sort((x, y) => (x.tecnicoNombre || '').localeCompare(y.tecnicoNombre || ''));
 
-          // Prioridad: Finalizada > En proceso > Aceptada
-          const badge = hasFin
-            ? `<span class="badge bg-secondary card-status-badge">Finalizada</span>`
-            : hasProc
-              ? `<span class="badge bg-warning text-dark card-status-badge">En proceso</span>`
-              : hasAcept
-                ? `<span class="badge bg-success card-status-badge">Aceptada</span>`
-                : ``;
+                const chipsTecnicos = asigs.map(a => `
+                    <span class="chip">
+                        <i class="bi bi-person-badge-fill text-primary"></i>
+                        ${a.tecnicoNombre ?? a.fkTecnico}
+                    </span>
+                `).join('');
 
-          const idSol = encodeURIComponent(asigs[0].idSolicitud);
-          const fechaVisitaTxt = inicioMin ? inicioMin.toLocaleDateString('es') : '-';
+                const supervisores = uniques(asigs.map(a => a.supervisorNombre ?? '-')).join(', ');
+                const inicioMin = asigs.reduce((acc, a) => {
+                    const dt = parseInicio(a);
+                    return !dt ? acc : (!acc || dt < acc ? dt : acc);
+                }, null);
 
-          return `
-            <div class="col-12 col-md-6 col-lg-3">
-              <div class="card h-100 border-0 shadow rounded-4 position-relative">
-                ${badge}
-                <div class="card-body d-flex flex-column">
-                  <div class="d-flex justify-content-between align-items-center mb-3">
-                    <a class="h5 mb-0 text-decoration-none" href="${base}/AsignacionesUi/DetalleTecnico/${idSol}">
-                      <i class="bi bi-journal-text text-primary"></i>
-                      <span class="fw-bold text-primary">Solicitud #${asigs[0].idSolicitud}</span>
-                    </a>
-                  </div>
+                const hasFin   = asigs.some(a => a.estado === 5);
+                const hasProc  = asigs.some(a => a.estado === 4);
+                const hasAcept = asigs.some(a => a.estado === 3);
 
-                  <div class="meta mb-3">
-                    <div>
-                      <i class="bi bi-person-workspace text-warning"></i>
-                      <strong>Supervisor(es):</strong> ${supervisores}
-                    </div>
-                    <div class="mt-1">
-                      <i class="bi bi-calendar2-week text-success"></i>
-                      <strong>Fecha de Visita:</strong> ${fechaVisitaTxt}
-                    </div>
-                  </div>
+                const badge = hasFin
+                    ? `<span class="badge bg-secondary card-status-badge">Finalizada</span>`
+                    : hasProc
+                        ? `<span class="badge bg-warning text-dark card-status-badge">En proceso</span>`
+                        : hasAcept
+                            ? `<span class="badge bg-success card-status-badge">Aceptada</span>`
+                            : ``;
 
-                  <div class="mb-3">
-                    <div class="mb-1">
-                      <i class="bi bi-people-fill text-primary"></i>
-                      <strong>Técnicos:</strong>
-                    </div>
-                    <div>${chipsTecnicos}</div>
-                  </div>
+                const idSol = encodeURIComponent(asigs[0].idSolicitud);
+                const fechaVisitaTxt = inicioMin ? inicioMin.toLocaleDateString('es') : '-';
 
-                     <div class="mt-auto">
-                      <a class="btn btn-outline-primary w-100 fw-bold d-flex align-items-center justify-content-center gap-2"
-                         href="${base}/ui/asignaciones/DetalleTecnico/${idSol}">
-                        <i class="bi bi-eye"></i>
-                        <span>Ver detalles</span>
-                      </a>
-                    </div>
+                return `
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="card h-100 border-0 shadow rounded-4 position-relative">
+                            ${badge}
+                            <div class="card-body d-flex flex-column">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <a class="h5 mb-0 text-decoration-none"
+                                       href="${base}/AsignacionesUi/DetalleTecnico/${idSol}">
+                                        <i class="bi bi-journal-text text-primary"></i>
+                                        <span class="fw-bold text-primary">Solicitud #${asigs[0].idSolicitud}</span>
+                                    </a>
+                                </div>
 
-                </div>
-              </div>
-            </div>
-          `;
-        }).join('');
-      }
+                                <div class="meta mb-3">
+                                    <div>
+                                        <i class="bi bi-person-workspace text-warning"></i>
+                                        <strong>Supervisor(es):</strong> ${supervisores}
+                                    </div>
+                                    <div class="mt-1">
+                                        <i class="bi bi-calendar2-week text-success"></i>
+                                        <strong>Fecha de Visita:</strong> ${fechaVisitaTxt}
+                                    </div>
+                                </div>
 
-      async function init() {
-      try {
-        // ✅ endpoint correcto: todas las asignaciones del técnico logueado
-        const res = await fetch(`${base}/api/solicitudes/asignaciones/tecnico`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                                <div class="mb-3">
+                                    <div class="mb-1">
+                                        <i class="bi bi-people-fill text-primary"></i>
+                                        <strong>Técnicos:</strong>
+                                    </div>
+                                    <div>${chipsTecnicos}</div>
+                                </div>
 
-        const data = await res.json();
-        const groups = groupBySolicitud(data);
-        render(groups, $fEstado.value);
-        $fEstado.addEventListener('change', () => render(groups, $fEstado.value));
-      } catch (e) {
-        console.error(e);
-        $cards.innerHTML = `<div class="col-12"><div class="alert alert-danger">No se pudo cargar el listado.</div></div>`;
-        $count.textContent = '';
-      }
-    }
+                                <div class="mt-auto">
+                                    <a class="btn btn-outline-primary w-100 fw-bold d-flex align-items-center justify-content-center gap-2"
+                                       href="${base}/ui/asignaciones/DetalleTecnico/${idSol}">
+                                        <i class="bi bi-eye"></i>
+                                        <span>Ver detalles</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
 
+        async function init() {
+            try {
+                const res = await fetch(`${base}/api/solicitudes/asignaciones/tecnico`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-      init();
+                const data = await res.json();
+                const groups = groupBySolicitud(data);
+
+                // 🟩 Detecta si hay un ?filtro= en la URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const filtroUrl = urlParams.get('filtro');
+                if (filtroUrl && ['all', 'proceso', 'aceptada', 'finalizada'].includes(filtroUrl)) {
+                    $fEstado.value = filtroUrl;
+                }
+
+                render(groups, $fEstado.value);
+                $fEstado.addEventListener('change', () => render(groups, $fEstado.value));
+
+            } catch (e) {
+                console.error(e);
+                $cards.innerHTML = `
+                    <div class="col-12">
+                        <div class="alert alert-danger">No se pudo cargar el listado.</div>
+                    </div>`;
+                $count.textContent = '';
+            }
+        }
+
+        init();
     })();
 </script>
-

@@ -10,7 +10,7 @@ using SkyNet.Models.DTOs;
 
 namespace SkyNet.Controllers
 {
-    [Authorize(Roles = "Tecnico")]
+    [Authorize]
     public class TecnicoDashboardController : Controller
     {
         private readonly ApplicationDbContext _db;

@@ -9,7 +9,7 @@ using SkyNet.Models.DTOs;
 
 namespace SkyNet.Controllers
 {
-    [Authorize(Roles = "Supervisor")]
+    [Authorize]
     public class SupervisorDashboardController : Controller
     {
         private readonly ApplicationDbContext _db;
@@ -44,7 +44,7 @@ namespace SkyNet.Controllers
             return Json(result ?? new DashboardSupervisorDto());
         }
 
-        // ======== Visitas de Hoy (equipo del supervisor) =========
+       
         [HttpGet]
         public async Task<IActionResult> Hoy(int? estado, bool finalizadasTodas = false)
         {

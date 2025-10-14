@@ -1,0 +1,251 @@
+﻿@{
+    ViewData["Title"] = "Dashboard del Administrador";
+    Layout = "~/Views/Shared/_Admin.cshtml";
+}
+
+<div class="container mt-3">
+
+    <!-- Header -->
+    <div class="rounded-3 p-3 mb-4 shadow-sm text-white" style="background:#0b5ed7;">
+        <div class="d-flex align-items-center gap-3">
+            <div class="display-6 lh-1"><i class="bi bi-graph-up"></i></div>
+            <div class="flex-grow-1">
+                <h3 class="mb-1 fw-bold">Dashboard · <span class="fw-bolder">Administrador</span></h3>
+                <div class="small">Actualizado: <span id="lbl-ultima-act" class="fw-semibold">—</span></div>
+            </div>
+            <button id="btn-refresh" class="btn btn-light btn-sm fw-bold">
+                <i class="bi bi-arrow-clockwise me-1"></i> Actualizar
+            </button>
+        </div>
+    </div>
+
+    <!-- KPIs (botones clicables) -->
+    <div class="row g-3 mb-4 text-center">
+        <!-- Rechazadas -->
+        <div class="col-6 col-md-2">
+            <a href="@Url.Action("Index", "Solicitudes", new { estado = 0 })" class="text-decoration-none">
+                <div class="card kpi-btn shadow-sm border-0">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-1">Rechazadas</h6>
+                        <h3 id="k-rechazado" class="fw-bold mb-2 text-dark">0</h3>
+                        <div class="icon-circle bg-danger-subtle text-danger border border-danger-subtle">
+                            <i class="bi bi-x-circle-fill fs-4"></i>
+                        </div>
+                    </div>
+                    <div class="line-bottom bg-danger"></div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Pendientes -->
+        <div class="col-6 col-md-2">
+            <a href="@Url.Action("Index", "Solicitudes", new { estado = 1 })" class="text-decoration-none">
+                <div class="card kpi-btn shadow-sm border-0">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-1">Pendientes</h6>
+                        <h3 id="k-pendiente" class="fw-bold mb-2 text-dark">0</h3>
+                        <div class="icon-circle bg-secondary-subtle text-secondary border border-secondary-subtle">
+                            <i class="bi bi-hourglass-split fs-4"></i>
+                        </div>
+                    </div>
+                    <div class="line-bottom bg-secondary"></div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Revisadas -->
+        <div class="col-6 col-md-2">
+            <a href="@Url.Action("Index", "Solicitudes", new { estado = 2 })" class="text-decoration-none">
+                <div class="card kpi-btn shadow-sm border-0">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-1">Revisadas</h6>
+                        <h3 id="k-revisada" class="fw-bold mb-2 text-dark">0</h3>
+                        <div class="icon-circle bg-warning-subtle text-warning border border-warning-subtle">
+                            <i class="bi bi-search fs-4"></i>
+                        </div>
+                    </div>
+                    <div class="line-bottom bg-warning"></div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Asignadas -->
+        <div class="col-6 col-md-2">
+            <a href="@Url.Action("Todas", "AsignacionesUi", new { filtro = "aceptada" })" class="text-decoration-none">
+                <div class="card kpi-btn shadow-sm border-0">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-1">Asignadas</h6>
+                        <h3 id="k-asignadas" class="fw-bold mb-2 text-dark">0</h3>
+                        <div class="icon-circle bg-info-subtle text-info border border-info-subtle">
+                            <i class="bi bi-clipboard-check fs-4"></i>
+                        </div>
+                    </div>
+                    <div class="line-bottom bg-info"></div>
+                </div>
+            </a>
+        </div>
+
+        <!-- En proceso -->
+        <div class="col-6 col-md-2">
+            <a href="@Url.Action("Todas", "AsignacionesUi", new { filtro = "proceso" })" class="text-decoration-none">
+                <div class="card kpi-btn shadow-sm border-0">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-1">En proceso</h6>
+                        <h3 id="k-proceso" class="fw-bold mb-2 text-dark">0</h3>
+                        <div class="icon-circle bg-primary-subtle text-primary border border-primary-subtle">
+                            <i class="bi bi-gear-fill fs-4"></i>
+                        </div>
+                    </div>
+                    <div class="line-bottom bg-primary"></div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Finalizadas -->
+        <div class="col-6 col-md-2">
+            <a href="@Url.Action("Todas", "AsignacionesUi", new { filtro = "finalizadas" })" class="text-decoration-none">
+                <div class="card kpi-btn shadow-sm border-0">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-1">Finalizadas</h6>
+                        <h3 id="k-finalizado" class="fw-bold mb-2 text-dark">0</h3>
+                        <div class="icon-circle bg-success-subtle text-success border border-success-subtle">
+                            <i class="bi bi-flag-fill fs-4"></i>
+                        </div>
+                    </div>
+                    <div class="line-bottom bg-success"></div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="row g-4">
+        <div class="col-12 col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-light fw-semibold">
+                    <i class="bi bi-bar-chart text-primary me-2"></i>Distribución General por Estado
+                </div>
+                <div class="card-body">
+                    <canvas id="chartBar"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-light fw-semibold">
+                    <i class="bi bi-pie-chart-fill text-success me-2"></i>Porcentaje por Estado
+                </div>
+                <div class="card-body">
+                    <canvas id="chartPie"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- jQuery y Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        async function cargarKpis() {
+            const res = await fetch('@Url.Action("Kpis", "AdministradorDashboard")', { cache: 'no-store' });
+            const d = await res.json();
+
+            $('#k-rechazado').text(d.rechazado ?? 0);
+            $('#k-pendiente').text(d.pendiente ?? 0);
+            $('#k-revisada').text(d.revisada ?? 0);
+            $('#k-asignadas').text(d.asignadas ?? 0);
+            $('#k-proceso').text(d.enProceso ?? 0);
+            $('#k-finalizado').text(d.finalizado ?? 0);
+            $('#lbl-ultima-act').text(new Date().toLocaleString());
+
+            renderCharts(d);
+        }
+
+        let chartBar, chartPie;
+        function renderCharts(d) {
+            const labels = ['Rechazado', 'Pendiente', 'Revisada', 'Asignadas', 'En proceso', 'Finalizado'];
+            const valores = [d.rechazado, d.pendiente, d.revisada, d.asignadas, d.enProceso, d.finalizado];
+            const colores = ['#dc3545','#6c757d','#ffc107','#0dcaf0','#0d6efd','#198754'];
+
+            const ctxBar = document.getElementById('chartBar').getContext('2d');
+            const ctxPie = document.getElementById('chartPie').getContext('2d');
+
+            if (chartBar) chartBar.destroy();
+            chartBar = new Chart(ctxBar, {
+                type: 'bar',
+                data: { labels, datasets: [{ data: valores, backgroundColor: colores.map(c => c + 'aa'), borderRadius: 8, borderSkipped: false }] },
+                options: {
+                    animation: { duration: 900, easing: 'easeOutQuart' },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => `${ctx.label}: ${ctx.formattedValue}`
+                            }
+                        }
+                    },
+                    scales: { y: { beginAtZero: true, grid: { color: '#eee' } } }
+                }
+            });
+
+            if (chartPie) chartPie.destroy();
+            chartPie = new Chart(ctxPie, {
+                type: 'doughnut',
+                data: { labels, datasets: [{ data: valores, backgroundColor: colores, hoverOffset: 10, borderWidth: 2, borderColor: '#fff' }] },
+                options: {
+                    animation: { duration: 1000, easing: 'easeOutBounce' },
+                    cutout: '60%',
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => `${ctx.label}: ${ctx.formattedValue} (${((ctx.raw / valores.reduce((a,b)=>a+b,0))*100).toFixed(1)}%)`
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        $('#btn-refresh').on('click', cargarKpis);
+        $(document).ready(() => cargarKpis());
+    </script>
+
+    <style>
+        .kpi-btn {
+            cursor: pointer;
+            border-radius: 0.75rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            overflow: hidden;
+            position: relative;
+        }
+
+            .kpi-btn:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.1);
+            }
+
+        .icon-circle {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .line-bottom {
+            height: 4px;
+            border-radius: 0 0 10px 10px;
+        }
+
+        #chartBar, #chartPie {
+            width: 100% !important;
+            height: 340px !important;
+        }
+    </style>
+}
