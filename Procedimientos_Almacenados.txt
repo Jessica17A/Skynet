@@ -1305,13 +1305,13 @@ GO
 
 USE [SkyNet01]
 GO
-/****** Object:  StoredProcedure [dbo].[usp_VisitasGlobales_KPIs_Estados]    Script Date: 14/10/2025 15:42:00 ******/
+/****** Object:  StoredProcedure [dbo].[usp_VisitasGlobales_KPIs_Estados] ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-ALTER PROCEDURE [dbo].[usp_VisitasGlobales_KPIs_Estados]
+CREATE PROCEDURE [dbo].[usp_VisitasGlobales_KPIs_Estados]
   @FechasEnUtc BIT = 0   -- se deja por compatibilidad futura
 AS
 BEGIN
@@ -1360,4 +1360,3 @@ BEGIN
   FROM @Solicitudes S CROSS JOIN @Asignaciones A;
 END
 GO
-

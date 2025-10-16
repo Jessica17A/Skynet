@@ -19,13 +19,12 @@ namespace SkyNet.Controllers
                 if (User.IsInRole("Tecnico"))
                     return RedirectToAction("Index", "TecnicoDashboard");
 
-                //// fallback
-                //return RedirectToAction("Index", "Home");
+              
+                return RedirectToAction("Index", "Home");
 
             }
 
-            return View(); // si no está autenticado
-        }
+            return View(); 
 
 
 
