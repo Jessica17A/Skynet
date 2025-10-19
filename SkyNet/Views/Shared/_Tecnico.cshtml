@@ -159,12 +159,13 @@
                             <li><a class="dropdown-item" asp-controller="Settings" asp-action="Index"><i class="bi bi-gear me-2"></i> Ajustes</a></li>
                             <li><hr class="dropdown-divider" /></li>
                             <li>
-                                <form method="post" asp-area="Identity" asp-page="/Account/Logout"
+                                <form id="logoutForm" method="post" asp-area="Identity" asp-page="/Account/Logout"
                                       asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
                                     <button type="submit" class="dropdown-item">
                                         <i class="bi bi-box-arrow-right me-2"></i> Cerrar sesión
                                     </button>
                                 </form>
+
                             </li>
                         </ul>
                     </div>
@@ -248,6 +249,30 @@
           target.addEventListener('show.bs.collapse', () => caret.classList.add('rotate-180'));
           target.addEventListener('hide.bs.collapse', () => caret.classList.remove('rotate-180'));
         });
+    </script>
+
+    <script>
+        let idleTime = 0;
+        const maxIdleMinutes = 3; 
+        const redirectUrl = '/Identity/Account/Logout';
+
+        function resetIdleTimer() {
+            idleTime = 0;
+        }
+
+        setInterval(() => {
+            idleTime++;
+            if (idleTime >= maxIdleMinutes) {
+                document.getElementById('logoutForm')?.submit();
+            }
+        }, 60000); 
+
+
+        window.onload = resetIdleTimer;
+        document.onmousemove = resetIdleTimer;
+        document.onkeypress = resetIdleTimer;
+        document.onclick = resetIdleTimer;
+        document.onscroll = resetIdleTimer;
     </script>
 
     @RenderSection("Scripts", required: false)

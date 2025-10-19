@@ -14,12 +14,11 @@
     .auth-shell {
         min-height: 100vh;
         display: flex;
-        align-items: flex-start; /* en lugar de center */
+        align-items: flex-start;
         justify-content: center;
-        padding: 210px 100px 130px; /* arriba más grande para empujar hacia arriba */
+        padding: 210px 100px 130px;
         background: #fff;
     }
-
 
     .login-card {
         width: 100%;
@@ -56,9 +55,10 @@
         margin-bottom: 20px;
     }
 
-    .form-floating > .form-control {
+    .form-control {
         border-radius: 10px;
         height: 3rem;
+        padding-right: 2.5rem; /* espacio para el ojito */
     }
 
     .btn-login {
@@ -74,6 +74,25 @@
         .btn-login:hover {
             filter: brightness(.95);
         }
+
+    /* Estilo del ojito dentro del input */
+    .password-container {
+        position: relative;
+    }
+
+        .password-container i {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #6c757d;
+            font-size: 1.1rem;
+        }
+
+            .password-container i:hover {
+                color: var(--azul);
+            }
 </style>
 
 <div class="auth-shell">
@@ -84,16 +103,28 @@
             <form id="account" method="post" novalidate>
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
 
+                <!-- Usuario -->
                 <div class="mb-3">
                     <label asp-for="Input.UserName" class="form-label"></label>
-                    <input asp-for="Input.UserName" class="form-control" autocomplete="username" />
+                    <input asp-for="Input.UserName"
+                           class="form-control"
+                           autocomplete="username"
+                           placeholder="Nombre de usuario" />
                     <span asp-validation-for="Input.UserName" class="text-danger"></span>
                 </div>
 
-
-                <div class="form-floating mb-4">
-                    <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Contraseña" />
-                    <label asp-for="Input.Password">Contraseña</label>
+                <!-- Contraseña -->
+                <div class="mb-4">
+                    <label asp-for="Input.Password" class="form-label">Contraseña</label>
+                    <div class="password-container">
+                        <input asp-for="Input.Password"
+                               class="form-control"
+                               autocomplete="current-password"
+                               aria-required="true"
+                               placeholder="Contraseña"
+                               id="passwordInput" />
+                        <i class="bi bi-eye" id="togglePassword"></i>
+                    </div>
                     <span asp-validation-for="Input.Password" class="text-danger"></span>
                 </div>
 
@@ -110,4 +141,15 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('passwordInput');
+
+        togglePassword.addEventListener('click', () => {
+            const type = passwordInput.type === 'password' ? 'text' : 'password';
+            passwordInput.type = type;
+            togglePassword.classList.toggle('bi-eye');
+            togglePassword.classList.toggle('bi-eye-slash');
+        });
+    </script>
 }
