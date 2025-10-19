@@ -86,9 +86,17 @@
               "target": "Package",
               "version": "[8.0.7, )"
             },
+            "Resend": {
+              "target": "Package",
+              "version": "[0.1.6, )"
+            },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
               "version": "[6.5.0, )"
+            },
+            "sib_api_v3_sdk": {
+              "target": "Package",
+              "version": "[4.0.2, )"
             }
           },
           "imports": [

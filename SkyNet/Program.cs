@@ -1,8 +1,10 @@
+using CloudinaryDotNet;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using CloudinaryDotNet;
-using SkyNet.Data;
 using Microsoft.OpenApi.Models;
+using SkyNet.Data;
+using SkyNet.Services;
+
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,11 +16,6 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 // Identity
@@ -29,6 +26,9 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 })
 .AddRoles<IdentityRole>()
 .AddEntityFrameworkStores<ApplicationDbContext>();
+
+builder.Services.AddScoped<EmailService>();
+builder.Services.AddSingleton<EmailService>();
 
 
 builder.Services.AddControllersWithViews();

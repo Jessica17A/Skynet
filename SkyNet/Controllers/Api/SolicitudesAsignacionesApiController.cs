@@ -10,6 +10,7 @@ using SkyNet.Models;
 using SkyNet.Models.DTOs;
 using System.Linq;
 using System.Security.Claims;
+using SkyNet.Services;
 
 [ApiController]
 [Route("api/solicitudes")]
@@ -18,37 +19,34 @@ public class SolicitudesAsignacionesApiController : ControllerBase
     private readonly ApplicationDbContext _db;
     private readonly UserManager<IdentityUser> _userManager;
     private readonly ILogger<SolicitudesAsignacionesApiController> _log;
+    private readonly EmailService _emailService;
 
     public SolicitudesAsignacionesApiController(
         ApplicationDbContext db,
         UserManager<IdentityUser> userManager,
-        ILogger<SolicitudesAsignacionesApiController> log)
+        ILogger<SolicitudesAsignacionesApiController> log,
+        EmailService emailService)
     {
         _db = db;
         _userManager = userManager;
         _log = log;
+        _emailService = emailService;
     }
 
     [HttpPatch("asignaciones/{id:long}/estado")]
-    public async Task<IActionResult> PatchEstado(long id,[FromBody] SolicitudFinalizarDto dto,CancellationToken ct)
+    public async Task<IActionResult> PatchEstado(long id, [FromBody] SolicitudFinalizarDto dto, CancellationToken ct)
     {
         if (dto is null) return BadRequest("Body requerido.");
-
         var estadoNuevo = (SolicitudAsignacionEstado)dto.Estado;
-        if (!Enum.IsDefined(typeof(SolicitudAsignacionEstado), estadoNuevo))
-            return BadRequest("Estado inválido (0..5).");
 
-        var asig = await _db.SolicitudAsignaciones
-                            .FirstOrDefaultAsync(x => x.Id == id, ct);
+        var asig = await _db.SolicitudAsignaciones.FirstOrDefaultAsync(x => x.Id == id, ct);
         if (asig is null) return NotFound();
 
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrWhiteSpace(userId))
-            return Forbid(); 
+        if (string.IsNullOrWhiteSpace(userId)) return Forbid();
 
         await using var tx = await _db.Database.BeginTransactionAsync(ct);
 
-        // --- Actualiza ASIGNACIÓN ---
         asig.Estado = estadoNuevo;
         if (!string.IsNullOrWhiteSpace(dto.Nota))
             asig.Notas = dto.Nota;
@@ -58,7 +56,6 @@ public class SolicitudesAsignacionesApiController : ControllerBase
 
         await _db.SaveChangesAsync(ct);
 
-        
         if (estadoNuevo == SolicitudAsignacionEstado.Proceso
             || estadoNuevo == SolicitudAsignacionEstado.Finalizada)
         {
@@ -71,10 +68,25 @@ public class SolicitudesAsignacionesApiController : ControllerBase
                 new[] { p1, p2, p3 }, ct);
         }
 
+
+        // ✅ Enviar correo cuando se finaliza
+        if (estadoNuevo == SolicitudAsignacionEstado.Finalizada)
+        {
+            var solicitud = await _db.Solicitudes.FirstOrDefaultAsync(s => s.Id == asig.FkSolicitud, ct);
+
+            if (solicitud != null && !string.IsNullOrWhiteSpace(solicitud.Email))
+            {
+                await _emailService.EnviarCorreoFinalizacionAsync(
+                    solicitud.Email,
+                    solicitud.Nombre,
+                    solicitud.Ticket
+                );
+            }
+        }
+
         await tx.CommitAsync(ct);
         return NoContent();
     }
-
 
 
 
@@ -217,6 +229,7 @@ public class SolicitudesAsignacionesApiController : ControllerBase
 
         return Ok(rows);
     }
+
 
     [HttpGet("asignaciones/supervisor")]
     public async Task<ActionResult<IEnumerable<SolicitudAsignacionListadoS>>> ListarAsignacionesSupervisor()

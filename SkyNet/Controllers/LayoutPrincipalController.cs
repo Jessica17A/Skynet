@@ -24,11 +24,8 @@ namespace SkyNet.Controllers
 
             }
 
-            return View(); 
-
-
-
-
+            return View();
+        }
 
         public IActionResult Nosotros()
         {

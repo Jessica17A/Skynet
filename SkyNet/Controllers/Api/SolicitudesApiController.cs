@@ -29,7 +29,7 @@ namespace SkyNet.Controllers.Api
             var list = await _db.Solicitudes
                 .AsNoTracking()
                .Where(s => (int)s.Estado >= 0 && (int)s.Estado <= 2)
-                .OrderByDescending(x => x.CreatedAtUtc)
+                .OrderBy(x => x.CreatedAtUtc)
                 .Select(s => new SolicitudDto
                 {
                     Id = s.Id,
@@ -179,6 +179,15 @@ namespace SkyNet.Controllers.Api
 
             return Ok(data);
         }
+
+        //[HttpGet("test-brevo")]
+        //public async Task<IActionResult> TestBrevo()
+        //{
+        //    var emailService = new SkyNet.Services.EmailService();
+        //    await emailService.EnviarCorreoFinalizacionAsync("gonzalezjessica813@gmail.com", "Prueba SkyNet", "TCK-0001");
+        //    return Ok("Intento de envío realizado. Revisa tu correo o el log de Brevo.");
+        //}
+
 
 
 
