@@ -599,7 +599,6 @@ C:\Users\JESSICA GONZALEZ\Desktop\Skynet\SkyNet\obj\Debug\net8.0\staticwebassets
 C:\Users\JESSICA GONZALEZ\Desktop\Skynet\SkyNet\obj\Debug\net8.0\staticwebassets.build.json.cache
 C:\Users\JESSICA GONZALEZ\Desktop\Skynet\SkyNet\obj\Debug\net8.0\staticwebassets.development.json
 C:\Users\JESSICA GONZALEZ\Desktop\Skynet\SkyNet\obj\Debug\net8.0\staticwebassets.build.endpoints.json
-C:\Users\JESSICA GONZALEZ\Desktop\Skynet\SkyNet\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
 C:\Users\JESSICA GONZALEZ\Desktop\Skynet\SkyNet\obj\Debug\net8.0\SkyNet.csproj.Up2Date
 C:\Users\JESSICA GONZALEZ\Desktop\Skynet\SkyNet\obj\Debug\net8.0\SkyNet.dll
 C:\Users\JESSICA GONZALEZ\Desktop\Skynet\SkyNet\obj\Debug\net8.0\refint\SkyNet.dll
