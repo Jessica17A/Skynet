@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using SkyNet.Models;
 using SkyNet.Models.DTOs;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -28,10 +30,7 @@ namespace SkyNet.Controllers.Web
             return client;
         }
 
-        // ---------------------------
-        // Index: lista de grupos
-        // ---------------------------
-        // GET /GruposUi?sup=123
+      //lisstado
         public async Task<IActionResult> Index(long? sup)
         {
             try
@@ -59,16 +58,14 @@ namespace SkyNet.Controllers.Web
             }
         }
 
-        // ---------------------------
-        // Mis técnicos (del supervisor logueado)
-        // ---------------------------
+   
         // GET /GruposUi/MisTecnicos
         public async Task<IActionResult> MisTecnicos()
         {
             try
             {
                 using var c = CreateClient();
-                // Puedes consumir /api/grupos?mine=true (lista de GrupoItemDto)
+              
                 var data = await c.GetFromJsonAsync<List<GrupoItemDto>>("/api/grupos?mine=true");
                 return View(data ?? new List<GrupoItemDto>());
             }
@@ -79,79 +76,107 @@ namespace SkyNet.Controllers.Web
             }
         }
 
-        // ---------------------------
-        // Crear grupos (GET+POST)
-        // ---------------------------
         // GET /GruposUi/Create
-        public async Task<IActionResult> Create()
+        public async Task<IActionResult> Create([FromServices] SkyNet.Data.ApplicationDbContext _db)
         {
-            using var c = CreateClient();
-            var lookups = await c.GetFromJsonAsync<LookupsDto>("/api/grupos/lookups");
+            // Supervisores activos
+            var supervisores = await _db.Empleados
+                .Where(e => (e.Cargo == "Supervisor" || e.Cargo == "Supervisór"))
+                .OrderBy(e => e.Nombres).ThenBy(e => e.Apellidos)
+                .Select(e => new OpcionEmpleadoDto
+                {
+                    Id = e.Id,
+                    Nombre = e.Nombres + " " + e.Apellidos
+                })
+                .ToListAsync();
+
+            // 🔹 Técnicos activos o inactivos (da igual) cuyo grupo tenga Estado = 0 o no tengan grupo
+            var tecnicos = await _db.Empleados
+                .Where(e => (e.Cargo == "Tecnico" || e.Cargo == "Técnico"))
+                .Where(e => !_db.GruposSupervisoresTec
+                    .Any(g => g.FkTecnico == e.Id && g.Estado == true))  // sólo excluir si está en grupo activo
+                .OrderBy(e => e.Nombres).ThenBy(e => e.Apellidos)
+                .Select(e => new OpcionEmpleadoDto
+                {
+                    Id = e.Id,
+                    Nombre = e.Nombres + " " + e.Apellidos
+                })
+                .ToListAsync();
 
             var vm = new GrupoCreateVm
             {
-                Supervisores = lookups?.supervisores ?? new List<OpcionEmpleadoDto>(),
-                Tecnicos = lookups?.tecnicos ?? new List<OpcionEmpleadoDto>()
+                Supervisores = supervisores,
+                Tecnicos = tecnicos
             };
+
             return View(vm);
         }
 
-        // POST /GruposUi/Create
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(GrupoCreateVm vm)
+        public async Task<IActionResult> Create(
+    [FromServices] SkyNet.Data.ApplicationDbContext _db,
+    GrupoCreateVm model)
         {
-            if (vm == null || vm.SupervisorId <= 0 || vm.TecnicosIds == null || vm.TecnicosIds.Count == 0)
+            if (model.SupervisorId <= 0 || model.TecnicosIds.Count == 0)
             {
-                ModelState.AddModelError(string.Empty, "Seleccione un supervisor y al menos un técnico.");
+                ModelState.AddModelError(string.Empty, "Debe seleccionar un supervisor y al menos un técnico.");
             }
 
             if (!ModelState.IsValid)
             {
-                using var cRe = CreateClient();
-                var lkp = await cRe.GetFromJsonAsync<LookupsDto>("/api/grupos/lookups");
-                vm.Supervisores = lkp?.supervisores ?? new List<OpcionEmpleadoDto>();
-                vm.Tecnicos = lkp?.tecnicos ?? new List<OpcionEmpleadoDto>();
-                return View(vm);
+                // Recargar combos si hay error
+                model.Supervisores = await _db.Empleados
+                    .Where(e => e.Estado != 0 && e.Cargo == "Supervisor")
+                    .Select(e => new OpcionEmpleadoDto
+                    {
+                        Id = e.Id,
+                        Nombre = e.Nombres + " " + e.Apellidos
+                    })
+                    .ToListAsync();
+
+                var ocupados = await _db.GruposSupervisoresTec
+                    .Where(g => g.Estado == true)
+                    .Select(g => g.FkTecnico)
+                    .Distinct()
+                    .ToListAsync();
+
+                model.Tecnicos = await _db.Empleados
+                    .Where(e => e.Estado != 0 && e.Cargo == "Tecnico" && !ocupados.Contains(e.Id))
+                    .Select(e => new OpcionEmpleadoDto
+                    {
+                        Id = e.Id,
+                        Nombre = e.Nombres + " " + e.Apellidos
+                    })
+                    .ToListAsync();
+
+                return View(model);
             }
 
-            try
+            // Guardar los técnicos seleccionados en la tabla intermedia
+            foreach (var tecId in model.TecnicosIds.Distinct())
             {
-                using var c = CreateClient();
-                var payload = new GrupoCreateDto
+                _db.GruposSupervisoresTec.Add(new GrupoSupervisorTec
                 {
-                    SupervisorId = vm.SupervisorId,
-                    TecnicosIds = vm.TecnicosIds
-                };
-
-                var resp = await c.PostAsJsonAsync("/api/grupos", payload);
-                if (resp.IsSuccessStatusCode)
-                {
-                    TempData["ok"] = true;
-                    return RedirectToAction(nameof(Index), new { sup = vm.SupervisorId });
-                }
-
-                var msg = await resp.Content.ReadAsStringAsync();
-                ModelState.AddModelError(string.Empty, $"Error al crear: {resp.StatusCode} - {msg}");
-            }
-            catch (Exception ex)
-            {
-                _log.LogError(ex, "Error en Create (POST)");
-                ModelState.AddModelError(string.Empty, "Error inesperado al crear el grupo.");
+                    FkSupervisor = model.SupervisorId,
+                    FkTecnico = tecId,
+                    Estado = true,
+                    FechaCreacionUtc = DateTime.UtcNow
+                });
             }
 
-            // Reponer lookups al re-renderizar la vista
-            using var c2 = CreateClient();
-            var lookups = await c2.GetFromJsonAsync<LookupsDto>("/api/grupos/lookups");
-            vm.Supervisores = lookups?.supervisores ?? new List<OpcionEmpleadoDto>();
-            vm.Tecnicos = lookups?.tecnicos ?? new List<OpcionEmpleadoDto>();
-            return View(vm);
+            await _db.SaveChangesAsync();
+            TempData["ok"] = true;
+
+            return RedirectToAction(nameof(Index));
         }
 
-        // ---------------------------
-        // Toggle estado
-        // ---------------------------
-        // POST /GruposUi/Toggle/5
+
+
+
+
+        // eliminar
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Toggle(int id, long? sup)
@@ -171,28 +196,7 @@ namespace SkyNet.Controllers.Web
             return RedirectToAction(nameof(Index), new { sup });
         }
 
-        // ---------------------------
-        // Eliminar (DELETE)
-        // ---------------------------
-        // POST /GruposUi/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Delete(int id, long? sup)
-        {
-            try
-            {
-                using var c = CreateClient();
-                var resp = await c.DeleteAsync($"/api/grupos/{id}");
-                TempData["ok"] = resp.IsSuccessStatusCode;
-            }
-            catch (Exception ex)
-            {
-                _log.LogError(ex, "Error al eliminar grupo {Id}", id);
-                TempData["ok"] = false;
-            }
-
-            return RedirectToAction(nameof(Index), new { sup });
-        }
+  
 
         // ---------------------------
         // Tipos auxiliares para lookups/vm
@@ -223,7 +227,7 @@ namespace SkyNet.Controllers.Web
         public IActionResult Asignar(long solicitudId)
         {
             ViewBag.SolicitudId = solicitudId;
-            // devolvemos la vista sin modelo; el JS hará fetch al API con la cookie del usuario
+            
             return View();
         }
 
@@ -279,7 +283,7 @@ namespace SkyNet.Controllers.Web
                         continue;
                     }
 
-                    // Si tu API devuelve 200 con {ignored:true} cuando el técnico ya estaba activo:
+                  
                     if ((int)resp.StatusCode == StatusCodes.Status200OK)
                     {
                         okCount++;
@@ -290,7 +294,6 @@ namespace SkyNet.Controllers.Web
                     errores.Add($"Grupo {p.IdGrupo}: {resp.StatusCode} - {msg}");
                 }
 
-                // 3) Si hubo al menos una inserción, (opcional) cambiar a Aceptada(3)
                 if (okCount > 0)
                 {
                

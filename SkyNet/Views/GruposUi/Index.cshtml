@@ -8,13 +8,15 @@
     long supSel = ViewBag.SupSel is long v ? v : 0L;
 }
 
+<!-- SweetAlert -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <div class="container-xxl mt-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <h4 class="mb-0"><i class="bi bi-people"></i> Grupos Supervisor – Técnicos</h4>
         <div class="d-flex gap-2">
             <form method="get" class="d-flex align-items-center gap-2">
                 <select name="sup" class="form-select form-select-sm">
-                    @* Opción "Todos" sin C# en atributos *@
                     @if (supSel == 0)
                     {
                         <option value="0" selected>-- Todos los supervisores --</option>
@@ -24,7 +26,6 @@
                         <option value="0">-- Todos los supervisores --</option>
                     }
 
-                    @* Opciones de supervisores *@
                     @foreach (var s in supervisores)
                     {
                         if (supSel == s.Id)
@@ -48,14 +49,7 @@
         </div>
     </div>
 
-    @if (TempData["ok"] is bool okFlag)
-    {
-        <div class="alert @(okFlag ? "alert-success" : "alert-danger") alert-dismissible fade show" role="alert">
-            @(okFlag ? "Acción realizada con éxito." : "No se pudo completar la acción.")
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    }
-
+    <!-- Tabla -->
     <div class="table-responsive">
         <table class="table table-sm table-striped align-middle shadow-sm">
             <thead class="table-light">
@@ -71,9 +65,7 @@
             <tbody>
                 @if (Model != null && Model.Any())
                 {
-                    
                     var i = 1;
-                    
                     foreach (var g in Model)
                     {
                         <tr>
@@ -93,18 +85,7 @@
                             </td>
                             <td class="text-end">
                                 <div class="btn-group">
-                                    @* Alternar estado *@
-                                    <form asp-action="Toggle" method="post" class="d-inline">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@g.IdGrupo" />
-                                        <input type="hidden" name="sup" value="@supSel" />
-                                        <button class="btn btn-sm btn-outline-warning" type="submit" title="Activar/Desactivar">
-                                            <i class="bi bi-power"></i>
-                                        </button>
-                                    </form>
-
-                                    @* Eliminar (DELETE) *@
-                                    <form asp-action="Delete" method="post" class="d-inline" onsubmit="return confirm('¿Eliminar este grupo?');">
+                                    <form asp-action="Toggle" method="post" class="frmEliminar d-inline">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@g.IdGrupo" />
                                         <input type="hidden" name="sup" value="@supSel" />
@@ -128,6 +109,56 @@
         </table>
     </div>
 </div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            // === Confirmar antes de eliminar ===
+            const forms = document.querySelectorAll(".frmEliminar");
+            forms.forEach(form => {
+                form.addEventListener("submit", function (e) {
+                    e.preventDefault();
+
+                    Swal.fire({
+                        title: "¿Estás seguro?",
+                        text: "Esta acción desactivará el grupo seleccionado.",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#d33",
+                        cancelButtonColor: "#6c757d",
+                        confirmButtonText: "Sí, eliminar",
+                        cancelButtonText: "Cancelar",
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+                    });
+                });
+            });
+
+           
+            const okFlag = '@(TempData["ok"])';
+            if (okFlag === 'True') {
+                Swal.fire({
+                    title: "Éxito",
+                    text: "Acción realizada con éxito.",
+                    icon: "success",
+                    confirmButtonColor: "#198754"
+                });
+            } else if (okFlag === 'False') {
+                Swal.fire({
+                    title: "Error",
+                    text: "No se pudo completar la acción.",
+                    icon: "error",
+                    confirmButtonColor: "#d33"
+                });
+            }
+        });
+    </script>
+}
 
 <style>
     .table td, .table th {

@@ -30,22 +30,28 @@ namespace SkyNet.Controllers.Api
                 .Select(e => new OpcionEmpleadoDto { Id = e.Id, Nombre = e.Nombres + " " + e.Apellidos })
                 .ToListAsync();
 
-            // base query de técnicos activos
-            IQueryable<Empleado> tQuery = _db.Empleados
+           
+                 IQueryable<Empleado> tQuery = _db.Empleados
                 .Where(e => e.Estado != 0 && e.Cargo == "Tecnico");
 
             if (availableOnly)
             {
-                // técnicos que YA tienen una asignación ACTIVA
+               
                 var ocupados = await _db.GruposSupervisoresTec
-                    .Where(g => g.Estado)
+                    .Where(g => g.Estado == true)
                     .Select(g => g.FkTecnico)
                     .Distinct()
                     .ToListAsync();
 
-                // excluirlos del listado
-                tQuery = tQuery.Where(e => !ocupados.Contains(e.Id));
+              
+                tQuery = tQuery.Where(e =>
+                    !_db.GruposSupervisoresTec
+                        .Any(g => g.FkTecnico == e.Id && g.Estado == true)
+                );
             }
+
+
+
 
             var tecnicos = await tQuery
                 .OrderBy(e => e.Nombres).ThenBy(e => e.Apellidos)
@@ -56,17 +62,17 @@ namespace SkyNet.Controllers.Api
         }
 
 
-        // POST: api/grupos
+        
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] GrupoCreateDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            // supervisor válido (Estado != 0)
+            
             var existeSup = await _db.Empleados.AnyAsync(e => e.Id == dto.SupervisorId && e.Estado != 0);
             if (!existeSup) return NotFound($"Supervisor {dto.SupervisorId} no existe o está inactivo.");
 
-            // técnicos válidos (Estado != 0)
+          
             var tecValidos = await _db.Empleados
                 .Where(e => dto.TecnicosIds.Contains(e.Id) && e.Estado != 0)
                 .Select(e => e.Id)
@@ -93,7 +99,7 @@ namespace SkyNet.Controllers.Api
                 }
                 else
                 {
-                    // No existe -> crear nuevo
+                  
                     _db.GruposSupervisoresTec.Add(new GrupoSupervisorTec
                     {
                         FkSupervisor = dto.SupervisorId,
@@ -121,17 +127,7 @@ namespace SkyNet.Controllers.Api
             return NoContent();
         }
 
-        // DELETE: api/grupos/{id}
-        [HttpDelete("{id:int}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            var g = await _db.GruposSupervisoresTec.FindAsync(id);
-            if (g == null) return NotFound();
-
-            _db.GruposSupervisoresTec.Remove(g);
-            await _db.SaveChangesAsync();
-            return NoContent();
-        }
+   
 
         // GET: api/grupos/mis-tecnicos
         [HttpGet("mis-tecnicos")]

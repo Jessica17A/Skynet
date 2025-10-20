@@ -81,7 +81,7 @@
     <div class="card-header bg-light d-flex justify-content-between align-items-center">
         <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-list-check"></i> Técnicos asignados</h6>
 
-        @if (!esFinalizada)
+        @if (!esFinalizada && !User.IsInRole("Administrador"))
         {
             <button id="btnAgregarTec" class="btn btn-sm btn-success fw-bold">
                 <i class="bi bi-person-plus"></i> Agregar técnico(s)
@@ -125,8 +125,8 @@
                                 <td>@(a.TecnicoNombre ?? $"ID: {a.FkTecnico}")</td>
                                 <td>@(a.Fecha_Inicio?.ToString("yyyy-MM-dd HH:mm") ?? "-")</td>
                                 <td>@(string.IsNullOrWhiteSpace(a.Notas) ? "-" : a.Notas)</td>
-                              
-                                @if (!esFinalizada)
+
+                                @if (!esFinalizada && !User.IsInRole("Administrador"))
                                 {
                                     <td class="text-end">
                                         <button class="btn btn-sm btn-outline-danger btnAnular" data-id="@a.Id" title="Anular">

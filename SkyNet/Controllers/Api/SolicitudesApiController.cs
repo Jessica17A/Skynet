@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using SkyNet.Data;
 using SkyNet.Models;
 using SkyNet.Models.DTOs;
+using SkyNet.Services;
 using System.Security.Claims;
 
 namespace SkyNet.Controllers.Api
@@ -15,11 +16,13 @@ namespace SkyNet.Controllers.Api
     {
         private readonly ApplicationDbContext _db;
         private readonly ILogger<SolicitudesApiController> _logger;
+        private readonly EmailService _emailService;
 
-        public SolicitudesApiController(ApplicationDbContext db, ILogger<SolicitudesApiController> logger)
+        public SolicitudesApiController(ApplicationDbContext db, ILogger<SolicitudesApiController> logger, EmailService emailService)
         {
             _db = db;
             _logger = logger;
+            _emailService = emailService;
         }
 
         // GET: /api/solicitudes
@@ -100,32 +103,56 @@ namespace SkyNet.Controllers.Api
             return CreatedAtAction(nameof(Details), new { id = entidad.Id }, Map(entidad));
         }
 
+       
         // PATCH: /api/solicitudes/{id}/estado
         [HttpPatch("{id:long}/estado")]
         public async Task<ActionResult<SolicitudDto>> CambiarEstado(
-        long id, [FromBody] CambiarEstadoDto dto, CancellationToken ct)
+            long id, [FromBody] CambiarEstadoDto dto, CancellationToken ct)
         {
             if (dto is null || dto.Estado < 0 || dto.Estado > 5)
                 return BadRequest(new { error = "Estado inválido. Debe ser 0..5" });
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrWhiteSpace(userId))
-                return Forbid(); 
+                return Forbid();
 
             var p1 = new SqlParameter("@SolicitudId", id);
             var p2 = new SqlParameter("@NuevoEstado", dto.Estado);
             var p3 = new SqlParameter("@UserId", userId);
 
+            // 1) Cambiar estado vía SP
             await _db.Database.ExecuteSqlRawAsync(
                 "EXEC dbo.sp_Solicitudes_CambiarEstado @SolicitudId, @NuevoEstado, @UserId",
                 new[] { p1, p2, p3 }, ct);
 
+            // 2) Recuperar la solicitud ya actualizada
             var s = await _db.Solicitudes.AsNoTracking()
                          .FirstOrDefaultAsync(x => x.Id == id, ct);
             if (s is null) return NotFound();
 
+
+            if (dto.Estado == 5 && !string.IsNullOrWhiteSpace(s.Email))
+            {
+                try
+                {
+                    _logger.LogInformation("📧 Intentando enviar correo de finalización a {Email}", s.Email);
+
+                    await _emailService.EnviarCorreoFinalizacionAsync(s.Email, s.Nombre, s.Ticket);
+
+                    _logger.LogInformation("✅ Correo enviado correctamente a {Email}", s.Email);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "❌ Error al enviar correo a {Email}: {Mensaje}", s.Email, ex.Message);
+                    return Ok(new { message = "Estado cambiado, pero fallo el correo", error = ex.Message });
+                }
+            }
+
+
+
             return Ok(Map(s));
         }
+
 
         private static string GenerateTicket()
         {

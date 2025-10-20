@@ -25,7 +25,7 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 .AddEntityFrameworkStores<ApplicationDbContext>();
 
 builder.Services.AddScoped<EmailService>();
-builder.Services.AddSingleton<EmailService>();
+//builder.Services.AddSingleton<EmailService>();
 
 builder.Services.AddControllersWithViews();
 
@@ -75,12 +75,12 @@ else
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "SkyNet API v1");
-        c.RoutePrefix = "swagger";
-    });
+    //app.UseSwagger();
+    //app.UseSwaggerUI(c =>
+    //{
+    //    c.SwaggerEndpoint("/swagger/v1/swagger.json", "SkyNet API v1");
+    //    c.RoutePrefix = "swagger";
+    //});
 }
 
 app.UseHttpsRedirection();

@@ -17,7 +17,7 @@ public class AsignacionesUiController : Controller
     private readonly IHttpClientFactory _http;
     private readonly ApplicationDbContext _db;
 
-
+    
     public AsignacionesUiController(
     ILogger<AsignacionesUiController> log,
     IHttpClientFactory http,
@@ -32,6 +32,7 @@ public class AsignacionesUiController : Controller
     [HttpGet("Index")]
     public IActionResult Index() => View();
 
+    [HttpGet]
     public async Task<IActionResult> Todas()
     {
         var c = _http.CreateClient();

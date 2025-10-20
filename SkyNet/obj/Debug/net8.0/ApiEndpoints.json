@@ -264,22 +264,6 @@
   },
   {
     "ContainingType": "SkyNet.Controllers.Api.GruposApiController",
-    "Method": "Delete",
-    "RelativePath": "api/grupos/{id}",
-    "HttpMethod": "DELETE",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "SkyNet.Controllers.Api.GruposApiController",
     "Method": "Toggle",
     "RelativePath": "api/grupos/{id}/toggle",
     "HttpMethod": "POST",
@@ -897,7 +881,7 @@
     "ContainingType": "AsignacionesUiController",
     "Method": "Todas",
     "RelativePath": "ui/asignaciones/Todas",
-    "HttpMethod": "",
+    "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
     "Parameters": [],
