@@ -1,11 +1,13 @@
-﻿using System.Net.Http;
-using System.Net.Http.Json;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using SkyNet.Models.DTOs;
+using System.Net.Http;
+using System.Net.Http.Json;
 
 namespace SkyNet.Controllers.Web
 {
+    [Authorize]
     public class GruposUiController : Controller
     {
         private readonly IHttpClientFactory _http;

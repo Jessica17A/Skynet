@@ -206,6 +206,16 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "SkyNet.Controllers.Api.UsuariosApiController",
+    "Method": "GetEmpleadosDisponibles",
+    "RelativePath": "api/empleados/disponibles",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "SkyNet.Controllers.Api.GruposApiController",
     "Method": "Create",
     "RelativePath": "api/grupos",
@@ -304,6 +314,16 @@
     "ContainingType": "SkyNet.Controllers.Api.GruposApiController",
     "Method": "MisTecnicos",
     "RelativePath": "api/grupos/mis-tecnicos",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SkyNet.Controllers.Api.UsuariosApiController",
+    "Method": "GetRoles",
+    "RelativePath": "api/roles",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -729,6 +749,22 @@
   },
   {
     "ContainingType": "SkyNet.Controllers.Api.UsuariosApiController",
+    "Method": "CrearUsuario",
+    "RelativePath": "api/usuarios",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "model",
+        "Type": "SkyNet.Controllers.Api.UsuariosApiController\u002BCrearUsuarioRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SkyNet.Controllers.Api.UsuariosApiController",
     "Method": "ResetPassword",
     "RelativePath": "api/usuarios/{id}/reset-password",
     "HttpMethod": "POST",
@@ -738,6 +774,11 @@
       {
         "Name": "id",
         "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "model",
+        "Type": "SkyNet.Controllers.Api.UsuariosApiController\u002BResetPasswordRequest",
         "IsRequired": true
       }
     ],

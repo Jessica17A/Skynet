@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Net.Http.Json;
 using SkyNet.Models.DTOs;
+using System.Net.Http.Json;
 
 namespace SkyNet.Controllers.Web
 {
+    [Authorize]
     public class EmpleadosUiController : Controller
     {
         private readonly IHttpClientFactory _factory;

@@ -139,23 +139,24 @@ public class SolicitudesAsignacionesApiController : ControllerBase
         if (dto is null || id != dto.IdSolicitud)
             return BadRequest(new { ok = false, msg = "Datos inválidos." });
 
-        var userId = User?.FindFirstValue(ClaimTypes.NameIdentifier) ?? "sistema";
+        // ✅ Prioriza el UserId recibido desde el DTO, luego el del usuario autenticado
+        var userId = dto.UserId ?? User?.FindFirstValue(ClaimTypes.NameIdentifier) ?? "sistema";
 
         try
         {
             var result = await _db.Database.SqlQueryRaw<AsignacionResultDto>(
                 @"EXEC dbo.usp_SolicitudAsignarTecnico 
-                @IdSolicitud = {0},
-                @IdGrupo = {1},
-                @FkTecnico = {2},
-                @Notas = {3},
-                @FechaInicioUtc = {4},
-                @UserId = {5}",
+              @IdSolicitud = {0},
+              @IdGrupo = {1},
+              @FkTecnico = {2},
+              @Notas = {3},
+              @FechaInicioUtc = {4},
+              @UserId = {5}",
                 dto.IdSolicitud,
                 dto.IdGrupo,
                 dto.FkTecnico,
                 dto.Notas,
-                dto.Fecha_Inicio ?? DateTime.UtcNow, // Evita nulls
+                dto.Fecha_Inicio ?? DateTime.UtcNow, // evita nulls
                 userId
             ).ToListAsync();
 
@@ -168,26 +169,19 @@ public class SolicitudesAsignacionesApiController : ControllerBase
                 return Ok(new { ok = true, msg = r.Msg });
 
             return BadRequest(new { ok = false, msg = r.Msg });
-
         }
         catch (Exception ex)
         {
-            var msg = ex.Message;
-            var inner = ex.InnerException?.Message;
-            var stack = ex.StackTrace;
-
-            // Esto devolverá todo el detalle al frontend (para depuración)
+            
             return StatusCode(500, new
             {
                 ok = false,
-                msg = msg,
-                inner = inner,
-                stack = stack
+                msg = ex.Message,
+                inner = ex.InnerException?.Message,
+                stack = ex.StackTrace
             });
         }
-
     }
-
 
 
 

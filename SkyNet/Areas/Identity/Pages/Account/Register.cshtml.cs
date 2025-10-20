@@ -24,6 +24,7 @@ using SkyNet.Models;
 
 namespace SkyNet.Areas.Identity.Pages.Account
 {
+    [AllowAnonymous]
     public class RegisterModel : PageModel
     {
         private readonly SignInManager<IdentityUser> _signInManager;

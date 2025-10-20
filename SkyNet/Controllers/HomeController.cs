@@ -17,10 +17,10 @@ namespace SkyNet.Controllers
         }
 
 
-      
+        [AllowAnonymous]
         public IActionResult Index()
         {
-            return View();
+            return RedirectToAction("Index", "LayoutPrincipal");
         }
 
 

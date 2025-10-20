@@ -12,7 +12,8 @@ namespace SkyNet.Models.DTOs
         public long FkTecnico { get; set; }
         public DateTime? Fecha_Inicio { get; set; }
         public string? Notas { get; set; }
-      
+        public string? UserId { get; set; }
+
     }
 
 

@@ -1,19 +1,25 @@
-﻿using sib_api_v3_sdk.Api;
+﻿using Microsoft.Extensions.Configuration;
+using sib_api_v3_sdk.Api;
 using sib_api_v3_sdk.Client;
 using sib_api_v3_sdk.Model;
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks; // usamos este Task
+using System.Threading.Tasks;
 using TaskSys = System.Threading.Tasks.Task;
 
 namespace SkyNet.Services
 {
     public class EmailService
     {
-        private readonly string _apiKey = "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";
+        private readonly string _apiKey;
 
-        public EmailService()
+        public EmailService(IConfiguration configuration)
         {
+            _apiKey = configuration["SendinBlue:ApiKey"];
+
+            if (string.IsNullOrEmpty(_apiKey))
+                throw new InvalidOperationException("No se encontró la API Key de SendinBlue en appsettings.json");
+
             Configuration.Default.ApiKey.Add("api-key", _apiKey);
         }
 
@@ -30,8 +36,6 @@ namespace SkyNet.Services
                 };
 
                 string asunto = $"Finalización de su solicitud #{ticket}";
-
-                // 🔹 URL pública del logo en Cloudinary
                 string logoUrl = "https://res.cloudinary.com/dz4b8ug9h/image/upload/v1760849473/logo_guhibi.png";
 
                 string contenido = $@"
@@ -63,7 +67,7 @@ namespace SkyNet.Services
                             border-radius: 10px 10px 0 0;
                         }}
                         .header img {{
-                            width: 90px;
+                            width: 40px; 
                             border-radius: 12px;
                             background-color: white;
                             padding: 6px;
@@ -104,16 +108,13 @@ namespace SkyNet.Services
                             <img src='{logoUrl}' alt='SkyNet Logo'>
                             <h1>Solicitud Finalizada</h1>
                         </div>
-
                         <div class='content'>
                             <h2>Hola {nombreCliente},</h2>
                             <p>Nos complace informarte que tu solicitud con número de ticket 
                             <strong>#{ticket}</strong> ha sido finalizada exitosamente.</p>
-
                             <p>Gracias por confiar en <strong>SkyNet S.A.</strong>. 
                             Nuestro equipo técnico se esfuerza por brindarte siempre el mejor servicio.</p>
                         </div>
-
                         <div class='footer'>
                             <p>Este es un mensaje automático, por favor no responder.</p>
                             <p>&copy; 2025 SkyNet S.A. | Todos los derechos reservados</p>
@@ -121,10 +122,6 @@ namespace SkyNet.Services
                     </div>
                 </body>
                 </html>";
-
-
-
-
 
                 var email = new SendSmtpEmail(
                     sender: remitente,
@@ -134,14 +131,17 @@ namespace SkyNet.Services
                 );
 
                 var resultado = await apiInstance.SendTransacEmailAsync(email);
-                Console.WriteLine($"✅ Correo enviado correctamente a {emailDestino}. ID: {resultado.MessageId}");
+                Console.WriteLine($"Correo enviado correctamente a {emailDestino}. ID: {resultado.MessageId}");
+            }
+            catch (sib_api_v3_sdk.Client.ApiException ex)
+            {
+                Console.WriteLine($"Error SendinBlue: {ex.Message}");
+                Console.WriteLine($"Detalles: {ex.ErrorContent}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Error al enviar correo: {ex.Message}");
+                Console.WriteLine($"Error general al enviar correo: {ex.Message}");
             }
-
-            return;
         }
     }
 }

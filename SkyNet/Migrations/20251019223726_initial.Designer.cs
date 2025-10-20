@@ -12,8 +12,8 @@ using SkyNet.Data;
 namespace SkyNet.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251007152422_Initial")]
-    partial class Initial
+    [Migration("20251019223726_initial")]
+    partial class initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -227,35 +227,6 @@ namespace SkyNet.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("SkyNet.Models.ArchivoSolicitud", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("Estado")
-                        .HasColumnType("int");
-
-                    b.Property<long>("Fk_Solicitud")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("PublicId")
-                        .IsRequired()
-                        .HasMaxLength(512)
-                        .HasColumnType("nvarchar(512)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Fk_Solicitud");
-
-                    b.ToTable("ArchivoSolicitud");
-                });
-
             modelBuilder.Entity("SkyNet.Models.Cliente", b =>
                 {
                     b.Property<long>("Id")
@@ -418,6 +389,96 @@ namespace SkyNet.Migrations
                     b.ToView(null, (string)null);
                 });
 
+            modelBuilder.Entity("SkyNet.Models.DTOs.SolicitudAsignacionListadoS", b =>
+                {
+                    b.Property<int>("Estado")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("FechaAsignacionUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("Fecha_Inicio")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("FkSolicitud")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("FkTecnico")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("IdGrupo")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Notas")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SupervisorNombre")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TecnicoNombre")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.ToTable((string)null);
+
+                    b.ToView(null, (string)null);
+                });
+
+            modelBuilder.Entity("SkyNet.Models.DTOs.SolicitudDetalleCompletoDto", b =>
+                {
+                    b.Property<DateTime?>("AsignacionFechaFin")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("AsignacionFechaInicio")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AsignacionNotas")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Descripcion")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Direccion")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("EstadoSolicitud")
+                        .HasColumnType("int");
+
+                    b.Property<long>("IdSolicitud")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Nombre")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Prioridad")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SupervisorNombre")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TecnicoNombre")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Telefono")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Ticket")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Tipo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.ToTable("SolicitudDetalleCompleto");
+                });
+
             modelBuilder.Entity("SkyNet.Models.DTOs.SolicitudResumenDto", b =>
                 {
                     b.Property<string>("Asignaciones_Json")
@@ -452,27 +513,35 @@ namespace SkyNet.Migrations
             modelBuilder.Entity("SkyNet.Models.DTOs.SolicitudTrackingTimelineRow", b =>
                 {
                     b.Property<byte>("Estado")
-                        .HasColumnType("tinyint");
+                        .HasColumnType("tinyint")
+                        .HasColumnName("Estado");
 
                     b.Property<string>("EstadoTexto")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("EstadoTexto");
 
                     b.Property<DateTime>("FechaUtc")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("datetime2")
+                        .HasColumnName("FechaUtc");
 
                     b.Property<long>("SolicitudId")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnName("SolicitudId");
 
                     b.Property<string>("Texto")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("Texto");
 
                     b.Property<string>("Usuario")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("Usuario");
 
-                    b.ToTable("SolicitudTrackingTimeline");
+                    b.ToTable((string)null);
+
+                    b.ToView(null, (string)null);
                 });
 
             modelBuilder.Entity("SkyNet.Models.Empleado", b =>
@@ -771,17 +840,6 @@ namespace SkyNet.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("SkyNet.Models.ArchivoSolicitud", b =>
-                {
-                    b.HasOne("SkyNet.Models.Solicitud", "Solicitud")
-                        .WithMany("Archivos")
-                        .HasForeignKey("Fk_Solicitud")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Solicitud");
-                });
-
             modelBuilder.Entity("SkyNet.Models.Empleado", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
@@ -824,11 +882,6 @@ namespace SkyNet.Migrations
                         .HasConstraintName("FK_SolicitudTracking_Solicitud");
 
                     b.Navigation("Solicitud");
-                });
-
-            modelBuilder.Entity("SkyNet.Models.Solicitud", b =>
-                {
-                    b.Navigation("Archivos");
                 });
 #pragma warning restore 612, 618
         }

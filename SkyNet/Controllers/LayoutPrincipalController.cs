@@ -19,8 +19,8 @@ namespace SkyNet.Controllers
                 if (User.IsInRole("Tecnico"))
                     return RedirectToAction("Index", "TecnicoDashboard");
 
-              
-                return RedirectToAction("Index", "Home");
+
+                return RedirectToAction("AccessDenied", "Account");
 
             }
 

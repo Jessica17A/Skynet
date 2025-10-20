@@ -1,14 +1,16 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using SkyNet.Data;
 using SkyNet.Models.DTOs;
 using System.Net;
 using System.Net.Http.Json;
+using System.Security.Claims;
 using System.Text.Json;
-using Microsoft.EntityFrameworkCore;
 
 
 [Route("ui/asignaciones/[action]")]
-
+[Authorize]
 public class AsignacionesUiController : Controller
 {
     private readonly ILogger<AsignacionesUiController> _log;
@@ -149,7 +151,7 @@ public class AsignacionesUiController : Controller
             .ToListAsync(ct);
 
         ViewBag.Solicitud = solicitud;
-        ViewBag.SolicitudId = solicitudId; // ✅ necesario para la vista
+        ViewBag.SolicitudId = solicitudId; 
         return View(asignaciones);
     }
 
@@ -168,19 +170,25 @@ public class AsignacionesUiController : Controller
         var c = _http.CreateClient();
         c.BaseAddress ??= new Uri($"{Request.Scheme}://{Request.Host}{Request.PathBase}/");
 
+        // 🔹 Obtener el ID del usuario autenticado
+        var userId = User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
         int okCount = 0;
         var errores = new List<string>();
 
         foreach (var item in TecnicosIds)
         {
             var partes = item.Split('|');
+
+            // 🔹 Incluir el UserId al DTO
             var dto = new SolicitudAsignacionCreateDto
             {
                 IdSolicitud = solicitudId,
                 IdGrupo = int.Parse(partes[0]),
                 FkTecnico = long.Parse(partes[1]),
                 Notas = notas,
-                Fecha_Inicio = fechaVisita
+                Fecha_Inicio = fechaVisita,
+                UserId = userId    // <---- aquí lo agregamos
             };
 
             var resp = await c.PostAsJsonAsync($"api/solicitudes/{solicitudId}/asignaciones", dto);
@@ -210,11 +218,6 @@ public class AsignacionesUiController : Controller
 
         return RedirectToAction("Asignar", new { solicitudId });
     }
-
-
-
-
-
 
 
     //public async Task<IActionResult> Supervisores()

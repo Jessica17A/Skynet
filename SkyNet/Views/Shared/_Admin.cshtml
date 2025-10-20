@@ -149,9 +149,7 @@
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow">
                             <li class="dropdown-item-text"><strong>@User.Identity?.Name</strong></li>
-                            <li><hr class="dropdown-divider" /></li>
-                            <li><a class="dropdown-item" asp-controller="Settings" asp-action="Index"><i class="bi bi-gear me-2"></i> Ajustes</a></li>
-                            <li><hr class="dropdown-divider" /></li>
+                            
                             <li>
                                 <form method="post" asp-area="Identity" asp-page="/Account/Logout"
                                       asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
@@ -201,8 +199,8 @@
 
                 <!-- Submenú SIN 'show' (cerrado) + acordeón -->
                 <div class="collapse" id="grpUsuarios" data-bs-parent="#sidebarMenu">
-                    <a class="nav-link" asp-area="Identity" asp-page="/Account/Register">
-                        <i class="bi bi-person-plus-fill"></i> Registrar usuarios
+                    <a class="nav-link" asp-controller="UsuariosUi" asp-action="Crear">
+                        <i class="bi bi-person-plus"></i> Crear Usuario
                     </a>
                     <a class="nav-link @(IsActive("UsuariosUi") ? "active" : "")"
                        asp-controller="UsuariosUi" asp-action="Index">

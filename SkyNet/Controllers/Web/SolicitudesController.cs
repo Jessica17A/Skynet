@@ -6,7 +6,8 @@ using System.Net.Http.Json;
 
 namespace SkyNet.Controllers.Web
 {
-
+    // 🔒 Aplica autorización por defecto a todo el controlador
+    [Authorize]
     public class SolicitudesController : Controller
     {
         private readonly IHttpClientFactory _factory;
@@ -18,7 +19,9 @@ namespace SkyNet.Controllers.Web
             _logger = logger;
         }
 
-        // LISTADO
+        // ======================
+        // LISTADO (requiere login)
+        // ======================
         public async Task<IActionResult> Index(CancellationToken ct)
         {
             var http = _factory.CreateClient();
@@ -36,10 +39,12 @@ namespace SkyNet.Controllers.Web
                 TempData["Error"] = "No se pudo cargar el listado de solicitudes.";
             }
 
-            return View(lista); 
+            return View(lista);
         }
 
-        // DETALLE
+        // ======================
+        // DETALLE (requiere login)
+        // ======================
         public async Task<IActionResult> Details(long id, CancellationToken ct)
         {
             var http = _factory.CreateClient();
@@ -80,9 +85,15 @@ namespace SkyNet.Controllers.Web
             return View(sol);
         }
 
-        // FORMULARIO CREATE (GET)
+        // ======================
+        // FORMULARIO CREATE (GET) — público
+        // ======================
+        [AllowAnonymous]
         public IActionResult Create() => View(new SolicitudCreateDto());
 
+        // ======================
+        // FORMULARIO CREATE (POST) — público
+        // ======================
         [HttpPost]
         [ValidateAntiForgeryToken]
         [AllowAnonymous]
@@ -95,7 +106,7 @@ namespace SkyNet.Controllers.Web
 
             var resp = await http.PostAsJsonAsync("api/solicitudes", form);
 
-            if (resp.IsSuccessStatusCode) // 201 Created
+            if (resp.IsSuccessStatusCode)
             {
                 var creado = await resp.Content.ReadFromJsonAsync<SolicitudDto>();
 
@@ -110,14 +121,17 @@ namespace SkyNet.Controllers.Web
             return View(form);
         }
 
-        [HttpGet] // /Solicitudes/Tracking?ticket=...
+        // ======================
+        // TRACKING — público
+        // ======================
+        [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> Tracking(string? ticket, CancellationToken ct)
         {
             ViewBag.QueryTried = !string.IsNullOrWhiteSpace(ticket);
 
             if (string.IsNullOrWhiteSpace(ticket))
-                return View(model: null); // solo muestra el buscador
+                return View(model: null);
 
             var cli = _factory.CreateClient();
             cli.BaseAddress = new Uri($"{Request.Scheme}://{Request.Host}/");
@@ -126,23 +140,21 @@ namespace SkyNet.Controllers.Web
             if (!resp.IsSuccessStatusCode)
             {
                 _logger.LogInformation("Tracking ticket {Ticket} API status: {StatusCode}", ticket, resp.StatusCode);
-                return View(model: null); // Ticket no encontrado
+                return View(model: null);
             }
 
             var model = await resp.Content.ReadFromJsonAsync<SolicitudDto>(cancellationToken: ct);
-            return View(model); // Views/Solicitudes/Tracking.cshtml
+            return View(model);
         }
 
-
-
-
+        // ======================
+        // HISTORIAL (requiere login)
+        // ======================
         [HttpGet("{id:long}/historial")]
         public IActionResult Historial(long id)
         {
             ViewBag.SolicitudId = id;
             return View();
         }
-
-
     }
 }

@@ -1,0 +1,217 @@
+﻿@{
+    ViewData["Title"] = "Crear Usuario";
+    Layout = "~/Views/Shared/_Admin.cshtml";
+}
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+
+<style>
+    .card-header.header-purple {
+        background: #635bff;
+        color: #fff;
+        border-top-left-radius: 1rem !important;
+        border-top-right-radius: 1rem !important;
+        text-align: center;
+    }
+
+    .card.rounded-4 {
+        border-radius: 1rem;
+    }
+
+    .swal2-popup {
+        border-radius: 0.75rem !important;
+    }
+
+    .select2-container--default .select2-selection--single {
+        height: 38px !important;
+        border-radius: 0.375rem !important;
+        border-color: #ced4da !important;
+    }
+</style>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-7 col-md-9">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header header-purple">
+                    <h5 class="mb-0">
+                        <i class="bi bi-person-plus"></i>
+                        Crear Usuario
+                    </h5>
+                </div>
+
+                <div class="card-body p-4">
+                    <p class="text-muted mb-4 text-center">
+                        Selecciona un empleado, asigna un rol y define la contraseña.
+                    </p>
+                    <hr class="my-4" />
+
+                    <form id="frmCrearUsuario">
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Empleado</label>
+                            <select id="EmpleadoId" class="form-select select2" required>
+                                <option value="">Cargando empleados...</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Rol</label>
+                            <select id="Role" class="form-select" required>
+                                <option value="">Cargando roles...</option>
+                            </select>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Contraseña</label>
+                                <div class="input-group">
+                                    <input id="Password" type="password" class="form-control" required />
+                                    <button type="button" class="btn btn-outline-secondary" id="togglePwd">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Confirmar Contraseña</label>
+                                <div class="input-group">
+                                    <input id="ConfirmPassword" type="password" class="form-control" required />
+                                    <button type="button" class="btn btn-outline-secondary" id="togglePwd2">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-center mt-4">
+                            <button type="submit" class="btn btn-primary px-4" id="btnCrear">
+                                <span class="spinner-border spinner-border-sm me-2 d-none" id="spinnerCrear" role="status"></span>
+                                Crear Usuario
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card-footer bg-light text-center rounded-bottom-4 small text-muted">
+                   
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $('.select2').select2({ width: '100%', placeholder: "Selecciona..." });
+
+        // 🔹 Cargar empleados y roles apenas entra
+        cargarDatos();
+
+        // 🔹 Mostrar/ocultar contraseñas
+        togglePwd("Password", "togglePwd");
+        togglePwd("ConfirmPassword", "togglePwd2");
+
+        function togglePwd(inputId, btnId) {
+            const input = document.getElementById(inputId);
+            const btn = document.getElementById(btnId);
+            btn.addEventListener("click", () => {
+                const isPwd = input.type === "password";
+                input.type = isPwd ? "text" : "password";
+                btn.querySelector("i").classList.toggle("bi-eye", !isPwd);
+                btn.querySelector("i").classList.toggle("bi-eye-slash", isPwd);
+            });
+        }
+
+        // 🔹 Cargar empleados y roles desde la API
+        async function cargarDatos() {
+            try {
+                const [empleados, roles] = await Promise.all([
+                    fetch("/api/empleados/disponibles").then(r => r.json()),
+                    fetch("/api/roles").then(r => r.json())
+                ]);
+
+                // Empleados
+                $("#EmpleadoId").empty().append('<option value="">Selecciona un empleado...</option>');
+                empleados.forEach(e => {
+                    $("#EmpleadoId").append(`<option value="${e.id}">${e.nombres} ${e.apellidos} (${e.cargo})</option>`);
+                });
+
+                // Roles
+                $("#Role").empty().append('<option value="">Selecciona un rol...</option>');
+                roles.forEach(r => {
+                    $("#Role").append(`<option value="${r.name}">${r.name}</option>`);
+                });
+
+            } catch (err) {
+                console.error(err);
+                Swal.fire("Error", "No se pudieron cargar empleados o roles.", "error");
+            }
+        }
+
+        // 🔹 Crear usuario
+        $("#frmCrearUsuario").on("submit", async function (e) {
+            e.preventDefault();
+
+            const pass = $("#Password").val();
+            const confirm = $("#ConfirmPassword").val();
+            const btn = $("#btnCrear");
+            const spinner = $("#spinnerCrear");
+
+            if (pass !== confirm) {
+                Swal.fire("Advertencia", "Las contraseñas no coinciden.", "warning");
+                return;
+            }
+
+            const data = {
+                EmpleadoId: parseInt($("#EmpleadoId").val()),
+                Password: pass,
+                Role: $("#Role").val()
+            };
+
+            const token = $('input[name="__RequestVerificationToken"]').val();
+
+            try {
+                // 🔸 Mostrar alerta de espera
+                spinner.removeClass("d-none");
+                btn.prop("disabled", true);
+
+                const resp = await fetch("/UsuariosUi/CrearUsuario", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "RequestVerificationToken": token
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await resp.json();
+
+                Swal.fire({
+                    icon: result.ok ? "success" : "error",
+                    title: result.ok ? "Éxito" : "Error",
+                    text: result.msg,
+                    confirmButtonText: "Aceptar"
+                });
+
+                if (result.ok) {
+                    $("#frmCrearUsuario")[0].reset();
+                    $("#EmpleadoId, #Role").val("").trigger("change");
+                }
+
+            } catch (error) {
+                console.error(error);
+                Swal.fire("Error", "Ocurrió un error al crear el usuario.", "error");
+            } finally {
+                spinner.addClass("d-none");
+                btn.prop("disabled", false);
+            }
+        });
+    });
+</script>

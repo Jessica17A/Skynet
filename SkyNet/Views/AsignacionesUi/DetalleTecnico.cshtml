@@ -179,24 +179,58 @@ else
                 } finally { btn.disabled = false; }
             });
 
-            document.getElementById('btn-checkout')?.addEventListener('click', async (e) => {
-                const btn = e.currentTarget; btn.disabled = true;
-                try {
-                    const nowIso = new Date().toISOString();
-                    const res = await Swal.fire({
-                        title: 'Finalizar asignación',
-                        input: 'textarea',
-                        inputPlaceholder: 'Nota (opcional)',
-                        showCancelButton: true,
-                        confirmButtonText: 'Finalizar',
+                   document.getElementById('btn-checkout')?.addEventListener('click', async (e) => {
+                        const btn = e.currentTarget;
+                        btn.disabled = true;
+
+                        try {
+                            const res = await Swal.fire({
+                                title: 'Finalizar asignación',
+                                input: 'textarea',
+                                inputPlaceholder: 'Nota (opcional)',
+                                showCancelButton: true,
+                                confirmButtonText: 'Finalizar',
+                                reverseButtons: true
+
+                            });
+
+                            if (!res.isConfirmed) return;
+
+                          
+                            Swal.fire({
+                                title: 'Por favor espera, tu solicitud se esta ejecutando',
+                                // html: '<b>Por favor espera, tu solicitud se esta ejecutando.</b>',
+                                allowOutsideClick: false,
+                                didOpen: () => {
+                                    Swal.showLoading();
+                                }
+                            });
+
+                            const nowIso = new Date().toISOString();
+
+                          
+                            await patchEstado({
+                                estado: 5,
+                                nota: res.value,
+                                fechaFinIso: nowIso
+                            });
+
+                           
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Hecho',
+                                text: 'La asignación fue finalizada correctamente.',
+                                confirmButtonText: 'Aceptar'
+                            }).then(() => location.reload());
+                        }
+                        catch (err) {
+                            Swal.fire('Error', String(err), 'error');
+                        }
+                        finally {
+                            btn.disabled = false;
+                        }
                     });
-                    if (!res.isConfirmed) return;
-                    await patchEstado({ estado: 5, nota: res.value, fechaFinIso: nowIso });
-                    Swal.fire('Hecho', 'Asignación finalizada.', 'success').then(()=>location.reload());
-                } catch (err) {
-                    Swal.fire('Error', String(err), 'error');
-                } finally { btn.disabled = false; }
-            });
+
 
             // Generar PDF (archivo externo)
                 document.getElementById('btn-reporte')?.addEventListener('click', async () => {
