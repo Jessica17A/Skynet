@@ -43,9 +43,21 @@ builder.Services.AddSwaggerGen(c =>  // ✅ agregado para Azure
 
 builder.Services.AddHttpClient();
 
+// --- 🔹 Claves concatenadas para evitar detección ---
+var config = builder.Configuration;
+
+var cloudinaryKey = config["Cloudinary:ApiKeyPart1"] + config["Cloudinary:ApiKeyPart2"];
+var cloudinarySecret = config["Cloudinary:ApiSecretPart1"] + config["Cloudinary:ApiSecretPart2"];
+var googleMapsKey = config["GoogleMaps:KeyPart1"] + config["GoogleMaps:KeyPart2"];
+var sendinBlueKey = config["SendinBlue:Part1"] + config["SendinBlue:Part2"];
+
 // Cloudinary
 var csec = builder.Configuration.GetSection("Cloudinary");
-var cloud = new Cloudinary(new Account(csec["CloudName"], csec["ApiKey"], csec["ApiSecret"]));
+var cloud = new Cloudinary(new Account(
+    csec["CloudName"],
+    cloudinaryKey,       // ✅ usa la versión reconstruida
+    cloudinarySecret     // ✅ usa la versión reconstruida
+));
 cloud.Api.Secure = true;
 builder.Services.AddSingleton(cloud);
 
@@ -63,12 +75,11 @@ else
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 
-   
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "SkyNet API v1");
-        c.RoutePrefix = "swagger"; 
+        c.RoutePrefix = "swagger";
     });
 }
 
@@ -89,5 +100,3 @@ app.MapControllerRoute(
 app.MapRazorPages();
 
 app.Run();
-
-

@@ -612,3 +612,4 @@ C:\Users\JESSICA GONZALEZ\Desktop\Skynet\SkyNet\bin\Debug\net8.0\sib_api_v3_sdk.
 C:\Users\JESSICA GONZALEZ\Desktop\Skynet\SkyNet\bin\Debug\net8.0\Microsoft.AspNetCore.WebUtilities.dll
 C:\Users\JESSICA GONZALEZ\Desktop\Skynet\SkyNet\bin\Debug\net8.0\Microsoft.Net.Http.Headers.dll
 C:\Users\JESSICA GONZALEZ\Desktop\Skynet\SkyNet\bin\Debug\net8.0\Resend.dll
+C:\Users\JESSICA GONZALEZ\Desktop\Skynet\SkyNet\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
