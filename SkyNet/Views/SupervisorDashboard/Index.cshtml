@@ -240,10 +240,11 @@
                         <td>${chipPrioridad(x.prioridad)}</td>
                         <td>${chipEstado(x.estado, x.estadoTexto)}</td>
                         <td class="text-end">
-                            <a class="btn btn-sm btn-outline-primary fw-bold btn-pill"
-                               href="${base}/ui/asignaciones/DetalleSupervisor/${x.idSolicitud}">
-                               <i class="bi bi-eye"></i> Detalles
-                            </a>
+                        <a class="btn btn-sm btn-outline-primary fw-bold btn-pill"
+                           href="/ui/asignaciones/Supervisores?id=${x.idSolicitud}">
+                           <i class="bi bi-eye"></i> Detalles
+                        </a>
+
                         </td>
                     </tr>`).join('');
             }catch(e){

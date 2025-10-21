@@ -69,7 +69,7 @@ public class SolicitudesAsignacionesApiController : ControllerBase
         }
 
 
-        // ✅ Enviar correo cuando se finaliza
+        
         if (estadoNuevo == SolicitudAsignacionEstado.Finalizada)
         {
             var solicitud = await _db.Solicitudes.FirstOrDefaultAsync(s => s.Id == asig.FkSolicitud, ct);
@@ -120,10 +120,10 @@ public class SolicitudesAsignacionesApiController : ControllerBase
     [HttpGet("{id:long}/asignaciones/tecnico")]
     public async Task<ActionResult<IEnumerable<SolicitudAsignacionDto>>> ListarAsignacionesPorSolicitudTecnico(long id)
     {
-        // Obtener el UserId del Identity actual
+      
         var userId = _userManager.GetUserId(User);
 
-        // Ejecutar el SP pasando la solicitud y el usuario logueado
+     
         var rows = await _db.SolicitudAsignacionListado
         .FromSqlRaw("EXEC dbo.usp_SolicitudesAsignaciones_PorSolicitud @ID_SOLICITUD = {0}, @AspNetUserId = {1}", id, userId)
         .AsNoTracking()
@@ -319,7 +319,7 @@ public class SolicitudesAsignacionesApiController : ControllerBase
         }
         catch (SqlException ex)
         {
-            // 🔹 Devuelve mensaje exacto que envió el SP
+            
             return BadRequest(new { ok = false, msg = ex.Message });
         }
     }

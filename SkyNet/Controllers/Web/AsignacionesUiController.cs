@@ -181,7 +181,7 @@ public class AsignacionesUiController : Controller
         {
             var partes = item.Split('|');
 
-            // 🔹 Incluir el UserId al DTO
+          
             var dto = new SolicitudAsignacionCreateDto
             {
                 IdSolicitud = solicitudId,
@@ -221,47 +221,20 @@ public class AsignacionesUiController : Controller
     }
 
 
-    //public async Task<IActionResult> Supervisores()
-    //{
-    //    var c = _http.CreateClient();
-    //    c.BaseAddress ??= new Uri($"{Request.Scheme}://{Request.Host}{Request.PathBase}/");
-
-    //    List<SolicitudAsignacionListado> data;
-
-    //    try
-    //    {
-    //        // 🔹 Consumimos el endpoint específico del supervisor
-    //        data = await c.GetFromJsonAsync<List<SolicitudAsignacionListado>>(
-    //            "api/solicitudes/asignaciones/supervisor",
-    //            HttpContext.RequestAborted
-    //        ) ?? new();
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        _log.LogError(ex, "Error al cargar asignaciones del supervisor.");
-    //        ModelState.AddModelError("", "No se pudo contactar el API.");
-    //        data = new();
-    //    }
-
-    //    // Si no hay datos, muestra mensaje
-    //    if (data.Count == 0)
-    //        ViewBag.Mensaje = "No se encontraron asignaciones para tu usuario.";
-
-    //    return View(data);
-    //}
-
-    public IActionResult Supervisores()
+    [HttpGet]
+    public IActionResult Supervisores(long id)
     {
-        // Solo retorna la vista vacía
+        ViewBag.IdSolicitud = id;
         return View();
     }
 
 
 
 
+    [HttpGet]
     public IActionResult Tecnicos()
     {
-        // Solo retorna la vista, el consumo de la API se hará con JS
+      
         return View();
     }
 

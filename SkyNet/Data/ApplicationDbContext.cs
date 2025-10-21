@@ -13,7 +13,7 @@ namespace SkyNet.Data
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options) { }
 
-        public DbSet<Cliente> Clientes => Set<Cliente>();
+    
         public DbSet<Solicitud> Solicitudes => Set<Solicitud>();
         public DbSet<Empleado> Empleados => Set<Empleado>();      
 
@@ -195,8 +195,8 @@ namespace SkyNet.Data
 
             b.Entity<SolicitudTrackingTimelineRow>(e =>
             {
-                e.HasNoKey();      // <- importantísimo
-                e.ToView(null);    // <- evita que EF lo trate como tabla o vista
+                e.HasNoKey();     
+                e.ToView(null);    
                 e.Property(p => p.SolicitudId).HasColumnName("SolicitudId");
                 e.Property(p => p.FechaUtc).HasColumnName("FechaUtc");
                 e.Property(p => p.Usuario).HasColumnName("Usuario");

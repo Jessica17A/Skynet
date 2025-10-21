@@ -177,7 +177,7 @@
       }
 
       async function init() {
-        // Consumir la API filtrada por supervisor logueado
+      
         const res = await fetch(`${base}/api/solicitudes/asignaciones/supervisor`);
         if (!res.ok) {
           $cards.innerHTML = `<div class="col-12"><div class="alert alert-danger">No se pudo cargar el listado.</div></div>`;
