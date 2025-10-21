@@ -124,6 +124,11 @@ else
         <!-- MAPA -->
         @if (Model.Latitud.HasValue && Model.Longitud.HasValue && Model.EstadoAsignacion != EST_FIN)
         {
+            var q = Model.Direccion ?? $"{Model.Latitud},{Model.Longitud}";
+            var lat = Model.Latitud;
+            var lng = Model.Longitud;
+            var hasCoords = Model.Latitud.HasValue && Model.Longitud.HasValue;
+
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-info bg-opacity-10 fw-bold text-info">
                     <i class="bi bi-geo-alt"></i> Ubicación aproximada
@@ -135,6 +140,20 @@ else
                             referrerpolicy="no-referrer-when-downgrade"
                             src="https://www.google.com/maps?q=@Model.Latitud,@Model.Longitud&hl=es&z=16&output=embed">
                     </iframe>
+                </div>
+
+                <!-- 🔹 NUEVOS BOTONES DE MAPA -->
+                <div class="card-footer d-flex justify-content-end gap-2 flex-wrap">
+                    <a class="btn btn-outline-primary btn-sm"
+                       href="https://www.google.com/maps/dir/?api=1&destination=@Uri.EscapeDataString(q)"
+                       target="_blank" rel="noopener">
+                        <i class="bi bi-signpost-2"></i> Cómo llegar (Google Maps)
+                    </a>
+                    <a class="btn btn-outline-dark btn-sm"
+                       href="https://waze.com/ul?@(hasCoords ? $"ll={lat!.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)},{lng!.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)}&navigate=yes" : $"q={Uri.EscapeDataString(q)}&navigate=yes")"
+                       target="_blank" rel="noopener">
+                        <i class="bi bi-geo"></i> Abrir en Waze
+                    </a>
                 </div>
             </div>
         }
@@ -179,64 +198,57 @@ else
                 } finally { btn.disabled = false; }
             });
 
-                   document.getElementById('btn-checkout')?.addEventListener('click', async (e) => {
-                        const btn = e.currentTarget;
-                        btn.disabled = true;
+            document.getElementById('btn-checkout')?.addEventListener('click', async (e) => {
+                const btn = e.currentTarget;
+                btn.disabled = true;
 
-                        try {
-                            const res = await Swal.fire({
-                                title: 'Finalizar asignación',
-                                input: 'textarea',
-                                inputPlaceholder: 'Nota (opcional)',
-                                showCancelButton: true,
-                                confirmButtonText: 'Finalizar',
-                                reverseButtons: true
+                try {
+                    const res = await Swal.fire({
+                        title: 'Finalizar asignación',
+                        input: 'textarea',
+                        inputPlaceholder: 'Nota (opcional)',
+                        showCancelButton: true,
+                        confirmButtonText: 'Finalizar',
+                        reverseButtons: true
+                    });
 
-                            });
+                    if (!res.isConfirmed) return;
 
-                            if (!res.isConfirmed) return;
-
-                          
-                            Swal.fire({
-                                title: 'Por favor espera, tu solicitud se esta ejecutando',
-                                // html: '<b>Por favor espera, tu solicitud se esta ejecutando.</b>',
-                                allowOutsideClick: false,
-                                didOpen: () => {
-                                    Swal.showLoading();
-                                }
-                            });
-
-                            const nowIso = new Date().toISOString();
-
-                          
-                            await patchEstado({
-                                estado: 5,
-                                nota: res.value,
-                                fechaFinIso: nowIso
-                            });
-
-                           
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Hecho',
-                                text: 'La asignación fue finalizada correctamente.',
-                                confirmButtonText: 'Aceptar'
-                            }).then(() => location.reload());
-                        }
-                        catch (err) {
-                            Swal.fire('Error', String(err), 'error');
-                        }
-                        finally {
-                            btn.disabled = false;
+                    Swal.fire({
+                        title: 'Por favor espera, tu solicitud se está ejecutando',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
                         }
                     });
 
+                    const nowIso = new Date().toISOString();
+
+                    await patchEstado({
+                        estado: 5,
+                        nota: res.value,
+                        fechaFinIso: nowIso
+                    });
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Hecho',
+                        text: 'La asignación fue finalizada correctamente.',
+                        confirmButtonText: 'Aceptar'
+                    }).then(() => location.reload());
+                }
+                catch (err) {
+                    Swal.fire('Error', String(err), 'error');
+                }
+                finally {
+                    btn.disabled = false;
+                }
+            });
 
             // Generar PDF (archivo externo)
-                document.getElementById('btn-reporte')?.addEventListener('click', async () => {
+            document.getElementById('btn-reporte')?.addEventListener('click', async () => {
                 generarReporteAsignacionCompleta(@Model.IdSolicitud);
-        });
-
+            });
         })();
     </script>
 }

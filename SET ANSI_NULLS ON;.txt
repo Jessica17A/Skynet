@@ -1,0 +1,289 @@
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+GO
+
+-- =============================================================
+-- TABLA: Solicitud_Tracking
+-- =============================================================
+IF OBJECT_ID('dbo.Solicitud_Tracking') IS NULL
+BEGIN
+    CREATE TABLE dbo.Solicitud_Tracking (
+        IdTracking      BIGINT IDENTITY(1,1) PRIMARY KEY,
+        FkSolicitud     BIGINT NOT NULL,
+        UserId          NVARCHAR(450) NOT NULL,
+        Estado          TINYINT NULL,
+        FechaUtc        DATETIME2(7) NOT NULL 
+            CONSTRAINT DF_SolicitudTracking_FechaUtc DEFAULT SYSUTCDATETIME()
+    );
+
+    ALTER TABLE dbo.Solicitud_Tracking
+    ADD CONSTRAINT FK_SolicitudTracking_Solicitud
+        FOREIGN KEY (FkSolicitud) REFERENCES dbo.Solicitud(Id_Solicitud);
+END
+GO
+
+
+-- =============================================================
+-- SP: Cambiar estado de Solicitud + registrar Tracking
+-- =============================================================
+CREATE OR ALTER PROCEDURE dbo.sp_Solicitudes_CambiarEstado
+    @SolicitudId  BIGINT,
+    @NuevoEstado  INT,
+    @UserId       NVARCHAR(450)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    BEGIN TRY
+        BEGIN TRAN;
+
+        DECLARE @EstadoActual INT;
+        SELECT @EstadoActual = s.Estado
+        FROM dbo.Solicitud AS s WITH (UPDLOCK, HOLDLOCK)
+        WHERE s.Id_Solicitud = @SolicitudId;
+
+        IF @EstadoActual IS NULL
+            THROW 50001, 'La solicitud no existe.', 1;
+
+        IF (@EstadoActual = @NuevoEstado)
+        BEGIN
+            COMMIT;
+            SELECT Id_Solicitud AS Id, Estado
+            FROM dbo.Solicitud
+            WHERE Id_Solicitud = @SolicitudId;
+            RETURN;
+        END
+
+        UPDATE dbo.Solicitud
+           SET Estado = @NuevoEstado
+        WHERE Id_Solicitud = @SolicitudId;
+
+        UPDATE sa
+           SET sa.Estado   = CONVERT(TINYINT, @NuevoEstado),
+               sa.FechaFin = CASE
+                               WHEN @NuevoEstado IN (0,5) AND sa.FechaFin IS NULL
+                                 THEN SYSUTCDATETIME()
+                               ELSE sa.FechaFin
+                             END
+        FROM dbo.Solicitud_Asignacion AS sa
+        WHERE sa.FkSolicitud = @SolicitudId;
+
+        INSERT INTO dbo.Solicitud_Tracking (FkSolicitud, UserId, Estado)
+        VALUES (@SolicitudId, @UserId, CONVERT(TINYINT, @NuevoEstado));
+
+        COMMIT;
+
+        SELECT Id_Solicitud AS Id, Estado
+        FROM dbo.Solicitud
+        WHERE Id_Solicitud = @SolicitudId;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK;
+        DECLARE @msg NVARCHAR(4000) = ERROR_MESSAGE();
+        THROW 50002, @msg, 1;
+    END CATCH
+END
+GO
+
+
+-- =============================================================
+-- SP: Timeline de cambios de estado
+-- =============================================================
+CREATE OR ALTER PROCEDURE dbo.sp_Solicitud_Tracking_Timeline
+  @SolicitudId BIGINT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    ;WITH Timeline AS
+    (
+        SELECT
+            s.Id_Solicitud AS SolicitudId,
+            s.CreatedAtUtc AS FechaUtc,
+            CAST(1 AS TINYINT) AS Estado,
+            N'Creada' AS EstadoTexto,
+            CAST(s.Nombre AS NVARCHAR(200)) AS Usuario,
+            N'Creación de solicitud' AS Texto
+        FROM dbo.Solicitud s
+        WHERE s.Id_Solicitud = @SolicitudId
+
+        UNION ALL
+
+        SELECT
+            t.FkSolicitud,
+            t.FechaUtc,
+            t.Estado,
+            CASE t.Estado
+                WHEN 0 THEN N'Rechazado'
+                WHEN 1 THEN N'Pendiente'
+                WHEN 2 THEN N'Revisada'
+                WHEN 3 THEN N'Aceptada'
+                WHEN 4 THEN N'En proceso'
+                WHEN 5 THEN N'Finalizada'
+                ELSE N'Desconocido'
+            END AS EstadoTexto,
+            COALESCE(NULLIF(LTRIM(RTRIM(CONCAT(e.Nombres, N' ', e.Apellidos))), N''), t.UserId) AS Usuario,
+            N'Estado cambiado a ' +
+            CASE t.Estado
+                WHEN 0 THEN N'Rechazado'
+                WHEN 1 THEN N'Pendiente'
+                WHEN 2 THEN N'Revisada'
+                WHEN 3 THEN N'Aceptada'
+                WHEN 4 THEN N'En proceso'
+                WHEN 5 THEN N'Finalizada'
+                ELSE N'Desconocido'
+            END AS Texto
+        FROM dbo.Solicitud_Tracking t
+        LEFT JOIN dbo.Empleado e ON e.UserId = t.UserId
+        WHERE t.FkSolicitud = @SolicitudId
+    )
+    SELECT SolicitudId, FechaUtc, Usuario, Texto, Estado, EstadoTexto
+    FROM Timeline
+    ORDER BY FechaUtc ASC;
+END
+GO
+
+
+-- =============================================================
+-- SP: Solicitud Resumen
+-- =============================================================
+CREATE OR ALTER PROCEDURE [dbo].[usp_Solicitud_Resumen]
+  @ID_SOLICITUD BIGINT
+AS
+BEGIN
+  SET NOCOUNT ON;
+
+  ;WITH BASE AS (
+    SELECT
+      A.Id_Solicitud_Asignacion AS ID,
+      A.FkSolicitud AS IDSOLICITUD,
+      A.IdGrupo AS IDGRUPO,
+      A.FkTecnico AS FKTECNICO,
+      A.FechaAsignacionUtc AS FECHAASIGNACIONUTC,
+      A.FechaInicio AS FECHA_INICIO,
+      A.FechaFin AS FECHA_FIN,
+      A.Notas AS NOTAS,
+      A.Estado AS ESTADO,
+      (TEC.Nombres + ' ' + TEC.Apellidos) AS TECNICONOMBRE,
+      (SUP.Nombres + ' ' + SUP.Apellidos) AS SUPERVISORNOMBRE,
+      CONCAT('GRUPO #', G.IdGrupo) AS GRUPOETIQUETA
+    FROM dbo.Solicitud_Asignacion A
+    LEFT JOIN dbo.Empleado TEC ON TEC.Id_Empleado = A.FkTecnico
+    LEFT JOIN dbo.Grupo_Supervisor_Tec G ON G.IdGrupo = A.IdGrupo AND G.FkTecnico = A.FkTecnico
+    LEFT JOIN dbo.Empleado SUP ON SUP.Id_Empleado = G.FkSupervisor
+    WHERE A.FkSolicitud = @ID_SOLICITUD
+  )
+  SELECT
+    @ID_SOLICITUD AS IDSOLICITUD,
+    MIN(B.FECHA_INICIO) AS FECHAVISITA_MIN,
+    CASE 
+      WHEN EXISTS(SELECT 1 FROM BASE WHERE ESTADO = 4) THEN 4
+      WHEN EXISTS(SELECT 1 FROM BASE WHERE ESTADO = 3) THEN 3
+      WHEN EXISTS(SELECT 1 FROM BASE WHERE ESTADO = 1) THEN 1
+      WHEN EXISTS(SELECT 1 FROM BASE WHERE ESTADO = 2) THEN 2
+      WHEN EXISTS(SELECT 1 FROM BASE WHERE ESTADO = 0) THEN 0
+      ELSE 0
+    END AS ESTADO_AGREGADO,
+    (
+      SELECT STRING_AGG(SUPERVISORNOMBRE, ', ')
+      FROM (SELECT DISTINCT SUPERVISORNOMBRE FROM BASE WHERE SUPERVISORNOMBRE IS NOT NULL) S
+    ) AS SUPERVISORES,
+    (
+      SELECT STRING_AGG(TECNICONOMBRE, ', ')
+      FROM (SELECT DISTINCT TECNICONOMBRE FROM BASE WHERE TECNICONOMBRE IS NOT NULL) T
+    ) AS TECNICOS,
+    (
+      SELECT
+        B.ID,
+        B.IDGRUPO,
+        B.GRUPOETIQUETA,
+        B.FKTECNICO,
+        B.TECNICONOMBRE,
+        B.SUPERVISORNOMBRE,
+        B.FECHAASIGNACIONUTC,
+        B.FECHA_INICIO,
+        B.FECHA_FIN,
+        B.ESTADO,
+        B.NOTAS
+      FROM BASE B
+      FOR JSON PATH
+    ) AS ASIGNACIONES_JSON
+  FROM BASE B;
+END
+GO
+
+
+
+
+
+
+
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+-- =============================================================
+-- SP: Cambiar estado de Solicitud + registrar Tracking
+-- =============================================================
+ALTER   PROCEDURE [dbo].[sp_Solicitudes_CambiarEstado]
+    @SolicitudId  BIGINT,
+    @NuevoEstado  INT,
+    @UserId       NVARCHAR(450)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    BEGIN TRY
+        BEGIN TRAN;
+
+        DECLARE @EstadoActual INT;
+        SELECT @EstadoActual = s.Estado
+        FROM dbo.Solicitud AS s WITH (UPDLOCK, HOLDLOCK)
+        WHERE s.Id_Solicitud = @SolicitudId;
+
+        IF @EstadoActual IS NULL
+            THROW 50001, 'La solicitud no existe.', 1;
+
+        IF (@EstadoActual = @NuevoEstado)
+        BEGIN
+            COMMIT;
+            SELECT Id_Solicitud AS Id, Estado
+            FROM dbo.Solicitud
+            WHERE Id_Solicitud = @SolicitudId;
+            RETURN;
+        END
+
+        UPDATE dbo.Solicitud
+           SET Estado = @NuevoEstado
+        WHERE Id_Solicitud = @SolicitudId;
+
+        UPDATE sa
+           SET sa.Estado   = CONVERT(TINYINT, @NuevoEstado),
+               sa.FechaFin = CASE
+                               WHEN @NuevoEstado IN (0,5) AND sa.FechaFin IS NULL
+                                 THEN SYSUTCDATETIME()
+                               ELSE sa.FechaFin
+                             END
+        FROM dbo.Solicitud_Asignacion AS sa
+        WHERE sa.FkSolicitud = @SolicitudId;
+
+        INSERT INTO dbo.Solicitud_Tracking (FkSolicitud, UserId, Estado)
+        VALUES (@SolicitudId, @UserId, CONVERT(TINYINT, @NuevoEstado));
+
+        COMMIT;
+
+        SELECT Id_Solicitud AS Id, Estado
+        FROM dbo.Solicitud
+        WHERE Id_Solicitud = @SolicitudId;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK;
+        DECLARE @msg NVARCHAR(4000) = ERROR_MESSAGE();
+        THROW 50002, @msg, 1;
+    END CATCH
+END
+GO

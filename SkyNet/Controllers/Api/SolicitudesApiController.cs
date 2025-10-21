@@ -135,15 +135,15 @@ namespace SkyNet.Controllers.Api
             {
                 try
                 {
-                    _logger.LogInformation("📧 Intentando enviar correo de finalización a {Email}", s.Email);
+                    _logger.LogInformation("Intentando enviar correo de finalización a {Email}", s.Email);
 
                     await _emailService.EnviarCorreoFinalizacionAsync(s.Email, s.Nombre, s.Ticket);
 
-                    _logger.LogInformation("✅ Correo enviado correctamente a {Email}", s.Email);
+                    _logger.LogInformation("Correo enviado correctamente a {Email}", s.Email);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "❌ Error al enviar correo a {Email}: {Mensaje}", s.Email, ex.Message);
+                    _logger.LogError(ex, "Error al enviar correo a {Email}: {Mensaje}", s.Email, ex.Message);
                     return Ok(new { message = "Estado cambiado, pero fallo el correo", error = ex.Message });
                 }
             }
@@ -206,14 +206,6 @@ namespace SkyNet.Controllers.Api
 
             return Ok(data);
         }
-
-        //[HttpGet("test-brevo")]
-        //public async Task<IActionResult> TestBrevo()
-        //{
-        //    var emailService = new SkyNet.Services.EmailService();
-        //    await emailService.EnviarCorreoFinalizacionAsync("gonzalezjessica813@gmail.com", "Prueba SkyNet", "TCK-0001");
-        //    return Ok("Intento de envío realizado. Revisa tu correo o el log de Brevo.");
-        //}
 
 
 

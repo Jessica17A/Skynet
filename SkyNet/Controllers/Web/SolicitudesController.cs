@@ -6,7 +6,7 @@ using System.Net.Http.Json;
 
 namespace SkyNet.Controllers.Web
 {
-    // 🔒 Aplica autorización por defecto a todo el controlador
+   
     [Authorize]
     public class SolicitudesController : Controller
     {
@@ -19,9 +19,6 @@ namespace SkyNet.Controllers.Web
             _logger = logger;
         }
 
-        // ======================
-        // LISTADO (requiere login)
-        // ======================
         public async Task<IActionResult> Index(CancellationToken ct)
         {
             var http = _factory.CreateClient();
@@ -42,9 +39,7 @@ namespace SkyNet.Controllers.Web
             return View(lista);
         }
 
-        // ======================
-        // DETALLE (requiere login)
-        // ======================
+     
         public async Task<IActionResult> Details(long id, CancellationToken ct)
         {
             var http = _factory.CreateClient();
@@ -85,15 +80,10 @@ namespace SkyNet.Controllers.Web
             return View(sol);
         }
 
-        // ======================
-        // FORMULARIO CREATE (GET) — público
-        // ======================
         [AllowAnonymous]
         public IActionResult Create() => View(new SolicitudCreateDto());
 
-        // ======================
-        // FORMULARIO CREATE (POST) — público
-        // ======================
+      
         [HttpPost]
         [ValidateAntiForgeryToken]
         [AllowAnonymous]
@@ -121,9 +111,6 @@ namespace SkyNet.Controllers.Web
             return View(form);
         }
 
-        // ======================
-        // TRACKING — público
-        // ======================
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> Tracking(string? ticket, CancellationToken ct)
@@ -147,9 +134,7 @@ namespace SkyNet.Controllers.Web
             return View(model);
         }
 
-        // ======================
-        // HISTORIAL (requiere login)
-        // ======================
+      
         [HttpGet("{id:long}/historial")]
         public IActionResult Historial(long id)
         {

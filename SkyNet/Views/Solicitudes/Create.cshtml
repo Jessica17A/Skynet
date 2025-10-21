@@ -193,18 +193,10 @@
                         <input asp-for="Direccion" id="direccion" class="form-control" placeholder="Calle, zona, ciudad" />
                         <span asp-validation-for="Direccion" class="text-danger"></span>
                     </div>
-                    <div class="col-md-6">
-                        <label asp-for="Latitud" class="form-label"></label>
-                        <!-- Mantengo el id 'lat' para el JS del mapa -->
-                        <input asp-for="Latitud" id="lat" class="form-control" placeholder="14.634915" />
-                        <span asp-validation-for="Latitud" class="text-danger"></span>
-                    </div>
-                    <div class="col-md-6">
-                        <label asp-for="Longitud" class="form-label"></label>
-                        <!-- Mantengo el id 'lng' para el JS del mapa -->
-                        <input asp-for="Longitud" id="lng" class="form-control" placeholder="-90.506882" />
-                        <span asp-validation-for="Longitud" class="text-danger"></span>
-                    </div>
+                    <!-- Campos ocultos para coordenadas -->
+                    <input asp-for="Latitud" id="lat" type="hidden" />
+                    <input asp-for="Longitud" id="lng" type="hidden" />
+
 
                     <!-- Términos -->
                     <div class="col-12">

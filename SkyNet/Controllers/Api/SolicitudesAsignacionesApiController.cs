@@ -138,8 +138,7 @@ public class SolicitudesAsignacionesApiController : ControllerBase
     {
         if (dto is null || id != dto.IdSolicitud)
             return BadRequest(new { ok = false, msg = "Datos inválidos." });
-
-        // ✅ Prioriza el UserId recibido desde el DTO, luego el del usuario autenticado
+        
         var userId = dto.UserId ?? User?.FindFirstValue(ClaimTypes.NameIdentifier) ?? "sistema";
 
         try
@@ -156,7 +155,7 @@ public class SolicitudesAsignacionesApiController : ControllerBase
                 dto.IdGrupo,
                 dto.FkTecnico,
                 dto.Notas,
-                dto.Fecha_Inicio ?? DateTime.UtcNow, // evita nulls
+                dto.Fecha_Inicio ?? DateTime.UtcNow, 
                 userId
             ).ToListAsync();
 

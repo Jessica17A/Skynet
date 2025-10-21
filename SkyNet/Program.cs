@@ -48,7 +48,7 @@ var config = builder.Configuration;
 
 var cloudinaryKey = config["Cloudinary:ApiKeyPart1"] + config["Cloudinary:ApiKeyPart2"];
 var cloudinarySecret = config["Cloudinary:ApiSecretPart1"] + config["Cloudinary:ApiSecretPart2"];
-var googleMapsKey = config["GoogleMaps:KeyPart1"] + config["GoogleMaps:KeyPart2"];
+var googleMapsKey = config["GoogleMaps:ApiKey"];
 var sendinBlueKey = config["SendinBlue:Part1"] + config["SendinBlue:Part2"];
 
 // Cloudinary
